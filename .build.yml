@@ -1,0 +1,15 @@
+image: alpine/latest
+packages:
+  - build-base
+  - python3
+sources:
+  - https://git.sr.ht/~zamfofex/moonfish
+  - https://github.com/thomasahle/sunfish#10e93383eae345c2b700657afe33b862604af20a
+tasks:
+  - build: |
+      cp sunfish/nnue/models/tanh.pickle moonfish
+      cd moonfish
+      make LDFLAGS=-static inbuilt_network=yes all
+artifacts:
+  - moonfish/moonfish
+  - moonfish/play
