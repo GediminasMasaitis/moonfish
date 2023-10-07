@@ -140,7 +140,16 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 
 static void moonfish_time(int time, char *name)
 {
-	printf("   \x1B[48;5;248m\x1B[38;5;235m %2d:%02d \x1B[0m %s\n", time / 60, time % 60, name);
+	printf("   \x1B[48;5;248m\x1B[38;5;235m ");
+	
+	if (time < 60)
+		printf("%4ds", time);
+	else if (time < 3600)
+		printf("%2d:%02d", time / 60, time % 60);
+	else
+		printf("%dh %d:%02d", time / 3600, time % 3600 / 60, time % 60);
+	
+	printf(" \x1B[0m %s      \n", name);
 }
 
 static void moonfish_fancy(struct moonfish_fancy *fancy)
@@ -239,6 +248,7 @@ static int moonfish_play_from(struct moonfish *ctx, struct moonfish_move *found,
 {
 	struct moonfish_move moves[32];
 	struct moonfish_move *move;
+	int valid;
 	
 	y0 = 9 - y0;
 	y1 = 9 - y1;
@@ -249,8 +259,15 @@ static int moonfish_play_from(struct moonfish *ctx, struct moonfish_move *found,
 	{
 		if (move->to == x1 + (y1 + 1) * 10)
 		{
-			*found = *move;
-			return 0;
+			moonfish_play(ctx, move);
+			valid = moonfish_validate(ctx);
+			moonfish_unplay(ctx, move);
+			
+			if (valid)
+			{
+				*found = *move;
+				return 0;
+			}
 		}
 	}
 	
@@ -259,6 +276,7 @@ static int moonfish_play_from(struct moonfish *ctx, struct moonfish_move *found,
 
 static void moonfish_reset_time(struct moonfish_fancy *fancy)
 {
+	struct timespec prev_timespec;
 	struct timespec timespec;
 	int *time;
 	long int *nano;
@@ -280,8 +298,11 @@ static void moonfish_reset_time(struct moonfish_fancy *fancy)
 		else time = &fancy->their_time, nano = &fancy->their_nano;
 	}
 	
-	timespec.tv_sec -= fancy->timespec.tv_sec;
-	timespec.tv_nsec -= fancy->timespec.tv_nsec;
+	prev_timespec = fancy->timespec;
+	fancy->timespec = timespec;
+	
+	timespec.tv_sec -= prev_timespec.tv_sec;
+	timespec.tv_nsec -= prev_timespec.tv_nsec;
 	
 	while (timespec.tv_nsec < 0)
 	{

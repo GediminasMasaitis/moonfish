@@ -417,3 +417,21 @@ void moonfish_fen(struct moonfish *ctx, char *fen)
 	ctx->white = 1;
 	if (*fen == 'b') moonfish_rotate(ctx);
 }
+
+int moonfish_validate(struct moonfish *ctx)
+{
+	int x, y;
+	struct moonfish_move moves[512];
+	struct moonfish_move *move;
+	
+	for (y = 0 ; y < 8 ; y++)
+	for (x = 0 ; x < 8 ; x++)
+	{
+		moonfish_moves(ctx, moves, (x + 1) + (y + 2) * 10);
+		for (move = moves ; move->piece != moonfish_outside ; move++)
+			if (move->captured == moonfish_their_king)
+				return 0;
+	}
+	
+	return 1;
+}

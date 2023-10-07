@@ -22,7 +22,7 @@ These are things that I plan to fix eventually.
   - no en passant
   - no underpromotion
 - the TUI will also prevent you from making those kinds of moves
-- the TUI allows illegal moves that leave the king in check
+- the TUI does not detect when the game has ended due to stalemate or checkmate
 - no quiescence search
 - no iterative deepening
 - no transposition table

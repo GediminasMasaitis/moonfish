@@ -68,4 +68,6 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *move);
 void moonfish_play_uci(struct moonfish *ctx, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move, int white);
 
+int moonfish_validate(struct moonfish *ctx);
+
 #endif
