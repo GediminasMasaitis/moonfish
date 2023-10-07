@@ -185,7 +185,8 @@ static void moonfish_rotate(struct moonfish *ctx)
 	moonfish_flip_horizontally(ctx);
 	moonfish_flip_vertically(ctx);
 	
-	ctx->white = !ctx->white;
+	if (ctx->white) ctx->white = 0;
+	else ctx->white = 1;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)

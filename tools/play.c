@@ -97,7 +97,7 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 	else
 		printf("\x1B[48;5;69m");
 	
-	if (fancy->white == (fancy->ctx.white ? 1 : 0)) y = 7 - y;
+	if (fancy->white == fancy->ctx.white) y = 7 - y;
 	else x = 7 - x;
 	
 	piece = fancy->ctx.board[(x + 1) + (y + 2) * 10];
@@ -174,7 +174,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 	delta = timespec.tv_sec - fancy->timespec.tv_sec;
 	if (timespec.tv_nsec - fancy->timespec.tv_nsec > 500000000L) delta++;
 	
-	if (fancy->white == (fancy->ctx.white ? 1 : 0))
+	if (fancy->white == fancy->ctx.white)
 		our_time -= delta;
 	else
 		their_time -= delta;
@@ -327,7 +327,7 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	int white_time, black_time;
 	char *arg;
 	
-	if (fancy->white == (fancy->ctx.white ? 1 : 0))
+	if (fancy->white == fancy->ctx.white)
 	{
 		white_time = fancy->our_time * 1000 + fancy->our_nano / 1000000;
 		black_time = fancy->their_time * 1000 + fancy->their_nano / 1000000;
@@ -540,7 +540,7 @@ int main(int argc, char **argv)
 	
 	pthread_create(&thread, NULL, &moonfish_start, fancy);
 	
-	if (fancy->white == (fancy->ctx.white ? 0 : 1))
+	if (fancy->white != fancy->ctx.white)
 	{
 		*name++ = ' ';
 		moonfish_go(fancy, names + 1, name, in, out);
