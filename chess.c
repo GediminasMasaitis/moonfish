@@ -21,9 +21,7 @@ static char moonfish_delta(struct moonfish *ctx, struct moonfish_move **moves, u
 static void moonfish_slide(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from, signed char delta)
 {
 	unsigned char to = from;
-	while (moonfish_delta(ctx, moves, from, &to, delta))
-	{
-	}
+	while (moonfish_delta(ctx, moves, from, &to, delta)) { }
 }
 
 static void moonfish_jump(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from, signed char delta)
@@ -267,8 +265,6 @@ void moonfish_show(struct moonfish *ctx)
 		printf("\n");
 	}
 }
-
-#include "moonfish.h"
 
 void moonfish_play_uci(struct moonfish *ctx, char *name)
 {
