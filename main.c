@@ -21,9 +21,17 @@ int main(int argc, char **argv)
 	char name[6];
 	int score;
 	
-	if (argc != 2)
+	if (argc < 1) return 1;
+	
+	if (argc != 2 && moonfish_network == NULL)
 	{
-		if (argc > 0) fprintf(stderr, "usage: %s <file-name>\n", argv[0]);
+		fprintf(stderr, "usage: %s <file-name>\n", argv[0]);
+		return 1;
+	}
+	
+	if (argc > 2)
+	{
+		fprintf(stderr, "usage: %s [<file-name>]\n", argv[0]);
 		return 1;
 	}
 	
@@ -34,7 +42,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	file = fopen(argv[1], "rb");
+	if (argc >= 2) file = fopen(argv[1], "rb");
+	else file = fmemopen(moonfish_network, 1139, "rb");
+	
 	if (file == NULL)
 	{
 		perror(argv[0]);

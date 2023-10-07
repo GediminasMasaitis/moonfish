@@ -79,4 +79,6 @@ void moonfish_to_uci(char *name, struct moonfish_move *move, int white);
 int moonfish_validate(struct moonfish *ctx);
 int moonfish_check(struct moonfish *ctx);
 
+extern char *moonfish_network;
+
 #endif
