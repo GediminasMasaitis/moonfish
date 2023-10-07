@@ -224,7 +224,7 @@ static FILE *moonfish_engine = NULL;
 static void moonfish_exit(void)
 {
 	tcsetattr(0, TCSANOW, &moonfish_termios);
-	printf("\x1B[?1000l\n");
+	printf("\x1B[?1000l");
 	fflush(stdout);
 	if (moonfish_engine != NULL) fprintf(moonfish_engine, "quit\n");
 }
