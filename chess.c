@@ -290,7 +290,7 @@ void moonfish_play(struct moonfish *ctx, struct moonfish_move *move)
 		if (move->from == 21)
 		{
 			if (ctx->white) ctx->castle.white_oo = 0;
-			else ctx->castle.black_opo = 0;
+			else ctx->castle.black_ooo = 0;
 		}
 	}
 	
