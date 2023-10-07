@@ -1,0 +1,11 @@
+*
+!/.gitignore
+!/README.md
+!/makefile
+!/*.c
+!/moonfish.h
+!/convert.py
+!/tools
+!/tools/*.c
+!/net
+!/net/*.c
