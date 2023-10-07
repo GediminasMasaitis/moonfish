@@ -18,12 +18,10 @@ limitations
 These are things that I plan to fix eventually.
 
 - the bot will never make certain moves
-  - no castling
   - no en passant
   - no underpromotion
 - the TUI will also prevent you from making those kinds of moves
 - the TUI does not detect when the game has ended due to stalemate or checkmate
-- no quiescence search
 - no iterative deepening
 - no transposition table
 - no good move ordering heuristic

@@ -31,14 +31,21 @@ struct moonfish_nnue
 	int values[2][6][64][10];
 	signed char pst0[64 * 6], pst1[10 * 6 * 6], pst3[10 * 10 * 2];
 	signed char layer1[180], layer2[10];
-	char scale;
+	signed char scale;
+};
+
+struct moonfish_castle
+{
+	unsigned int white_oo:1, white_ooo:1;
+	unsigned int black_oo:1, black_ooo:1;
 };
 
 struct moonfish
 {
 	struct moonfish_nnue nnue;
 	unsigned char board[120];
-	char white;
+	unsigned char white;
+	struct moonfish_castle castle;
 };
 
 struct moonfish_move
@@ -47,6 +54,7 @@ struct moonfish_move
 	unsigned char piece;
 	unsigned char promotion;
 	unsigned char captured;
+	struct moonfish_castle castle;
 };
 
 int moonfish_nnue(struct moonfish *ctx, FILE *file);
@@ -69,5 +77,6 @@ void moonfish_play_uci(struct moonfish *ctx, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move, int white);
 
 int moonfish_validate(struct moonfish *ctx);
+int moonfish_check(struct moonfish *ctx);
 
 #endif
