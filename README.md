@@ -10,9 +10,9 @@ features
 
 - very simple NNUE evaluation (same as sunfish)
 - alpha/beta pruning search
-- cute-looking UCI TUI
+- cute custom UCI TUI
 
-deficiencies
+limitations
 ---
 
 These are things that I plan to fix eventually.
@@ -26,7 +26,10 @@ These are things that I plan to fix eventually.
 - no quiescence search
 - no iterative deepening
 - no transposition table
+- no good move ordering heuristic
 - no support for `go infinite` or `go mate`
+- no move name or FEN validation (may lead to potential exploits)
+- the bot will ignore time control information
 
 building
 ---
@@ -35,7 +38,7 @@ building
 make
 ~~~
 
-The UCI TUI, called “play” may also be built.
+The UCI TUI, called “play”, may also be built.
 
 ~~~
 make play
@@ -44,7 +47,7 @@ make play
 usage
 ---
 
-moonfish is a UCI bot, which means you can use it with any UCI program (though see “deficiencies” above).
+moonfish is a UCI bot, which means you can use it with any UCI program (though see “limitations” above).
 
 However, note that you need an NNUE network in order for it to work! You can take `tanh.pickle` from [sunfish]’s repository, then convert it to moonfish’s format using the `convert.py` script. This should produce a `tanh.moon` file in the same directory, ready to be used for moonfish!
 
@@ -70,7 +73,7 @@ However, note that moonfish comes with its own UCI TUI, called “play”. You c
 license
 ---
 
-[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) © zamfofex 2023
+[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) &copy; zamfofex 2023
 
 [GPL]: <https://www.gnu.org/licenses/>
 [AGPL]: <https://www.gnu.org/licenses/why-affero-gpl.html>
