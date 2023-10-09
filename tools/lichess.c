@@ -491,14 +491,17 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 			state = cJSON_GetObjectItem(root, "state");
 			if (!cJSON_IsObject(state)) moonfish_json_error(game->argv0);
 			
+			white = 0;
+			
 			white_player = cJSON_GetObjectItem(root, "white");
 			if (!cJSON_IsObject(white_player)) moonfish_json_error(game->argv0);
 			
 			id = cJSON_GetObjectItem(white_player, "id");
-			if (!cJSON_IsString(id)) moonfish_json_error(game->argv0);
-			
-			if (!strcmp(id->valuestring, game->username)) white = 1;
-			else white = 0;
+			if (id != NULL && !cJSON_IsNull(id))
+			{
+				if (!cJSON_IsString(id)) moonfish_json_error(game->argv0);
+				if (!strcmp(id->valuestring, game->username)) white = 1;
+			}
 		}
 		else
 		{
