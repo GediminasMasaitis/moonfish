@@ -2,14 +2,22 @@ image: alpine/latest
 packages:
   - build-base
   - python3
+  - bearssl-dev
 sources:
   - https://git.sr.ht/~zamfofex/moonfish
   - https://github.com/thomasahle/sunfish#10e93383eae345c2b700657afe33b862604af20a
+  - https://github.com/DaveGamble/cJSON#v1.7.16
 tasks:
+  - build-cjson: |
+      cd cJSON
+      make
+      mkdir cjson
+      mv cJSON.h cjson
   - build: |
       cp sunfish/nnue/models/tanh.pickle moonfish
       cd moonfish
-      make LDFLAGS=-static inbuilt_network=yes moonfish play
+      make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON' inbuilt_network=yes all
 artifacts:
   - moonfish/moonfish
   - moonfish/play
+  - moonfish/lichess
