@@ -570,7 +570,7 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 			fprintf(stderr, "%s: could not make move '%s' in game '%s'\n", game->argv0, move, game->id);
 			snprintf(line, sizeof line, "POST /api/bot/game/%s/resign", game->id);
 			if (moonfish_basic_request(game->argv0, game->name, game->port, game->token, line, "", ""))
-				fprintf(stderr, "%s: could not make resign game '%s'\n", game->argv0, game->id);
+				fprintf(stderr, "%s: could not resign game '%s'\n", game->argv0, game->id);
 			break;
 		}
 	}
