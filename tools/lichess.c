@@ -578,6 +578,8 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 	fprintf(in, "isready\n");
 	moonfish_wait(out, "readyok");
 	fprintf(in, "quit\n");
+	fclose(in);
+	fclose(out);
 }
 
 static void *moonfish_handle_game(void *data)

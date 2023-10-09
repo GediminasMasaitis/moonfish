@@ -35,6 +35,7 @@ int main(int argc, char **argv)
 	else file = fmemopen(moonfish_network, 1139, "rb");
 	
 #else
+	
 	if (argc != 2)
 	{
 		fprintf(stderr, "usage: %s <file-name>\n", argv[0]);
