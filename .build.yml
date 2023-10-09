@@ -9,7 +9,7 @@ tasks:
   - build: |
       cp sunfish/nnue/models/tanh.pickle moonfish
       cd moonfish
-      make LDFLAGS=-static inbuilt_network=yes all
+      make LDFLAGS=-static inbuilt_network=yes moonfish play
 artifacts:
   - moonfish/moonfish
   - moonfish/play

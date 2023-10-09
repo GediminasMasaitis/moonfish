@@ -9,6 +9,7 @@
 #include <signal.h>
 
 #include "../moonfish.h"
+#include "tools.h"
 
 struct moonfish_fancy
 {
@@ -23,68 +24,6 @@ struct moonfish_fancy
 	char *argv0;
 	int x, y;
 };
-
-static int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
-{
-	int p1[2], p2[2];
-	int pid;
-	
-	if (pipe(p1) == -1) return 1;
-	if (pipe(p2) == -1) return 1;
-	
-	pid = fork();
-	if (pid == -1) return 1;
-	
-	if (pid)
-	{
-		*in = p1[1];
-		*out = p2[0];
-		close(p1[0]);
-		close(p2[1]);
-		return 0;
-	}
-	
-	dup2(p1[0], 0);
-	dup2(p2[1], 1);
-	
-	close(p1[0]);
-	close(p1[1]);
-	close(p2[0]);
-	close(p2[1]);
-	
-	execvp(argv[0], argv);
-	fprintf(stderr, "%s: %s: %s", argv0, argv[0], strerror(errno));
-	
-	exit(1);
-}
-
-static char *moonfish_next(FILE *file)
-{
-	static char line[2048];
-	
-	for (;;)
-	{
-		if (fgets(line, sizeof line, file) == NULL)
-			return NULL;
-		return line;
-	}
-}
-
-static char *moonfish_wait(FILE *file, char *name)
-{
-	char *line, *arg;
-	
-	for (;;)
-	{
-		line = moonfish_next(file);
-		if (line == NULL) exit(1);
-		
-		arg = strtok(line, "\r\n\t ");
-		if (arg == NULL) continue;
-		if (!strcmp(line, name))
-			return strtok(NULL, "\r\n\t ");
-	}
-}
 
 static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 {
@@ -350,7 +289,7 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	
 	fprintf(in, "go wtime %d btime %d", white_time, black_time);
 	if (fancy->increment > 0)
-		fprintf(in, "winc %d binc %d", fancy->increment * 1000, fancy->increment * 1000);
+		fprintf(in, " winc %d binc %d", fancy->increment * 1000, fancy->increment * 1000);
 	fprintf(in, "\n");
 	
 	arg = moonfish_wait(out, "bestmove");
@@ -546,8 +485,8 @@ int main(int argc, char **argv)
 		moonfish_go(fancy, names + 1, name, in, out);
 		name += strlen(name);
 		moonfish_reset_time(fancy);
-		pthread_mutex_unlock(fancy->mutex);
 		moonfish_fancy(fancy);
+		pthread_mutex_unlock(fancy->mutex);
 	}
 	
 	printf("\x1B[?1000h");

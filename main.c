@@ -23,11 +23,7 @@ int main(int argc, char **argv)
 	
 	if (argc < 1) return 1;
 	
-	if (argc != 2 && moonfish_network == NULL)
-	{
-		fprintf(stderr, "usage: %s <file-name>\n", argv[0]);
-		return 1;
-	}
+#ifdef MOONFISH_INBUILT_NET
 	
 	if (argc > 2)
 	{
@@ -35,15 +31,26 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
+	if (argc >= 2) file = fopen(argv[1], "rb");
+	else file = fmemopen(moonfish_network, 1139, "rb");
+	
+#else
+	if (argc != 2)
+	{
+		fprintf(stderr, "usage: %s <file-name>\n", argv[0]);
+		return 1;
+	}
+	
+	file = fopen(argv[1], "rb");
+	
+#endif
+	
 	ctx = malloc(sizeof *ctx);
 	if (ctx == NULL)
 	{
 		perror(argv[0]);
 		return 1;
 	}
-	
-	if (argc >= 2) file = fopen(argv[1], "rb");
-	else file = fmemopen(moonfish_network, 1139, "rb");
 	
 	if (file == NULL)
 	{
