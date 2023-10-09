@@ -7,6 +7,7 @@
 !/moonfish.h
 !/convert.py
 !/tools
+!/tools/tools.h
 !/tools/*.c
 !/net
 !/net/*.c
