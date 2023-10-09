@@ -318,6 +318,7 @@ static void moonfish_request(
 static int moonfish_response(br_ssl_engine_context *ctx, br_sslio_context *io_ctx, char *argv0)
 {
 	static char success[] = "HTTP/1.0 2";
+	static char success1[] = "HTTP/1.1 2";
 	
 	char line[sizeof success];
 	char prev, cur;
@@ -329,7 +330,9 @@ static int moonfish_response(br_ssl_engine_context *ctx, br_sslio_context *io_ct
 		exit(1);
 	}
 	
-	if (strcmp(line, success)) return 1;
+	if (strncmp(line, success, sizeof line - 1))
+	if (strncmp(line, success1, sizeof line - 1))
+		return 1;
 	
 	prev = 0;
 	for (;;)
