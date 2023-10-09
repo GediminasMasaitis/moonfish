@@ -129,12 +129,12 @@ static void moonfish_move_king(struct moonfish *ctx, struct moonfish_move **move
 	moonfish_jump(ctx, moves, from, 1);
 	moonfish_jump(ctx, moves, from, -1);
 	
-	if (from == 24)
+	if (!ctx->white && from == 24)
 	{
 		if (ctx->castle.black_oo) moonfish_castle_low(ctx, moves, from);
 		if (ctx->castle.black_ooo) moonfish_castle_high(ctx, moves, from);
 	}
-	if (from == 25)
+	if (ctx->white && from == 25)
 	{
 		if (ctx->castle.white_oo) moonfish_castle_high(ctx, moves, from);
 		if (ctx->castle.white_ooo) moonfish_castle_low(ctx, moves, from);
@@ -275,11 +275,22 @@ void moonfish_play(struct moonfish *ctx, struct moonfish_move *move)
 	if (move->piece == moonfish_our_king)
 	{
 		x0 = 0;
-		if (move->from == 24 && move->to == 22) x0 = 1, x1 = 3, ctx->castle.black_oo = 0;
-		if (move->from == 24 && move->to == 26) x0 = 8, x1 = 5, ctx->castle.black_ooo = 0;
-		if (move->from == 25 && move->to == 27) x0 = 8, x1 = 6, ctx->castle.white_oo = 0;
-		if (move->from == 25 && move->to == 23) x0 = 1, x1 = 4, ctx->castle.white_ooo = 0;
+		if (move->from == 24 && move->to == 22) x0 = 1, x1 = 3;
+		if (move->from == 24 && move->to == 26) x0 = 8, x1 = 5;
+		if (move->from == 25 && move->to == 27) x0 = 8, x1 = 6;
+		if (move->from == 25 && move->to == 23) x0 = 1, x1 = 4;
 		if (x0) ctx->board[x0 + 20] = moonfish_empty, ctx->board[x1 + 20] = moonfish_our_rook;
+		
+		if (ctx->white)
+		{
+			ctx->castle.white_oo = 0;
+			ctx->castle.white_ooo = 0;
+		}
+		else
+		{
+			ctx->castle.black_oo = 0;
+			ctx->castle.black_ooo = 0;
+		}
 	}
 	
 	if (move->piece == moonfish_our_rook)
@@ -293,6 +304,20 @@ void moonfish_play(struct moonfish *ctx, struct moonfish_move *move)
 		{
 			if (ctx->white) ctx->castle.white_oo = 0;
 			else ctx->castle.black_ooo = 0;
+		}
+	}
+	
+	if (move->captured == moonfish_their_rook)
+	{
+		if (move->to == 98)
+		{
+			if (ctx->white) ctx->castle.black_oo = 0;
+			else ctx->castle.white_ooo = 0;
+		}
+		if (move->to == 91)
+		{
+			if (ctx->white) ctx->castle.black_ooo = 0;
+			else ctx->castle.white_oo = 0;
 		}
 	}
 	
