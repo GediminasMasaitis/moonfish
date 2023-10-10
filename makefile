@@ -31,4 +31,4 @@ lichess: tools/tools.h tools/lichess.c tools/utils.c tools/play.c
 all: moonfish play lichess
 
 clean:
-	$(RM) moonfish play tanh.moon tanh.o
+	$(RM) moonfish play lichess tanh.moon tanh.o
