@@ -1,6 +1,9 @@
 moonfish
 ===
 
+[![builds.sr.ht status](https://builds.sr.ht/~zamfofex/moonfish/commits/main.svg)](https://builds.sr.ht/~zamfofex/moonfish/commits/main)
+[![Lichess rapid rating](https://lichess-shield.vercel.app/api?username=munfish&format=rapid)](https://lichess.org/@/munfish)
+
 **moonfish** is a chess bot inspired by [sunfish], written in C rather than Python. It is not nearly as complete, but it works well enough!
 
 [sunfish]: <https://github.com/thomasahle/sunfish>
@@ -11,6 +14,7 @@ features
 - very simple NNUE evaluation (same as sunfish)
 - alpha/beta pruning search
 - cute custom UCI TUI
+- custom Lichess integration
 
 limitations
 ---
