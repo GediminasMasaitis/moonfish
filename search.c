@@ -102,8 +102,6 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
-			char s[10];
-			
 			moonfish_play(ctx, move);
 			
 			if (!moonfish_validate(ctx))
@@ -114,9 +112,6 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 			
 			score = -moonfish_search(ctx, -10 * moonfish_omega, 10 * moonfish_omega, 3);
 			moonfish_unplay(ctx, move);
-			
-			moonfish_to_uci(s, move, ctx->white);
-			printf("%s %d\n", s, score);
 			
 			if (score > best_score)
 			{
