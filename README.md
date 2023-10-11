@@ -32,6 +32,7 @@ These are things that I plan to fix eventually.
 - no support for `go infinite` or `go mate`
 - no move name or FEN validation (may lead to potential exploits)
 - the bot will ignore time control information
+- search is single threaded
 
 building
 ---
