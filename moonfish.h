@@ -22,7 +22,7 @@ enum
 	moonfish_outside = 0,
 	moonfish_empty = 0xFF,
 	
-	moonfish_omega = 10000000
+	moonfish_omega = 5000000
 };
 
 struct moonfish_nnue
@@ -66,8 +66,6 @@ void moonfish_moves(struct moonfish *ctx, struct moonfish_move *moves, unsigned 
 
 void moonfish_play(struct moonfish *ctx, struct moonfish_move *move);
 void moonfish_unplay(struct moonfish *ctx, struct moonfish_move *move);
-
-void moonfish_show(struct moonfish *ctx);
 
 int moonfish_tanh(int value);
 

@@ -48,41 +48,6 @@ static int moonfish_evaluate(struct moonfish *ctx)
 	return score * 360 + scale * ctx->nnue.scale * 360 / 256;
 }
 
-static int moonfish_quiesce(struct moonfish *ctx, int alpha, int beta, int depth)
-{
-	int x, y;
-	struct moonfish_move moves[32];
-	struct moonfish_move *move;
-	int score;
-	
-	score = moonfish_evaluate(ctx);
-	if (depth == 0) return score;
-	
-	if (score >= beta) return beta;
-	if (alpha < score) alpha = score;
-	
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
-	{
-		moonfish_moves(ctx, moves, (x + 1) + (y + 2) * 10);
-		
-		for (move = moves ; move->piece != moonfish_outside ; move++)
-		{
-			if (move->captured == moonfish_empty) continue;
-			if (move->captured == moonfish_their_king) return moonfish_omega * (4 + depth);
-			
-			moonfish_play(ctx, move);
-			score = -moonfish_quiesce(ctx, -beta, -alpha, depth - 1);
-			moonfish_unplay(ctx, move);
-			
-			if (score >= beta) return beta;
-			if (score > alpha) alpha = score;
-		}
-	}
-	
-	return alpha;
-}
-
 static int moonfish_search(struct moonfish *ctx, int alpha, int beta, int depth)
 {
 	int x, y;
@@ -90,7 +55,14 @@ static int moonfish_search(struct moonfish *ctx, int alpha, int beta, int depth)
 	struct moonfish_move *move;
 	int score;
 	
-	if (depth == 0) return moonfish_quiesce(ctx, alpha, beta, 2);
+	if (depth <= 0)
+	{
+		score = moonfish_evaluate(ctx);
+		if (depth <= -3) return score;
+		
+		if (score >= beta) return beta;
+		if (alpha < score) alpha = score;
+	}
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
@@ -99,7 +71,8 @@ static int moonfish_search(struct moonfish *ctx, int alpha, int beta, int depth)
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
-			if (move->captured == moonfish_their_king) return moonfish_omega * depth;
+			if (depth <= 0 && move->captured == moonfish_empty) continue;
+			if (move->captured == moonfish_their_king) return moonfish_omega * (depth + 10);
 			
 			moonfish_play(ctx, move);
 			score = -moonfish_search(ctx, -beta, -alpha, depth - 1);
@@ -129,6 +102,8 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
+			char s[10];
+			
 			moonfish_play(ctx, move);
 			
 			if (!moonfish_validate(ctx))
@@ -137,8 +112,11 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 				continue;
 			}
 			
-			score = -moonfish_search(ctx, -10 * moonfish_omega, 10 * moonfish_omega, 4);
+			score = -moonfish_search(ctx, -10 * moonfish_omega, 10 * moonfish_omega, 3);
 			moonfish_unplay(ctx, move);
+			
+			moonfish_to_uci(s, move, ctx->white);
+			printf("%s %d\n", s, score);
 			
 			if (score > best_score)
 			{

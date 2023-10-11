@@ -4,22 +4,14 @@
 
 #include "moonfish.h"
 
-static char *moonfish_strdup(char *str)
-{
-	char *result;
-	result = malloc(strlen(str) + 1);
-	strcpy(result, str);
-	return result;
-}
-
 int main(int argc, char **argv)
 {
+	static char line[2048];
 	FILE *file;
 	struct moonfish *ctx;
-	char line[512], *arg;
+	char *arg;
 	struct moonfish_move move;
 	char name[6];
-	int score;
 	
 	if (argc < 1) return 1;
 	
@@ -73,7 +65,6 @@ int main(int argc, char **argv)
 	printf("   (moonfish by zamfofex)\n");
 	printf("   (inspired by sunfish by tahle)\n");
 	printf("   (simple UCI interface)\n");
-	printf("   (try typing 'help')\n");
 	
 	printf("\n");
 	printf(
@@ -105,46 +96,11 @@ int main(int argc, char **argv)
 		arg = strtok(line, "\r\n\t ");
 		if (arg == NULL) continue;
 		
-		if (!strcmp(arg, "play"))
-		{
-			while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
-				moonfish_play_uci(ctx, arg);
-		}
-		else if (!strcmp(arg, "go"))
+		if (!strcmp(arg, "go"))
 		{
 			moonfish_best_move(ctx, &move);
 			moonfish_to_uci(name, &move, ctx->white);
 			printf("bestmove %s\n", name);
-		}
-		else if (!strcmp(arg, "eval"))
-		{
-			score = moonfish_best_move(ctx, &move);
-			printf("score %d\n", score / 127);
-		}
-		else if (!strcmp(arg, "show"))
-		{
-			moonfish_show(ctx);
-		}
-		else if (!strcmp(arg, "restart"))
-		{
-			moonfish_chess(ctx);
-		}
-		else if (!strcmp(arg, "fen"))
-		{
-			arg = strtok(NULL, "\r\n");
-			if (arg == NULL)
-			{
-				fprintf(stderr, "malformed 'fen' command\n");
-				free(ctx);
-				return 1;
-			}
-			moonfish_fen(ctx, arg);
-		}
-		else if (!strcmp(arg, "echo"))
-		{
-			arg = strtok(NULL, "\r\n");
-			if (arg == NULL) arg = "";
-			printf("%s\n", arg);
 		}
 		else if (!strcmp(arg, "quit"))
 		{
@@ -170,9 +126,12 @@ int main(int argc, char **argv)
 				{
 					do arg--;
 					while (*arg == '\t' || *arg == ' ');
-					arg = moonfish_strdup(arg);
-					strtok(arg, "\r\n\t ");
-					free(arg);
+					strcpy(line, arg);
+					strtok(line, "\r\n\t ");
+				}
+				else
+				{
+					strtok("", "\r\n\t ");
 				}
 			}
 			else if (!strcmp(arg, "startpos"))
@@ -206,28 +165,9 @@ int main(int argc, char **argv)
 		else if (!strcmp(arg, "debug") || !strcmp(arg, "setoption") || !strcmp(arg, "ucinewgame") || !strcmp(arg, "stop"))
 		{
 		}
-		else if (!strcmp(arg, "help"))
-		{
-			printf("   'show'          - shows the current position as ASCII\n");
-			printf("   'play <moves>'  - plays the given moves on the current position\n");
-			printf("   'eval'          - shows the evaluation of the current position\n");
-			printf("   'go'            - finds the best move in the current position\n");
-			printf("   'restart'       - resets the board to the initial position\n");
-			printf("   'fen <FEN>'     - sets the board to the given FEN\n");
-			printf("   'echo <message> - shows the given message (useful for scripts)\n");
-			printf("   'quit'          - self-explanatory\n");
-			printf("   for UCI compatibility:\n");
-			printf("   'debug', 'setoption' - ignored\n");
-			printf("   'ucinewgame', 'stop' - ignored\n");
-			printf("   'uci', 'isready'     - handled per UCI\n");
-			printf("   'position startpos [moves <moves>]'  - equivalent to 'restart' then 'play <moves>'\n");
-			printf("   'position fen <FEN> [moves <moves>]' - equivalent to 'fen <FEN>' then 'play <moves>'\n");
-		}
 		else
 		{
 			fprintf(stderr, "%s: unknown command '%s'\n", argv[0], arg);
-			free(ctx);
-			return 1;
 		}
 		
 		fflush(stdout);
