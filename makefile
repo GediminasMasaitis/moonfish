@@ -15,8 +15,8 @@ tanh.moon: tanh.pickle
 
 else
 
-moonfish: moonfish.h *.c net/none.c
-	$(cc) -o moonfish net/none.c *.c
+moonfish: moonfish.h *.c
+	$(cc) -o moonfish *.c
 
 endif
 
