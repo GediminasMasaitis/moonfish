@@ -34,7 +34,7 @@ int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
 	close(p2[1]);
 	
 	execvp(argv[0], argv);
-	fprintf(stderr, "%s: %s: %s", argv0, argv[0], strerror(errno));
+	fprintf(stderr, "%s: %s: %s\n", argv0, argv[0], strerror(errno));
 	
 	exit(1);
 }
