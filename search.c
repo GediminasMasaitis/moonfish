@@ -93,7 +93,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 	struct moonfish_move *move;
 	int score, best_score;
 	
-	best_score = -50 * moonfish_omega;
+	best_score = -200 * moonfish_omega;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
@@ -110,7 +110,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 				continue;
 			}
 			
-			score = -moonfish_search(ctx, -10 * moonfish_omega, 10 * moonfish_omega, 3);
+			score = -moonfish_search(ctx, -100 * moonfish_omega, 100 * moonfish_omega, 3);
 			moonfish_unplay(&ctx->chess, move);
 			
 			if (score > best_score)
