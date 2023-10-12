@@ -38,7 +38,7 @@ static int moonfish_evaluate(struct moonfish *ctx)
 	{
 		hidden[i] = 0;
 		for (j = 0 ; j < 18 ; j++)
-			hidden[i] += ctx->nnue.layer1[i * 18 + j] * moonfish_tanh(features[i]) / 127;
+			hidden[i] += ctx->nnue.layer1[i * 18 + j] * moonfish_tanh(features[j]) / 127;
 	}
 	
 	score = 0;
