@@ -15,7 +15,7 @@ static int moonfish_evaluate(struct moonfish *ctx)
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		piece = ctx->board[(x + 1) + (y + 2) * 10];
+		piece = ctx->chess.board[(x + 1) + (y + 2) * 10];
 		if (piece == moonfish_empty) continue;
 		
 		color = (piece >> 4) - 1;
@@ -67,16 +67,16 @@ static int moonfish_search(struct moonfish *ctx, int alpha, int beta, int depth)
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		moonfish_moves(ctx, moves, (x + 1) + (y + 2) * 10);
+		moonfish_moves(&ctx->chess, moves, (x + 1) + (y + 2) * 10);
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
 			if (depth <= 0 && move->captured == moonfish_empty) continue;
 			if (move->captured == moonfish_their_king) return moonfish_omega * (depth + 10);
 			
-			moonfish_play(ctx, move);
+			moonfish_play(&ctx->chess, move);
 			score = -moonfish_search(ctx, -beta, -alpha, depth - 1);
-			moonfish_unplay(ctx, move);
+			moonfish_unplay(&ctx->chess, move);
 			
 			if (score >= beta) return beta;
 			if (score > alpha) alpha = score;
@@ -98,20 +98,20 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		moonfish_moves(ctx, moves, (x + 1) + (y + 2) * 10);
+		moonfish_moves(&ctx->chess, moves, (x + 1) + (y + 2) * 10);
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
-			moonfish_play(ctx, move);
+			moonfish_play(&ctx->chess, move);
 			
-			if (!moonfish_validate(ctx))
+			if (!moonfish_validate(&ctx->chess))
 			{
-				moonfish_unplay(ctx, move);
+				moonfish_unplay(&ctx->chess, move);
 				continue;
 			}
 			
 			score = -moonfish_search(ctx, -10 * moonfish_omega, 10 * moonfish_omega, 3);
-			moonfish_unplay(ctx, move);
+			moonfish_unplay(&ctx->chess, move);
 			
 			if (score > best_score)
 			{

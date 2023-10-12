@@ -1,6 +1,6 @@
 #include "moonfish.h"
 
-static struct moonfish_move *moonfish_create_move(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from, unsigned char to)
+static struct moonfish_move *moonfish_create_move(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from, unsigned char to)
 {
 	(*moves)->from = from;
 	(*moves)->to = to;
@@ -11,7 +11,7 @@ static struct moonfish_move *moonfish_create_move(struct moonfish *ctx, struct m
 	return (*moves)++;
 }
 
-static char moonfish_delta(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from, unsigned char *to, signed char delta)
+static char moonfish_delta(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from, unsigned char *to, signed char delta)
 {
 	*to += delta;
 	if (ctx->board[*to] <= moonfish_our_king) return 0;
@@ -20,19 +20,19 @@ static char moonfish_delta(struct moonfish *ctx, struct moonfish_move **moves, u
 	return 1;
 }
 
-static void moonfish_slide(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from, signed char delta)
+static void moonfish_slide(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from, signed char delta)
 {
 	unsigned char to;
 	to = from;
 	while (moonfish_delta(ctx, moves, from, &to, delta)) { }
 }
 
-static void moonfish_jump(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from, signed char delta)
+static void moonfish_jump(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from, signed char delta)
 {
 	moonfish_delta(ctx, moves, from, &from, delta);
 }
 
-static void moonfish_move_knight(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_move_knight(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	moonfish_jump(ctx, moves, from, 21);
 	moonfish_jump(ctx, moves, from, 19);
@@ -44,7 +44,7 @@ static void moonfish_move_knight(struct moonfish *ctx, struct moonfish_move **mo
 	moonfish_jump(ctx, moves, from, -12);
 }
 
-static void moonfish_move_bishop(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_move_bishop(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	moonfish_slide(ctx, moves, from, 11);
 	moonfish_slide(ctx, moves, from, 9);
@@ -52,7 +52,7 @@ static void moonfish_move_bishop(struct moonfish *ctx, struct moonfish_move **mo
 	moonfish_slide(ctx, moves, from, -11);
 }
 
-static void moonfish_move_rook(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_move_rook(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	moonfish_slide(ctx, moves, from, 10);
 	moonfish_slide(ctx, moves, from, -10);
@@ -60,13 +60,13 @@ static void moonfish_move_rook(struct moonfish *ctx, struct moonfish_move **move
 	moonfish_slide(ctx, moves, from, -1);
 }
 
-static void moonfish_move_queen(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_move_queen(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	moonfish_move_rook(ctx, moves, from);
 	moonfish_move_bishop(ctx, moves, from);
 }
 
-static char moonfish_attacked(struct moonfish *ctx, unsigned char from, unsigned char to)
+static char moonfish_attacked(struct moonfish_chess *ctx, unsigned char from, unsigned char to)
 {
 	int check;
 	ctx->board[from] = moonfish_empty;
@@ -77,7 +77,7 @@ static char moonfish_attacked(struct moonfish *ctx, unsigned char from, unsigned
 	return check;
 }
 
-static void moonfish_castle_low(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_castle_low(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	unsigned char to;
 	
@@ -92,7 +92,7 @@ static void moonfish_castle_low(struct moonfish *ctx, struct moonfish_move **mov
 	moonfish_create_move(ctx, moves, from, from - 2);
 }
 
-static void moonfish_castle_high(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_castle_high(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	unsigned char to;
 	
@@ -107,7 +107,7 @@ static void moonfish_castle_high(struct moonfish *ctx, struct moonfish_move **mo
 	moonfish_create_move(ctx, moves, from, from + 2);
 }
 
-static void moonfish_move_king(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_move_king(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	moonfish_jump(ctx, moves, from, 1 + 10);
 	moonfish_jump(ctx, moves, from, -1 + 10);
@@ -130,7 +130,7 @@ static void moonfish_move_king(struct moonfish *ctx, struct moonfish_move **move
 	}
 }
 
-static void moonfish_move_pawn(struct moonfish *ctx, struct moonfish_move **moves, unsigned char from)
+static void moonfish_move_pawn(struct moonfish_chess *ctx, struct moonfish_move **moves, unsigned char from)
 {
 	struct moonfish_move *move;
 	unsigned char promotion;
@@ -168,7 +168,7 @@ static void moonfish_move_pawn(struct moonfish *ctx, struct moonfish_move **move
 	}
 }
 
-void moonfish_moves(struct moonfish *ctx, struct moonfish_move *moves, unsigned char from)
+void moonfish_moves(struct moonfish_chess *ctx, struct moonfish_move *moves, unsigned char from)
 {
 	unsigned char piece;
 	piece = ctx->board[from];
@@ -181,7 +181,7 @@ void moonfish_moves(struct moonfish *ctx, struct moonfish_move *moves, unsigned 
 	moves->piece = moonfish_outside;
 }
 
-static void moonfish_swap(struct moonfish *ctx, int i, int j)
+static void moonfish_swap(struct moonfish_chess *ctx, int i, int j)
 {
 	unsigned char piece;
 	piece = ctx->board[i];
@@ -189,7 +189,7 @@ static void moonfish_swap(struct moonfish *ctx, int i, int j)
 	ctx->board[j] = piece;
 }
 
-static void moonfish_flip_horizontally(struct moonfish *ctx)
+static void moonfish_flip_horizontally(struct moonfish_chess *ctx)
 {
 	int x, y;
 	
@@ -203,7 +203,7 @@ static void moonfish_flip_horizontally(struct moonfish *ctx)
 	}
 }
 
-static void moonfish_flip_vertically(struct moonfish *ctx)
+static void moonfish_flip_vertically(struct moonfish_chess *ctx)
 {
 	int x, y;
 	
@@ -217,7 +217,7 @@ static void moonfish_flip_vertically(struct moonfish *ctx)
 	}
 }
 
-static void moonfish_rotate(struct moonfish *ctx)
+static void moonfish_rotate(struct moonfish_chess *ctx)
 {
 	int x, y;
 	
@@ -235,7 +235,7 @@ static void moonfish_rotate(struct moonfish *ctx)
 	}
 }
 
-void moonfish_play(struct moonfish *ctx, struct moonfish_move *move)
+void moonfish_play(struct moonfish_chess *ctx, struct moonfish_move *move)
 {
 	int x0, x1;
 	
@@ -294,7 +294,7 @@ void moonfish_play(struct moonfish *ctx, struct moonfish_move *move)
 	moonfish_rotate(ctx);
 }
 
-void moonfish_unplay(struct moonfish *ctx, struct moonfish_move *move)
+void moonfish_unplay(struct moonfish_chess *ctx, struct moonfish_move *move)
 {
 	int x0, x1;
 	
@@ -315,7 +315,7 @@ void moonfish_unplay(struct moonfish *ctx, struct moonfish_move *move)
 	}
 }
 
-void moonfish_chess(struct moonfish *ctx)
+void moonfish_chess(struct moonfish_chess *ctx)
 {
 	int x, y;
 	
@@ -326,7 +326,7 @@ void moonfish_chess(struct moonfish *ctx)
 	moonfish_fen(ctx, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
 }
 
-void moonfish_play_uci(struct moonfish *ctx, char *name)
+void moonfish_play_uci(struct moonfish_chess *ctx, char *name)
 {
 	struct moonfish_move move;
 	int x, y;
@@ -409,7 +409,7 @@ void moonfish_to_uci(char *name, struct moonfish_move *move, int white)
 	}
 }
 
-void moonfish_fen(struct moonfish *ctx, char *fen)
+void moonfish_fen(struct moonfish_chess *ctx, char *fen)
 {
 	int x, y;
 	unsigned char type, color;
@@ -482,7 +482,7 @@ void moonfish_fen(struct moonfish *ctx, char *fen)
 	}
 }
 
-int moonfish_validate(struct moonfish *ctx)
+int moonfish_validate(struct moonfish_chess *ctx)
 {
 	int x, y;
 	struct moonfish_move moves[32];
@@ -500,7 +500,7 @@ int moonfish_validate(struct moonfish *ctx)
 	return 1;
 }
 
-int moonfish_check(struct moonfish *ctx)
+int moonfish_check(struct moonfish_chess *ctx)
 {
 	int valid;
 	struct moonfish_castle castle;

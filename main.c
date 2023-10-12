@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	if (moonfish_nnue(ctx, file))
+	if (moonfish_nnue(&ctx->nnue, file))
 	{
 		fprintf(stderr, "%s: could not parse network\n", argv[0]);
 		fclose(file);
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 		"        `--    *\n\n"
 	);
 	
-	moonfish_chess(ctx);
+	moonfish_chess(&ctx->chess);
 	
 	for (;;)
 	{
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 		if (!strcmp(arg, "go"))
 		{
 			moonfish_best_move(ctx, &move);
-			moonfish_to_uci(name, &move, ctx->white);
+			moonfish_to_uci(name, &move, ctx->chess.white);
 			printf("bestmove %s\n", name);
 		}
 		else if (!strcmp(arg, "quit"))
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 			if (!strcmp(arg, "fen"))
 			{
 				arg = strtok(NULL, "\r\n");
-				moonfish_fen(ctx, arg);
+				moonfish_fen(&ctx->chess, arg);
 				
 				arg = strstr(arg, "moves");
 				if (arg != NULL)
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 			}
 			else if (!strcmp(arg, "startpos"))
 			{
-				moonfish_chess(ctx);
+				moonfish_chess(&ctx->chess);
 			}
 			else
 			{
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 			if (arg != NULL && !strcmp(arg, "moves"))
 			{
 				while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
-					moonfish_play_uci(ctx, arg);
+					moonfish_play_uci(&ctx->chess, arg);
 			}
 		}
 		else if (!strcmp(arg, "uci"))

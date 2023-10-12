@@ -13,7 +13,7 @@
 
 struct moonfish_fancy
 {
-	struct moonfish ctx;
+	struct moonfish_chess chess;
 	int white;
 	int our_time, their_time;
 	long int our_nano, their_nano;
@@ -36,10 +36,10 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 	else
 		printf("\x1B[48;5;69m");
 	
-	if (fancy->white == fancy->ctx.white) y = 7 - y;
+	if (fancy->white == fancy->chess.white) y = 7 - y;
 	else x = 7 - x;
 	
-	piece = fancy->ctx.board[(x + 1) + (y + 2) * 10];
+	piece = fancy->chess.board[(x + 1) + (y + 2) * 10];
 	
 	if (piece == moonfish_empty)
 	{
@@ -47,7 +47,7 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 		return;
 	}
 	
-	if (!fancy->ctx.white) piece ^= 0x30;
+	if (!fancy->chess.white) piece ^= 0x30;
 	
 	if (piece >> 4 == 1)
 		printf("\x1B[38;5;253m");
@@ -113,7 +113,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 	delta = timespec.tv_sec - fancy->timespec.tv_sec;
 	if (timespec.tv_nsec - fancy->timespec.tv_nsec > 500000000L) delta++;
 	
-	if (fancy->white == fancy->ctx.white)
+	if (fancy->white == fancy->chess.white)
 		our_time -= delta;
 	else
 		their_time -= delta;
@@ -183,7 +183,7 @@ static void moonfish_signal(int signal)
 	exit(1);
 }
 
-static int moonfish_play_from(struct moonfish *ctx, struct moonfish_move *found, int x0, int y0, int x1, int y1)
+static int moonfish_play_from(struct moonfish_chess *chess, struct moonfish_move *found, int x0, int y0, int x1, int y1)
 {
 	struct moonfish_move moves[32];
 	struct moonfish_move *move;
@@ -192,15 +192,15 @@ static int moonfish_play_from(struct moonfish *ctx, struct moonfish_move *found,
 	y0 = 9 - y0;
 	y1 = 9 - y1;
 	
-	moonfish_moves(ctx, moves, x0 + (y0 + 1) * 10);
+	moonfish_moves(chess, moves, x0 + (y0 + 1) * 10);
 	
 	for (move = moves ; move->piece != moonfish_outside ; move++)
 	{
 		if (move->to == x1 + (y1 + 1) * 10)
 		{
-			moonfish_play(ctx, move);
-			valid = moonfish_validate(ctx);
-			moonfish_unplay(ctx, move);
+			moonfish_play(chess, move);
+			valid = moonfish_validate(chess);
+			moonfish_unplay(chess, move);
 			
 			if (valid)
 			{
@@ -228,12 +228,12 @@ static void moonfish_reset_time(struct moonfish_fancy *fancy)
 	
 	if (fancy->white)
 	{
-		if (fancy->ctx.white) time = &fancy->their_time, nano = &fancy->their_nano;
+		if (fancy->chess.white) time = &fancy->their_time, nano = &fancy->their_nano;
 		else time = &fancy->our_time, nano = &fancy->our_nano;
 	}
 	else
 	{
-		if (fancy->ctx.white) time = &fancy->our_time, nano = &fancy->our_nano;
+		if (fancy->chess.white) time = &fancy->our_time, nano = &fancy->our_nano;
 		else time = &fancy->their_time, nano = &fancy->their_nano;
 	}
 	
@@ -266,7 +266,7 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	int white_time, black_time;
 	char *arg;
 	
-	if (fancy->white == fancy->ctx.white)
+	if (fancy->white == fancy->chess.white)
 	{
 		white_time = fancy->our_time * 1000 + fancy->our_nano / 1000000;
 		black_time = fancy->their_time * 1000 + fancy->their_nano / 1000000;
@@ -296,7 +296,7 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	strcpy(name, arg);
 	
 	pthread_mutex_lock(fancy->mutex);
-	moonfish_play_uci(&fancy->ctx, arg);
+	moonfish_play_uci(&fancy->chess, arg);
 }
 
 int main(int argc, char **argv)
@@ -475,11 +475,11 @@ int main(int argc, char **argv)
 	if (scanf("[%d;%dR", &oy, &ox) != 2) return 1;
 	oy -= 11;
 	
-	moonfish_chess(&fancy->ctx);
+	moonfish_chess(&fancy->chess);
 	
 	pthread_create(&thread, NULL, &moonfish_start, fancy);
 	
-	if (fancy->white != fancy->ctx.white)
+	if (fancy->white != fancy->chess.white)
 	{
 		*name++ = ' ';
 		moonfish_go(fancy, names + 1, name, in, out);
@@ -494,8 +494,8 @@ int main(int argc, char **argv)
 	
 	for (ch0 = 0 ; ch0 != EOF ; ch0 = getchar())
 	{
-		if (fancy->white && !fancy->ctx.white) continue;
-		if (!fancy->white && fancy->ctx.white) continue;
+		if (fancy->white && !fancy->chess.white) continue;
+		if (!fancy->white && fancy->chess.white) continue;
 		
 		if (ch0 != 0x1B) continue;
 		ch0 = getchar();
@@ -552,15 +552,15 @@ int main(int argc, char **argv)
 			if (x1 == 0) continue;
 			if (y1 == 0) continue;
 			
-			if (moonfish_play_from(&fancy->ctx, &move, fancy->x, fancy->y, x1, y1) == 0)
+			if (moonfish_play_from(&fancy->chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 			{
 				*name++ = ' ';
-				moonfish_to_uci(name, &move, fancy->ctx.white);
+				moonfish_to_uci(name, &move, fancy->chess.white);
 				name += strlen(name);
 				
 				pthread_mutex_lock(fancy->mutex);
 				
-				moonfish_play(&fancy->ctx, &move);
+				moonfish_play(&fancy->chess, &move);
 				moonfish_reset_time(fancy);
 				fancy->x = 0;
 				moonfish_fancy(fancy);

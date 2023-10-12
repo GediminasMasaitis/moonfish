@@ -40,12 +40,17 @@ struct moonfish_castle
 	unsigned int black_oo:1, black_ooo:1;
 };
 
-struct moonfish
+struct moonfish_chess
 {
-	struct moonfish_nnue nnue;
 	unsigned char board[120];
 	unsigned char white;
 	struct moonfish_castle castle;
+};
+
+struct moonfish
+{
+	struct moonfish_nnue nnue;
+	struct moonfish_chess chess;
 };
 
 struct moonfish_move
@@ -57,25 +62,25 @@ struct moonfish_move
 	struct moonfish_castle castle;
 };
 
-int moonfish_nnue(struct moonfish *ctx, FILE *file);
+int moonfish_nnue(struct moonfish_nnue *ctx, FILE *file);
 
-void moonfish_chess(struct moonfish *ctx);
-void moonfish_fen(struct moonfish *ctx, char *fen);
+void moonfish_chess(struct moonfish_chess *ctx);
+void moonfish_fen(struct moonfish_chess *ctx, char *fen);
 
-void moonfish_moves(struct moonfish *ctx, struct moonfish_move *moves, unsigned char from);
+void moonfish_moves(struct moonfish_chess *ctx, struct moonfish_move *moves, unsigned char from);
 
-void moonfish_play(struct moonfish *ctx, struct moonfish_move *move);
-void moonfish_unplay(struct moonfish *ctx, struct moonfish_move *move);
+void moonfish_play(struct moonfish_chess *ctx, struct moonfish_move *move);
+void moonfish_unplay(struct moonfish_chess *ctx, struct moonfish_move *move);
 
 int moonfish_tanh(int value);
 
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *move);
 
-void moonfish_play_uci(struct moonfish *ctx, char *name);
+void moonfish_play_uci(struct moonfish_chess *ctx, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move, int white);
 
-int moonfish_validate(struct moonfish *ctx);
-int moonfish_check(struct moonfish *ctx);
+int moonfish_validate(struct moonfish_chess *ctx);
+int moonfish_check(struct moonfish_chess *ctx);
 
 extern char *moonfish_network;
 
