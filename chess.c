@@ -224,8 +224,7 @@ static void moonfish_rotate(struct moonfish_chess *ctx)
 	moonfish_flip_horizontally(ctx);
 	moonfish_flip_vertically(ctx);
 	
-	if (ctx->white) ctx->white = 0;
-	else ctx->white = 1;
+	ctx->white ^= 1;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
@@ -518,5 +517,5 @@ int moonfish_check(struct moonfish_chess *ctx)
 	
 	ctx->castle = castle;
 	
-	return valid ? 0 : 1;
+	return valid ^ 1;
 }

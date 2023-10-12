@@ -61,7 +61,7 @@ static int moonfish_search(struct moonfish *ctx, int alpha, int beta, int depth)
 		if (depth <= -3) return score;
 		
 		if (score >= beta) return beta;
-		if (alpha < score) alpha = score;
+		if (score > alpha) alpha = score;
 	}
 	
 	for (y = 0 ; y < 8 ; y++)
@@ -89,7 +89,7 @@ static int moonfish_search(struct moonfish *ctx, int alpha, int beta, int depth)
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 {
 	int x, y;
-	struct moonfish_move moves[512];
+	struct moonfish_move moves[32];
 	struct moonfish_move *move;
 	int score, best_score;
 	
