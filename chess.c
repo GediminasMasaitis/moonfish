@@ -264,12 +264,12 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 	
 	if (move->piece == moonfish_our_rook)
 	{
-		if (move->from == 28)
+		if (move->from == 21)
 		{
 			if (chess->white) chess->castle.white_ooo = 0;
 			else chess->castle.black_oo = 0;
 		}
-		if (move->from == 21)
+		if (move->from == 28)
 		{
 			if (chess->white) chess->castle.white_oo = 0;
 			else chess->castle.black_ooo = 0;
@@ -278,15 +278,15 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 	
 	if (move->captured == moonfish_their_rook)
 	{
-		if (move->to == 98)
-		{
-			if (chess->white) chess->castle.black_oo = 0;
-			else chess->castle.white_ooo = 0;
-		}
 		if (move->to == 91)
 		{
 			if (chess->white) chess->castle.black_ooo = 0;
 			else chess->castle.white_oo = 0;
+		}
+		if (move->to == 98)
+		{
+			if (chess->white) chess->castle.black_oo = 0;
+			else chess->castle.white_ooo = 0;
 		}
 	}
 	
