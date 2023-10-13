@@ -44,6 +44,8 @@ static int moonfish_tcp(char *argv0, char *name, char *port)
 		exit(1);
 	}
 	
+	fd = -1;
+	
 	for (info = infos ; info != NULL ; info = info->ai_next)
 	{
 		fd = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
@@ -683,7 +685,7 @@ static void moonfish_handle_events(
 	game = malloc(sizeof *game);
 	if (game == NULL)
 	{
-		fprintf(stderr, "%s: could not allocate game\n", game->argv0);
+		fprintf(stderr, "%s: could not allocate game\n", argv0);
 		exit(1);
 	}
 	
