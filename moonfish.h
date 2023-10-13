@@ -3,6 +3,10 @@
 
 #include <stdio.h>
 
+#ifdef MOONFISH_HAS_PTHREAD
+#include <pthread.h>
+#endif
+
 enum
 {
 	moonfish_our_pawn = 0x11,

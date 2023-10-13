@@ -1,11 +1,18 @@
 CFLAGS ?= -ansi -O3 -Wall -Wextra -Wpedantic
 
-cc = $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
+cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
+
+src := *.c
+
+moonfish_cc := $(cc)
+tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
+
+moonfish:
 
 ifeq ($(inbuilt_network),yes)
 
-moonfish: moonfish.h *.c net/tanh.c tanh.o
-	$(cc) -D_POSIX_C_SOURCE=200809L -DMOONFISH_INBUILT_NET -o moonfish net/tanh.c tanh.o *.c
+src += net/tanh.c tanh.o
+moonfish_cc += -D_POSIX_C_SOURCE=200809L -DMOONFISH_INBUILT_NET
 
 tanh.o: tanh.moon
 	$(LD) -r -b binary -o tanh.o tanh.moon
@@ -13,18 +20,22 @@ tanh.o: tanh.moon
 tanh.moon: tanh.pickle
 	python3 convert.py tanh.pickle
 
-else
+endif
 
-moonfish: moonfish.h *.c
-	$(cc) -o moonfish *.c
+ifneq ($(has_pthread),no)
+
+moonfish_cc += -DMOONFISH_HAS_PTHREAD -pthread
 
 endif
 
+moonfish: moonfish.h $(src)
+	$(moonfish_cc) -o moonfish $(src)
+
 play: moonfish.h tools/tools.h tools/play.c tools/utils.c chess.c
-	$(cc) -pthread -D_POSIX_C_SOURCE=200809L -o play tools/play.c tools/utils.c chess.c
+	$(tools_cc) -o play tools/play.c tools/utils.c chess.c
 
 lichess: tools/tools.h tools/lichess.c tools/utils.c tools/play.c
-	$(cc) -pthread -D_POSIX_C_SOURCE=200809L -std=c99 -o lichess tools/lichess.c tools/utils.c -lbearssl -lcjson
+	$(tools_cc) -std=c99 -o lichess tools/lichess.c tools/utils.c -lbearssl -lcjson
 
 .PHONY: all clean
 

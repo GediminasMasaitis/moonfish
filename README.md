@@ -15,6 +15,7 @@ features
 - alpha/beta pruning search
 - cute custom UCI TUI
 - custom Lichess integration
+- optional threaded search support (enabled by default)
 
 limitations
 ---
@@ -32,7 +33,6 @@ These are things that I plan to fix eventually.
 - no support for `go infinite` or `go mate`
 - no move name or FEN validation (may lead to potential exploits)
 - the bot will ignore time control information
-- search is single threaded
 
 building
 ---
@@ -76,7 +76,7 @@ However, note that moonfish comes with its own UCI TUI, called “play”. You c
 license
 ---
 
-[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) &copy; zamfofex 2023
+[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) © zamfofex 2023
 
 [GPL]: <https://www.gnu.org/licenses/>
 [AGPL]: <https://www.gnu.org/licenses/why-affero-gpl.html>
