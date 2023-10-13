@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "moonfish.h"
 
 static int moonfish_evaluate(struct moonfish_chess *chess, struct moonfish_nnue *nnue)
@@ -109,7 +111,7 @@ static void *moonfish_start_search(void *data)
 	return NULL;
 }
 
-int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
+static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
 {
 	int x, y;
 	struct moonfish_move *move, moves[32];
@@ -140,7 +142,8 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 			infos[count].move = *move;
 			infos[count].chess = ctx->chess;
 			infos[count].nnue = &ctx->nnue;
-			infos[count].depth = 3;
+			infos[count].depth = depth;
+			
 			result = pthread_create(&infos[count].thread, NULL, &moonfish_start_search, infos + count);
 			if (result)
 			{
@@ -178,7 +181,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 
 #else
 
-int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
+static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
 {
 	int x, y;
 	struct moonfish_move moves[32];
@@ -202,7 +205,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 				continue;
 			}
 			
-			score = -moonfish_search(&ctx->chess, &ctx->nnue, -100 * moonfish_omega, 100 * moonfish_omega, 3);
+			score = -moonfish_search(&ctx->chess, &ctx->nnue, -100 * moonfish_omega, 100 * moonfish_omega, depth);
 			moonfish_unplay(&ctx->chess, move);
 			
 			if (score > best_score)
@@ -217,3 +220,24 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move)
 }
 
 #endif
+
+int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, int d)
+{
+	time_t t, t0, t1;
+	int i;
+	int score;
+	
+	d /= 4;
+	t0 = time(NULL);
+	
+	for (i = 0 ; i < 8 ; i++)
+	{
+		t = time(NULL);
+		score = moonfish_best_move_depth(ctx, best_move, i);
+		
+		t1 = time(NULL);
+		if ((t1 - t) * 32 > d - (t1 - t0)) break;
+	}
+	
+	return score;
+}

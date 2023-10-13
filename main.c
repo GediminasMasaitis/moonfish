@@ -12,6 +12,7 @@ int main(int argc, char **argv)
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
+	int time;
 	
 	if (argc < 1) return 1;
 	
@@ -98,7 +99,24 @@ int main(int argc, char **argv)
 		
 		if (!strcmp(arg, "go"))
 		{
-			moonfish_best_move(ctx, &move);
+			if (ctx->chess.white) arg = strstr(arg, " wtime ");
+			else arg = strstr(arg, " btime ");
+			
+			if (arg == NULL)
+			{
+				time = 120000;
+			}
+			else
+			{
+				if (sscanf(arg + 6, "%d", &time) != 1)
+				{
+					free(ctx);
+					fprintf(stderr, "%s: malformed 'go' command\n", argv[0]);
+					return 1;
+				}
+			}
+			
+			moonfish_best_move(ctx, &move, time / 1000);
 			moonfish_to_uci(name, &move, ctx->chess.white);
 			printf("bestmove %s\n", name);
 		}
