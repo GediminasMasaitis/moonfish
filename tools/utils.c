@@ -43,12 +43,9 @@ char *moonfish_next(FILE *file)
 {
 	static char line[2048];
 	
-	for (;;)
-	{
-		if (fgets(line, sizeof line, file) == NULL)
-			return NULL;
-		return line;
-	}
+	if (fgets(line, sizeof line, file) == NULL)
+		return NULL;
+	return line;
 }
 
 char *moonfish_wait(FILE *file, char *name)

@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -77,7 +76,7 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 	}
 }
 
-static void moonfish_time(int time, char *name)
+static void moonfish_clock(int time, char *name)
 {
 	printf("   \x1B[48;5;248m\x1B[38;5;235m ");
 	
@@ -132,7 +131,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 		their_time = 0;
 	}
 	
-	moonfish_time(their_time, fancy->their_name);
+	moonfish_clock(their_time, fancy->their_name);
 	
 	for (y = 0 ; y < 8 ; y++)
 	{
@@ -142,7 +141,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 		printf("\x1B[0m\n");
 	}
 	
-	moonfish_time(our_time, fancy->our_name);
+	moonfish_clock(our_time, fancy->our_name);
 	
 	if (done) exit(0);
 }
@@ -183,7 +182,7 @@ static void moonfish_signal(int signal)
 	exit(1);
 }
 
-static int moonfish_play_from(struct moonfish_chess *chess, struct moonfish_move *found, int x0, int y0, int x1, int y1)
+static int moonfish_move_from(struct moonfish_chess *chess, struct moonfish_move *found, int x0, int y0, int x1, int y1)
 {
 	struct moonfish_move moves[32];
 	struct moonfish_move *move;
@@ -468,7 +467,7 @@ int main(int argc, char **argv)
 	for (;;)
 	{
 		ch = getchar();
-		if (ch == EOF) return 0;
+		if (ch == EOF) return 1;
 		if (ch == 0x1B) break;
 	}
 	
@@ -552,7 +551,7 @@ int main(int argc, char **argv)
 			if (x1 == 0) continue;
 			if (y1 == 0) continue;
 			
-			if (moonfish_play_from(&fancy->chess, &move, fancy->x, fancy->y, x1, y1) == 0)
+			if (moonfish_move_from(&fancy->chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 			{
 				*name++ = ' ';
 				moonfish_to_uci(name, &move, fancy->chess.white);
@@ -562,8 +561,8 @@ int main(int argc, char **argv)
 				
 				moonfish_play(&fancy->chess, &move);
 				moonfish_reset_time(fancy);
-				fancy->x = 0;
 				moonfish_fancy(fancy);
+				fancy->x = 0;
 				
 				pthread_mutex_unlock(fancy->mutex);
 				
@@ -574,6 +573,7 @@ int main(int argc, char **argv)
 				moonfish_go(fancy, names + 1, name, in, out);
 				name += strlen(name);
 				moonfish_reset_time(fancy);
+				moonfish_fancy(fancy);
 				pthread_mutex_unlock(fancy->mutex);
 				
 				printf("\x1B[?1000h");
