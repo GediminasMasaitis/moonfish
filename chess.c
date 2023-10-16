@@ -241,6 +241,11 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 	chess->board[move->from] = moonfish_empty;
 	chess->board[move->to] = move->promotion;
 	
+	if (move->piece == moonfish_our_pawn)
+	if ((move->to - move->from) % 10)
+	if (move->captured == moonfish_empty)
+		chess->board[move->to - 10] = moonfish_empty;
+	
 	if (move->piece == moonfish_our_king)
 	{
 		x0 = 0;
@@ -325,9 +330,8 @@ void moonfish_chess(struct moonfish_chess *chess)
 	moonfish_fen(chess, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
 }
 
-void moonfish_play_uci(struct moonfish_chess *chess, char *name)
+void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
 {
-	struct moonfish_move move;
 	int x, y;
 	
 	x = name[0] - 'a';
@@ -339,7 +343,7 @@ void moonfish_play_uci(struct moonfish_chess *chess, char *name)
 		y = 7 - y;
 	}
 	
-	move.from = (x + 1) + (y + 2) * 10;
+	move->from = (x + 1) + (y + 2) * 10;
 	
 	x = name[2] - 'a';
 	y = name[3] - '1';
@@ -350,23 +354,16 @@ void moonfish_play_uci(struct moonfish_chess *chess, char *name)
 		y = 7 - y;
 	}
 	
-	move.to = (x + 1) + (y + 2) * 10;
+	move->to = (x + 1) + (y + 2) * 10;
 	
-	move.piece = chess->board[move.from];
-	move.captured = chess->board[move.to];
-	move.promotion = move.piece;
+	move->piece = chess->board[move->from];
+	move->captured = chess->board[move->to];
+	move->promotion = move->piece;
 	
-	if (move.piece == moonfish_our_pawn)
-	if ((move.to - move.from) % 10)
-	if (move.captured == moonfish_empty)
-		chess->board[move.to - 10] = moonfish_empty;
-	
-	if (name[4] == 'q') move.promotion = moonfish_our_queen;
-	if (name[4] == 'r') move.promotion = moonfish_our_rook;
-	if (name[4] == 'b') move.promotion = moonfish_our_bishop;
-	if (name[4] == 'n') move.promotion = moonfish_our_knight;
-	
-	moonfish_play(chess, &move);
+	if (name[4] == 'q') move->promotion = moonfish_our_queen;
+	if (name[4] == 'r') move->promotion = moonfish_our_rook;
+	if (name[4] == 'b') move->promotion = moonfish_our_bishop;
+	if (name[4] == 'n') move->promotion = moonfish_our_knight;
 }
 
 void moonfish_to_uci(char *name, struct moonfish_move *move, int white)

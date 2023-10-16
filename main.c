@@ -167,7 +167,10 @@ int main(int argc, char **argv)
 			if (arg != NULL && !strcmp(arg, "moves"))
 			{
 				while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
-					moonfish_play_uci(&ctx->chess, arg);
+				{
+					moonfish_from_uci(&ctx->chess, &move, arg);
+					moonfish_play(&ctx->chess, &move);
+				}
 			}
 		}
 		else if (!strcmp(arg, "uci"))

@@ -13,7 +13,7 @@ struct moonfish_ply
 {
 	struct moonfish_chess chess;
 	char name[6];
-	char san[12];
+	char san[16];
 	int white, black, draw;
 	int score;
 	int checkmate;
@@ -168,14 +168,49 @@ static void moonfish_evaluation(struct moonfish_fancy *fancy)
 
 static void moonfish_scoresheet_move(struct moonfish_fancy *fancy, int i)
 {
+	struct moonfish_ply *ply;
+	int checkmate;
+	int score;
+	
+	ply = fancy->plies + i;
+	
 	if (i >= fancy->count) 
 	{
-		printf("%11s", "");
+		printf("%10s", "");
 		return;
 	}
+	
 	if (i == fancy->i) printf("\x1B[48;5;248m\x1B[38;5;235m");
-	printf(" %-7s   ", fancy->plies[i].san);
-	if (i == fancy->i) printf("\x1B[0m");
+	printf(" %s", ply->san);
+	
+	if (ply->checkmate)
+	{
+		checkmate = ply->checkmate;
+		if (checkmate < 0) checkmate *= -1;
+		
+		printf("\x1B[38;5;162m#");
+		
+		if (ply->checkmate > 0) printf("+");
+		else printf("-");
+		
+		if (checkmate < 10)
+			printf("%d", checkmate);
+		else
+			printf("X");
+	}
+	else if (i > 0)
+	{
+		score = ply->score + fancy->plies[i - 1].score;
+		if (fancy->plies[i - 1].checkmate || score > 200) printf("\x1B[38;5;124m?? ");
+		else if (score > 100) printf("\x1B[38;5;173m?  ");
+		else printf("   ");
+	}
+	else
+	{
+		printf("   ");
+	}
+	
+	printf("%*s\x1B[0m", 6 - (int) strlen(ply->san), "");
 }
 
 static void moonfish_scoresheet(struct moonfish_fancy *fancy)
@@ -243,23 +278,117 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 	moonfish_evaluation(fancy);
 	
 	printf("\x1B[%d;24H", fancy->oy + 7);
-	printf("best:%s\n", fancy->pv);
+	printf("best:%s%32s\n", fancy->pv, "");
 	
 	fflush(stdout);
+}
+
+static void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moonfish_move *move)
+{
+	static char names[] = "NBRQK";
+	
+	int x, y;
+	struct moonfish_move moves[32];
+	struct moonfish_move *other_move;
+	char file_ambiguity, rank_ambiguity, ambiguity;
+	int to_x, to_y;
+	int from_x, from_y;
+	
+	from_x = move->from % 10 - 1;
+	from_y = move->from / 10 - 2;
+	
+	to_x = move->to % 10 - 1;
+	to_y = move->to / 10 - 2;
+	
+	if (!chess->white)
+	{
+		from_x = 7 - from_x;
+		from_y = 7 - from_y;
+		to_x = 7 - to_x;
+		to_y = 7 - to_y;
+	}
+	
+	if (move->piece == moonfish_our_pawn)
+	{
+		if (from_x != to_x)
+		{
+			*name++ = from_x + 'a';
+			*name++ = 'x';
+		}
+		
+		*name++ = to_x + 'a';
+		*name++ = to_y + '1';
+		
+		if (move->promotion != moonfish_our_pawn)
+		{
+			*name++ = '=';
+			*name++ = names[(move->promotion & 0xF) - 2];
+		}
+		
+		*name = 0;
+		
+		return;
+	}
+	
+	file_ambiguity = 0;
+	rank_ambiguity = 0;
+	ambiguity = 0;
+	
+	for (y = 0 ; y < 8 ; y++)
+	for (x = 0 ; x < 8 ; x++)
+	{
+		if ((x + 1) + (y + 2) * 10 == move->from) continue;
+		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		
+		for (other_move = moves ; other_move->piece != moonfish_outside ; other_move++)
+		{
+			if (other_move->to != move->to) continue;
+			if (other_move->piece != move->piece) continue;
+			
+			ambiguity = 1;
+			if (other_move->from % 10 - 1 == from_x) file_ambiguity = 1;
+			if (other_move->from / 10 - 2 == from_y) rank_ambiguity = 1;
+		}
+	}
+	
+	*name++ = names[(move->piece & 0xF) - 2];
+	
+	if (ambiguity)
+	{
+		if (file_ambiguity)
+		{
+			if (rank_ambiguity)
+				*name++ = from_x + 'a';
+			*name++ = from_y + '1';
+		}
+		else
+		{
+			*name++ = from_x + 'a';
+		}
+	}
+	
+	if (move->captured != moonfish_empty)
+		*name++ = 'x';
+		
+	*name++ = to_x + 'a';
+	*name++ = to_y + '1';
+	
+	*name = 0;
 }
 
 static void *moonfish_start(void *data)
 {
 	static char line[2048];
+	static struct moonfish_ply ply;
+	static char san[16];
 	
 	struct moonfish_fancy *fancy;
 	char *arg;
 	int score;
 	char *buffer;
-	struct moonfish_ply *ply;
-	int depth;
 	struct pollfd fds;
 	unsigned int i, length;
+	struct moonfish_move move;
 	
 	fancy = data;
 	
@@ -293,18 +422,21 @@ static void *moonfish_start(void *data)
 		arg = strtok_r(line, "\r\n\t ", &buffer);
 		if (arg == NULL) continue;
 		
-		ply = fancy->plies + fancy->i;
-		depth = 0;
+		ply = fancy->plies[fancy->i];
+		ply.depth = 0;
 		
 		for (;;)
 		{
 			arg = strtok_r(NULL, "\r\n\t ", &buffer);
 			if (arg == NULL) break;
 			
+			if (!strcmp(arg, "lowerbound")) break;
+			if (!strcmp(arg, "upperbound")) break;
+			
 			if (!strcmp(arg, "depth"))
 			{
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
-				if (arg == NULL || sscanf(arg, "%d", &depth) != 1)
+				if (arg == NULL || sscanf(arg, "%d", &ply.depth) != 1)
 				{
 					fprintf(stderr, "%s: malformed 'depth' in 'info' command\n", fancy->argv0);
 					exit(1);
@@ -320,16 +452,57 @@ static void *moonfish_start(void *data)
 				{
 					arg = strtok_r(NULL, "\r\n\t ", &buffer);
 					if (arg == NULL) break;
-					length = strlen(arg);
+					moonfish_from_uci(&ply.chess, &move, arg);
+					moonfish_to_san(&ply.chess, san, &move);
+					length = strlen(san);
 					if (i + length > sizeof fancy->pv - 2) break;
+					moonfish_play(&ply.chess, &move);
 					fancy->pv[i++] = ' ';
-					strcpy(fancy->pv + i, arg);
+					strcpy(fancy->pv + i, san);
 					i += length;
 				}
 				
-				fancy->pv[i] = 0;
+				fancy->plies[fancy->i].score = ply.score;
+				fancy->plies[fancy->i].white = ply.white;
+				fancy->plies[fancy->i].black = ply.black;
+				fancy->plies[fancy->i].draw = ply.draw;
+				fancy->plies[fancy->i].checkmate = ply.checkmate;
+				fancy->plies[fancy->i].depth = ply.depth;
 				
 				break;
+			}
+			
+			if (!strcmp(arg, "wdl"))
+			{
+				arg = strtok_r(NULL, "\r\n\t ", &buffer);
+				if (arg == NULL || sscanf(arg, "%d", &ply.white) != 1)
+				{
+					fprintf(stderr, "%s: malformed 'wdl' win in 'info' command\n", fancy->argv0);
+					exit(1);
+				}
+				arg = strtok_r(NULL, "\r\n\t ", &buffer);
+				if (arg == NULL || sscanf(arg, "%d", &ply.draw) != 1)
+				{
+					fprintf(stderr, "%s: malformed 'wdl' draw in 'info' command\n", fancy->argv0);
+					exit(1);
+				}
+				arg = strtok_r(NULL, "\r\n\t ", &buffer);
+				if (arg == NULL || sscanf(arg, "%d", &ply.black) != 1)
+				{
+					fprintf(stderr, "%s: malformed 'wdl' loss in 'info' command\n", fancy->argv0);
+					exit(1);
+				}
+				
+				ply.checkmate = 0;
+				
+				if (!ply.chess.white)
+				{
+					score = ply.white;
+					ply.white = ply.black;
+					ply.black = score;
+				}
+				
+				continue;
 			}
 			
 			if (strcmp(arg, "score")) continue;
@@ -346,21 +519,20 @@ static void *moonfish_start(void *data)
 					exit(1);
 				}
 				
-				ply->score = score;
-				ply->white = 100;
-				ply->black = 100;
-				ply->depth = depth;
-				ply->draw = 0;
-				ply->checkmate = 0;
+				ply.score = score;
+				ply.white = 100;
+				ply.black = 100;
+				ply.draw = 0;
+				ply.checkmate = 0;
 				
-				if (score > 0) ply->white += score;
-				else ply->black -= score;
+				if (score > 0) ply.white += score;
+				else ply.black -= score;
 				
-				if (!ply->chess.white)
+				if (!ply.chess.white)
 				{
-					score = ply->white;
-					ply->white = ply->black;
-					ply->black = score;
+					score = ply.white;
+					ply.white = ply.black;
+					ply.black = score;
 				}
 				
 				continue;
@@ -375,14 +547,13 @@ static void *moonfish_start(void *data)
 					exit(1);
 				}
 				
-				if (!ply->chess.white) score *= -1;
+				if (!ply.chess.white) score *= -1;
 				
-				ply->white = 0;
-				ply->black = 0;
-				ply->draw = 0;
-				ply->checkmate = score;
-				ply->score = 0;
-				ply->depth = depth;
+				ply.white = 0;
+				ply.black = 0;
+				ply.draw = 0;
+				ply.checkmate = score;
+				ply.score = 0;
 				
 				continue;
 			}
@@ -751,9 +922,10 @@ int main(int argc, char **argv)
 				fancy->count = fancy->i + 1;
 				fancy->plies[fancy->i] = fancy->plies[fancy->i - 1];
 				fancy->plies[fancy->i].depth = 0;
+				fancy->plies[fancy->i].score *= -1;
 				
 				moonfish_to_uci(fancy->plies[fancy->i].name, &move, fancy->plies[fancy->i].chess.white);
-				strcpy(fancy->plies[fancy->i].san, fancy->plies[fancy->i].name);
+				moonfish_to_san(&fancy->plies[fancy->i].chess, fancy->plies[fancy->i].san, &move);
 				
 				moonfish_play(&fancy->plies[fancy->i].chess, &move);
 				fancy->x = 0;

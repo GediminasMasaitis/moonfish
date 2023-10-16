@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #include "tools.h"
 
 int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
 {
 	int p1[2], p2[2];
-	int pid;
+	int pid, fd;
 	
 	if (pipe(p1) == -1) return 1;
 	if (pipe(p2) == -1) return 1;
@@ -25,8 +26,16 @@ int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
 		return 0;
 	}
 	
+	fd = open("/dev/null", O_RDONLY);
+	if (fd < 0)
+	{
+		fprintf(stderr, "%s: %s: %s\n", argv0, argv[0], strerror(errno));
+		exit(1);
+	}
+	
 	dup2(p1[0], 0);
 	dup2(p2[1], 1);
+	dup2(p2[1], 2);
 	
 	close(p1[0]);
 	close(p1[1]);

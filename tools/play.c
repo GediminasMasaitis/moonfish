@@ -264,6 +264,7 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 {
 	int white_time, black_time;
 	char *arg;
+	struct moonfish_move move;
 	
 	if (fancy->white == fancy->chess.white)
 	{
@@ -295,7 +296,8 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	strcpy(name, arg);
 	
 	pthread_mutex_lock(fancy->mutex);
-	moonfish_play_uci(&fancy->chess, arg);
+	moonfish_from_uci(&fancy->chess, &move, arg);
+	moonfish_play(&fancy->chess, &move);
 }
 
 int main(int argc, char **argv)

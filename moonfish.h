@@ -80,7 +80,7 @@ int moonfish_tanh(int value);
 
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *move, int time);
 
-void moonfish_play_uci(struct moonfish_chess *chess, char *name);
+void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move, int white);
 
 int moonfish_validate(struct moonfish_chess *chess);
