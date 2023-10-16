@@ -34,7 +34,7 @@ moonfish: moonfish.h $(src)
 play: moonfish.h tools/tools.h tools/play.c tools/utils.c chess.c
 	$(tools_cc) -o play tools/play.c tools/utils.c chess.c
 
-lichess: tools/tools.h tools/lichess.c tools/utils.c tools/play.c
+lichess: tools/tools.h tools/lichess.c tools/utils.c
 	$(tools_cc) -std=c99 -o lichess tools/lichess.c tools/utils.c -lbearssl -lcjson
 
 .PHONY: all clean
