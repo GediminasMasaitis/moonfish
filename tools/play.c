@@ -559,10 +559,10 @@ int main(int argc, char **argv)
 				
 				pthread_mutex_lock(fancy->mutex);
 				
+				fancy->x = 0;
 				moonfish_play(&fancy->chess, &move);
 				moonfish_reset_time(fancy);
 				moonfish_fancy(fancy);
-				fancy->x = 0;
 				
 				pthread_mutex_unlock(fancy->mutex);
 				
