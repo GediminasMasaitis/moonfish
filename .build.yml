@@ -16,8 +16,9 @@ tasks:
   - build: |
       cp sunfish/nnue/models/tanh.pickle moonfish
       cd moonfish
-      make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON' inbuilt_network=yes all
+      make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON' inbuilt_network=yes
 artifacts:
   - moonfish/moonfish
   - moonfish/play
   - moonfish/lichess
+  - moonfish/analyse

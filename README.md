@@ -39,13 +39,13 @@ building
 ---
 
 ~~~
-make
+make moonfish
 ~~~
 
-The UCI TUI, called “play”, may also be built.
+The two UCI TUIs, called “play” and “analyse”, may also be built.
 
 ~~~
-make play
+make play analyse
 ~~~
 
 usage
@@ -61,7 +61,9 @@ python3 convert.py tanh.pickle
 
 Then you can invoke `./moonfish tanh.moon` to start its UCI interface. If you’re using a GUI, make sure to add the path to `tanh.moon` as the sole argument to moonfish.
 
-However, note that moonfish comes with its own UCI TUI, called “play”. You can use it with any UCI engine you’d like! Simply invoke `./play` followed by a time control, then the command of whichever engine you want to play against. The color of your pieces will be decided randomly.
+However, note that moonfish comes with its own UCI TUIs, called “play” and “analyse”. You can use them with any UCI engine you’d like!
+
+To play against a UCI bot, use `./play` followed by a time control, then the command of whichever bot you want to play against. The color of your pieces will be decided randomly.
 
 ~~~
 # (start a game against Stockfish)
@@ -72,6 +74,16 @@ However, note that moonfish comes with its own UCI TUI, called “play”. You c
 
 # (start a game against moonfish)
 ./play 15+10 ./moonfish tanh.moon
+~~~
+
+To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or `initial` for the starting position) in a single argument (use shell quotation marks if necessary) followed by the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
+
+~~~
+# (analyse a game using Stockfish)
+./analyse initial stockfish
+
+# (analyse a game using Leela)
+./analyse initial lc0
 ~~~
 
 license

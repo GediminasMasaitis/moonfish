@@ -7,7 +7,9 @@ src := *.c
 moonfish_cc := $(cc)
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
-moonfish:
+.PHONY: all clean
+
+all: moonfish play lichess analyse
 
 ifeq ($(inbuilt_network),yes)
 
@@ -37,9 +39,8 @@ play: moonfish.h tools/tools.h tools/play.c tools/utils.c chess.c
 lichess: tools/tools.h tools/lichess.c tools/utils.c
 	$(tools_cc) -std=c99 -o lichess tools/lichess.c tools/utils.c -lbearssl -lcjson
 
-.PHONY: all clean
-
-all: moonfish play lichess
+analyse: tools/tools.h tools/analyse.c tools/utils.c chess.c
+	$(tools_cc) -o analyse tools/analyse.c tools/utils.c chess.c
 
 clean:
-	$(RM) moonfish play lichess tanh.moon tanh.o
+	$(RM) moonfish play lichess analyse tanh.moon tanh.o
