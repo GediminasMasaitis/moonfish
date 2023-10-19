@@ -27,20 +27,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	printf("   (moonfish by zamfofex)\n");
-	printf("   (inspired by sunfish by tahle)\n");
-	printf("   (simple UCI interface)\n");
-	
-	printf("\n");
-	printf(
-		"        .-, *  z     *\n"
-		"  *   /  /    z___ *\n"
-		"     |  | *   /-  \\/(\n"
-		"   * |  \\     \\___/\\(\n"
-		" *    \\  \\  *          *\n"
-		"        `--    *\n\n"
-	);
-	
 	ctx->argv0 = argv[0];
 	moonfish_chess(&ctx->chess);
 	
@@ -160,7 +146,5 @@ int main(int argc, char **argv)
 	}
 	
 	free(ctx);
-	
-	printf("   (good night)\n");
 	return 0;
 }

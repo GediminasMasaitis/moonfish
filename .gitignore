@@ -3,8 +3,10 @@
 !/README.md
 !/makefile
 !/.build.yml
+!/minify.sh
 !/moonfish.h
 !/*.c
 !/tools
 !/tools/tools.h
 !/tools/*.c
+/moonfish.c
