@@ -55,6 +55,7 @@ struct moonfish
 {
 	struct moonfish_nnue nnue;
 	struct moonfish_chess chess;
+	char *argv0;
 };
 
 struct moonfish_move

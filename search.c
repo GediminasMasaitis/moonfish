@@ -88,7 +88,7 @@ static int moonfish_search(struct moonfish_chess *chess, struct moonfish_nnue *n
 	return alpha;
 }
 
-#if MOONFISH_HAS_PTHREAD
+#ifdef MOONFISH_HAS_PTHREAD
 
 #include <stdlib.h>
 #include <string.h>
@@ -148,7 +148,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 			if (result)
 			{
 				free(infos);
-				fprintf(stderr, "moonfish: %s\n", strerror(result));
+				fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
 				exit(1);
 			}
 			
@@ -164,7 +164,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 		if (result)
 		{
 			free(infos);
-			fprintf(stderr, "moonfish: %s\n", strerror(result));
+			fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
 			exit(1);
 		}
 		

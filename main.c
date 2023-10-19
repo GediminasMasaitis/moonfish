@@ -77,6 +77,7 @@ int main(int argc, char **argv)
 		"        `--    *\n\n"
 	);
 	
+	ctx->argv0 = argv[0];
 	moonfish_chess(&ctx->chess);
 	
 	for (;;)
