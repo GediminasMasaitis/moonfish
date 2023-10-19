@@ -13,9 +13,9 @@ moonfish
 features
 ---
 
-- very simple NNUE evaluation (same as sunfish)
+- simple HCE based on PSTs
 - alpha/beta pruning search
-- cute custom UCI TUI
+- cute custom UCI TUIs
 - custom Lichess integration
 - optional threaded search support (enabled by default)
 
@@ -29,7 +29,6 @@ These are things that I plan to fix eventually.
   - no underpromotion
 - the TUI will also prevent you from making those kinds of moves
 - the TUI does not detect when the game has ended due to stalemate or checkmate
-- no iterative deepening
 - no transposition table
 - no good move ordering heuristic
 - no support for `go infinite` or `go mate`
@@ -51,15 +50,7 @@ make play analyse
 usage
 ---
 
-moonfish is a UCI bot, which means you can use it with any UCI program (though see “limitations” above).
-
-However, note that you need an NNUE network in order for it to work! You can take `tanh.pickle` from [sunfish]’s repository, then convert it to moonfish’s format using the `convert.py` script. This should produce a `tanh.moon` file in the same directory, ready to be used for moonfish!
-
-~~~
-python3 convert.py tanh.pickle
-~~~
-
-Then you can invoke `./moonfish tanh.moon` to start its UCI interface. If you’re using a GUI, make sure to add the path to `tanh.moon` as the sole argument to moonfish.
+moonfish is a UCI bot, which means you can select it and use it with any UCI program (though see “limitations” above). You can invoke `./moonfish` to start its UCI interface.
 
 However, note that moonfish comes with its own UCI TUIs, called “play” and “analyse”. You can use them with any UCI engine you’d like!
 
@@ -73,7 +64,7 @@ To play against a UCI bot, use `./play` followed by a time control, then the com
 ./play 5+2 lc0
 
 # (start a game against moonfish)
-./play 15+10 ./moonfish tanh.moon
+./play 15+10 ./moonfish
 ~~~
 
 To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or `initial` for the starting position) in a single argument (use shell quotation marks if necessary) followed by the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
@@ -84,6 +75,9 @@ To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or 
 
 # (analyse a game using Leela)
 ./analyse initial lc0
+
+# (analyse a game using Leela, showing win/draw/loss evaluation)
+./analyse initial lc0 --show-wdl
 ~~~
 
 license
