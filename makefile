@@ -11,23 +11,8 @@ tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
 all: moonfish play lichess analyse
 
-ifeq ($(inbuilt_network),yes)
-
-src += net/tanh.c tanh.o
-moonfish_cc += -D_POSIX_C_SOURCE=200809L -DMOONFISH_INBUILT_NET
-
-tanh.o: tanh.moon
-	$(LD) -r -b binary -o tanh.o tanh.moon
-
-tanh.moon: tanh.pickle
-	python3 convert.py tanh.pickle
-
-endif
-
 ifneq ($(has_pthread),no)
-
 moonfish_cc += -DMOONFISH_HAS_PTHREAD -pthread
-
 endif
 
 moonfish: moonfish.h $(src)
@@ -43,4 +28,4 @@ analyse: tools/tools.h tools/analyse.c tools/utils.c chess.c
 	$(tools_cc) -o analyse tools/analyse.c tools/utils.c chess.c
 
 clean:
-	$(RM) moonfish play lichess analyse tanh.moon tanh.o
+	$(RM) moonfish play lichess analyse

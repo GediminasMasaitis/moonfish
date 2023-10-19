@@ -1,43 +1,24 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "moonfish.h"
 
 int main(int argc, char **argv)
 {
 	static char line[2048];
-	FILE *file;
 	struct moonfish *ctx;
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
 	int time;
 	
-	if (argc < 1) return 1;
-	
-#ifdef MOONFISH_INBUILT_NET
-	
-	if (argc > 2)
+	if (argc > 1)
 	{
-		fprintf(stderr, "usage: %s [<file-name>]\n", argv[0]);
+		if (argc > 0) fprintf(stderr, "usage: %s\n", argv[0]);
 		return 1;
 	}
-	
-	if (argc >= 2) file = fopen(argv[1], "rb");
-	else file = fmemopen(moonfish_network, 1139, "rb");
-	
-#else
-	
-	if (argc != 2)
-	{
-		fprintf(stderr, "usage: %s <file-name>\n", argv[0]);
-		return 1;
-	}
-	
-	file = fopen(argv[1], "rb");
-	
-#endif
 	
 	ctx = malloc(sizeof *ctx);
 	if (ctx == NULL)
@@ -45,23 +26,6 @@ int main(int argc, char **argv)
 		perror(argv[0]);
 		return 1;
 	}
-	
-	if (file == NULL)
-	{
-		perror(argv[0]);
-		free(ctx);
-		return 1;
-	}
-	
-	if (moonfish_nnue(&ctx->nnue, file))
-	{
-		fprintf(stderr, "%s: could not parse network\n", argv[0]);
-		fclose(file);
-		free(ctx);
-		return 1;
-	}
-	
-	fclose(file);
 	
 	printf("   (moonfish by zamfofex)\n");
 	printf("   (inspired by sunfish by tahle)\n");

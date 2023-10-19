@@ -1,5 +1,64 @@
 #include "moonfish.h"
 
+static int moonfish_piece_scores[] = {100, 320, 330, 500, 900, 599900};
+
+static signed char moonfish_piece_square_scores[] =
+{
+	0, 0, 0, 0,
+	50, 50, 50, 50,
+	30, 20, 10, 10,
+	25, 10, 5, 5,
+	20, 0, 0, 0,
+	0, -10, -5, 5,
+	-20, 10, 10, 5,
+	0, 0, 0, 0,
+	
+	-30, -30, -40, -50,
+	5, 0, -20, -40,
+	15, 10, 5, -30,
+	20, 15, 0, -30,
+	20, 15, 0, -30,
+	15, 10, 5, -30,
+	5, 0, -20, -40,
+	-30, -30, -40, -50,
+	
+	-10, -10, -10, -20,
+	0, 0, 0, -10,
+	10, 5, 0, -10,
+	10, 5, 5, -10,
+	10, 10, 0, -10,
+	10, 10, 10, -10,
+	0, 0, 5, -10,
+	-10, -10, -10, -20,
+	
+	0, 0, 0, 0,
+	10, 10, 10, 5,
+	0, 0, 0, -5,
+	0, 0, 0, -5,
+	0, 0, 0, -5,
+	0, 0, 0, -5,
+	0, 0, 0, -5,
+	5, 0, 0, 0,
+	
+	-5, -10, -10, -20,
+	0, 0, 0, -10,
+	5, 5, 0, -10,
+	5, 5, 0, -5,
+	5, 5, 0, -5,
+	5, 5, 0, -10,
+	0, 0, 0, -10,
+	-5, -10, -10, -20,
+	
+	-50, -40, -40, -30,
+	-50, -40, -40, -30,
+	-50, -40, -40, -30,
+	-50, -40, -40, -30,
+	-40, -30, -30, -20,
+	-20, -20, -20, -10,
+	0, 0, 20, 20,
+	0, 10, 30, 20,
+};
+
 static struct moonfish_move *moonfish_create_move(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to)
 {
 	(*moves)->from = from;
@@ -8,6 +67,7 @@ static struct moonfish_move *moonfish_create_move(struct moonfish_chess *chess, 
 	(*moves)->promotion = chess->board[from];
 	(*moves)->captured = chess->board[to];
 	(*moves)->castle = chess->castle;
+	(*moves)->score = chess->score;
 	return (*moves)++;
 }
 
@@ -225,6 +285,7 @@ static void moonfish_rotate(struct moonfish_chess *chess)
 	moonfish_flip_vertically(chess);
 	
 	chess->white ^= 1;
+	chess->score *= -1;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
@@ -234,9 +295,38 @@ static void moonfish_rotate(struct moonfish_chess *chess)
 	}
 }
 
+static int moonfish_table(int from, unsigned char piece)
+{
+	int x, y;
+	unsigned char type, color;
+	int score;
+	
+	if (piece == moonfish_empty) return 0;
+	
+	x = from % 10 - 1;
+	y = from / 10 - 2;
+	
+	type = (piece & 0xF) - 1;
+	color = (piece >> 4) - 1;
+	
+	if (color == 0) y = 7 - y;
+	
+	if (x < 4) x = 4 - x;
+	else x %= 4;
+	
+	score = moonfish_piece_scores[type] + moonfish_piece_square_scores[x + y * 4 + type * 20];
+	if (color != 0) score *= -1;
+	
+	return score;
+}
+
 void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 {
 	int x0, x1;
+	
+	chess->score -= moonfish_table(move->from, move->piece);
+	chess->score += moonfish_table(move->to, move->piece);
+	chess->score -= moonfish_table(move->to, move->captured);
 	
 	chess->board[move->from] = moonfish_empty;
 	chess->board[move->to] = move->promotion;
@@ -244,7 +334,10 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 	if (move->piece == moonfish_our_pawn)
 	if ((move->to - move->from) % 10)
 	if (move->captured == moonfish_empty)
+	{
+		chess->score -= moonfish_table(move->to - 10, moonfish_their_pawn);
 		chess->board[move->to - 10] = moonfish_empty;
+	}
 	
 	if (move->piece == moonfish_our_king)
 	{
@@ -253,7 +346,13 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 		if (move->from == 24 && move->to == 26) x0 = 8, x1 = 5;
 		if (move->from == 25 && move->to == 27) x0 = 8, x1 = 6;
 		if (move->from == 25 && move->to == 23) x0 = 1, x1 = 4;
-		if (x0) chess->board[x0 + 20] = moonfish_empty, chess->board[x1 + 20] = moonfish_our_rook;
+		if (x0)
+		{
+			chess->score -= moonfish_table(x0 + 20, moonfish_our_rook);
+			chess->score += moonfish_table(x1 + 20, moonfish_our_rook);
+			chess->board[x0 + 20] = moonfish_empty;
+			chess->board[x1 + 20] = moonfish_our_rook;
+		}
 		
 		if (chess->white)
 		{
@@ -307,6 +406,7 @@ void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move)
 	chess->board[move->from] = move->piece;
 	chess->board[move->to] = move->captured;
 	chess->castle = move->castle;
+	chess->score = move->score;
 	
 	if (move->piece == moonfish_our_king)
 	{
@@ -359,6 +459,8 @@ void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move,
 	move->piece = chess->board[move->from];
 	move->captured = chess->board[move->to];
 	move->promotion = move->piece;
+	move->castle = chess->castle;
+	move->score = chess->score;
 	
 	if (name[4] == 'q') move->promotion = moonfish_our_queen;
 	if (name[4] == 'r') move->promotion = moonfish_our_rook;
@@ -423,6 +525,7 @@ void moonfish_fen(struct moonfish_chess *chess, char *fen)
 	chess->castle.white_ooo = 0;
 	chess->castle.black_oo = 0;
 	chess->castle.black_ooo = 0;
+	chess->score = 0;
 	
 	for (;;)
 	{
@@ -459,6 +562,8 @@ void moonfish_fen(struct moonfish_chess *chess, char *fen)
 		if (ch == 'k') type = 6;
 		
 		chess->board[(x + 1) + (9 - y) * 10] = type | color;
+		
+		chess->score += moonfish_table((x + 1) + (9 - y) * 10, type | color);
 		
 		x++;
 	}

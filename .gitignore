@@ -3,11 +3,8 @@
 !/README.md
 !/makefile
 !/.build.yml
-!/*.c
 !/moonfish.h
-!/convert.py
+!/*.c
 !/tools
 !/tools/tools.h
 !/tools/*.c
-!/net
-!/net/*.c

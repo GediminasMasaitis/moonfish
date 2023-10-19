@@ -2,55 +2,7 @@
 
 #include "moonfish.h"
 
-static int moonfish_evaluate(struct moonfish_chess *chess, struct moonfish_nnue *nnue)
-{
-	int features[18] = {0};
-	int x, y;
-	int i, j;
-	unsigned char piece, color, type;
-	int scale;
-	int *white_values, *black_values;
-	int hidden[10], score;
-	
-	scale = 0;
-	
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
-	{
-		piece = chess->board[(x + 1) + (y + 2) * 10];
-		if (piece == moonfish_empty) continue;
-		
-		color = (piece >> 4) - 1;
-		type = (piece & 0xF) - 1;
-		
-		white_values = nnue->values[color][type][63 - (x + y * 8)];
-		black_values = nnue->values[color ^ 1][type][x + y * 8];
-		
-		scale += white_values[0];
-		scale -= black_values[0];
-		
-		for (i = 0 ; i < 9 ; i++)
-		{
-			features[i] += white_values[i + 1];
-			features[i + 9] += black_values[i + 1];
-		}
-	}
-	
-	for (i = 0 ; i < 10 ; i++)
-	{
-		hidden[i] = 0;
-		for (j = 0 ; j < 18 ; j++)
-			hidden[i] += nnue->layer1[i * 18 + j] * moonfish_tanh(features[j]) / 127;
-	}
-	
-	score = 0;
-	for (i = 0 ; i < 10 ; i++)
-		score += moonfish_tanh(hidden[i]) * nnue->layer2[i] / 127;
-	
-	return score * 360 + scale * nnue->scale * 360 / 256;
-}
-
-static int moonfish_search(struct moonfish_chess *chess, struct moonfish_nnue *nnue, int alpha, int beta, int depth)
+static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, int depth)
 {
 	int x, y;
 	struct moonfish_move moves[32];
@@ -59,11 +11,10 @@ static int moonfish_search(struct moonfish_chess *chess, struct moonfish_nnue *n
 	
 	if (depth <= 0)
 	{
-		score = moonfish_evaluate(chess, nnue);
-		if (depth <= -3) return score;
+		if (depth <= -3) return chess->score;
 		
-		if (score >= beta) return beta;
-		if (score > alpha) alpha = score;
+		if (chess->score >= beta) return beta;
+		if (chess->score > alpha) alpha = chess->score;
 	}
 	
 	for (y = 0 ; y < 8 ; y++)
@@ -77,7 +28,7 @@ static int moonfish_search(struct moonfish_chess *chess, struct moonfish_nnue *n
 			if (move->captured == moonfish_their_king) return moonfish_omega * (depth + 10);
 			
 			moonfish_play(chess, move);
-			score = -moonfish_search(chess, nnue, -beta, -alpha, depth - 1);
+			score = -moonfish_search(chess, -beta, -alpha, depth - 1);
 			moonfish_unplay(chess, move);
 			
 			if (score >= beta) return beta;
@@ -88,17 +39,19 @@ static int moonfish_search(struct moonfish_chess *chess, struct moonfish_nnue *n
 	return alpha;
 }
 
+
 #ifdef MOONFISH_HAS_PTHREAD
 
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 struct moonfish_search_info
 {
 	pthread_t thread;
 	struct moonfish_move move;
 	struct moonfish_chess chess;
-	struct moonfish_nnue *nnue;
 	int depth;
 	int score;
 };
@@ -107,7 +60,7 @@ static void *moonfish_start_search(void *data)
 {
 	struct moonfish_search_info *info;
 	info = data;
-	info->score = -moonfish_search(&info->chess, info->nnue, -100 * moonfish_omega, 100 * moonfish_omega, info->depth);
+	info->score = -moonfish_search(&info->chess, -100 * moonfish_omega, 100 * moonfish_omega, info->depth);
 	return NULL;
 }
 
@@ -141,7 +94,6 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 			
 			infos[count].move = *move;
 			infos[count].chess = ctx->chess;
-			infos[count].nnue = &ctx->nnue;
 			infos[count].depth = depth;
 			
 			result = pthread_create(&infos[count].thread, NULL, &moonfish_start_search, infos + count);
@@ -205,7 +157,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 				continue;
 			}
 			
-			score = -moonfish_search(&ctx->chess, &ctx->nnue, -100 * moonfish_omega, 100 * moonfish_omega, depth);
+			score = -moonfish_search(&ctx->chess, -100 * moonfish_omega, 100 * moonfish_omega, depth);
 			moonfish_unplay(&ctx->chess, move);
 			
 			if (score > best_score)
