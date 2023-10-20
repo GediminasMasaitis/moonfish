@@ -2,7 +2,7 @@ CFLAGS ?= -ansi -O3 -Wall -Wextra -Wpedantic
 
 cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-src := *.c
+src := chess.c search.c main.c
 
 moonfish_cc := $(cc)
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
@@ -29,3 +29,4 @@ analyse: tools/tools.h tools/analyse.c tools/utils.c chess.c
 
 clean:
 	$(RM) moonfish play lichess analyse
+	$(RM) moonfish.c moonfish.c.xz moonfish.sh

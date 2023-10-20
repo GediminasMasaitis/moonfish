@@ -17,8 +17,12 @@ tasks:
       cp sunfish/nnue/models/tanh.pickle moonfish
       cd moonfish
       make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON' inbuilt_network=yes
+  - minify: |
+      cd moonfish
+      ./minify.sh
 artifacts:
   - moonfish/moonfish
   - moonfish/play
   - moonfish/lichess
   - moonfish/analyse
+  - moonfish/moonfish.sh
