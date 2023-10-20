@@ -3,6 +3,7 @@
 !/README.md
 !/makefile
 !/.build.yml
+!/manifest.scm
 !/minify.sh
 !/moonfish.h
 !/*.c
