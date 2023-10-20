@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# moonfish is licensed under the AGPL (v3 or later)
+# copyright 2023 zamfofex
+
 # for every C source file
 cat moonfish.h chess.c search.c main.c |
 

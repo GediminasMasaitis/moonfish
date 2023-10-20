@@ -1,3 +1,6 @@
+/* moonfish is licensed under the AGPL (v3 or later) */
+/* copyright 2023 zamfofex */
+
 #include "moonfish.h"
 
 static int moonfish_piece_scores[] = {100, 320, 330, 500, 900, 599900};

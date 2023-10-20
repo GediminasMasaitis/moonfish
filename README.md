@@ -1,3 +1,6 @@
+<!-- moonfish is licensed under the AGPL (v3 or later) -->
+<!-- copyright 2023 zamfofex -->
+
 moonfish
 ===
 
@@ -83,9 +86,9 @@ To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or 
 license
 ---
 
-[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) © zamfofex 2023
+[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) © [zamfofex 2023]
 
 [GPL]: <https://www.gnu.org/licenses/>
-[AGPL]: <https://www.gnu.org/licenses/why-affero-gpl.html>
+[AGPL]: <LICENSE>
 [AGPLv3]: <https://www.gnu.org/licenses/agpl-3.0>
 [GPLv3+]: <https://www.gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>

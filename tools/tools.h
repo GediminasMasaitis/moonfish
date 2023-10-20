@@ -1,3 +1,6 @@
+/* moonfish is licensed under the AGPL (v3 or later) */
+/* copyright 2023 zamfofex */
+
 #ifndef MOONFISH_TOOLS
 #define MOONFISH_TOOLS
 
