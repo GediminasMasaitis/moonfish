@@ -3,7 +3,7 @@
 
 #include "moonfish.h"
 
-static int moonfish_piece_scores[] = {100, 320, 330, 500, 900, 599900};
+static int moonfish_piece_scores[] = {100, 320, 330, 500, 900, 0};
 
 static signed char moonfish_piece_square_scores[] =
 {

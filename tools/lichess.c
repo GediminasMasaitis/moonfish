@@ -685,13 +685,6 @@ static void moonfish_handle_events(
 	struct moonfish_game *game;
 	pthread_t thread;
 	
-	game = malloc(sizeof *game);
-	if (game == NULL)
-	{
-		fprintf(stderr, "%s: could not allocate game\n", argv0);
-		exit(1);
-	}
-	
 	root = NULL;
 	
 	for (;;)
@@ -726,6 +719,13 @@ static void moonfish_handle_events(
 			
 			id = cJSON_GetObjectItem(challenge, "id");
 			if (!cJSON_IsString(id)) moonfish_json_error(argv0);
+			
+			game = malloc(sizeof *game);
+			if (game == NULL)
+			{
+				fprintf(stderr, "%s: could not allocate game\n", argv0);
+				exit(1);
+			}
 			
 			if (strlen(id->valuestring) > sizeof game->id - 1)
 			{
