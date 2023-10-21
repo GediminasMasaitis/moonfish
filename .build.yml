@@ -4,12 +4,10 @@
 image: alpine/latest
 packages:
   - build-base
-  - python3
   - bearssl-dev
   - xz
 sources:
   - https://git.sr.ht/~zamfofex/moonfish
-  - https://github.com/thomasahle/sunfish#10e93383eae345c2b700657afe33b862604af20a
   - https://github.com/DaveGamble/cJSON#v1.7.16
 tasks:
   - build-cjson: |
@@ -18,9 +16,8 @@ tasks:
       mkdir cjson
       mv cJSON.h cjson
   - build: |
-      cp sunfish/nnue/models/tanh.pickle moonfish
       cd moonfish
-      make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON' inbuilt_network=yes
+      make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON'
   - minify: |
       cd moonfish
       ./minify.sh
