@@ -29,7 +29,7 @@ tr '\n' ' ' |
 sed 's/\("\(\\"\|[^"]\)*"\)/\n\1\n/g' |
 
 # put line breaks around character literals
-sed 's/\('"'"'\(\\.\|.\)*'"'"'\)/\n\1\n/g' |
+sed 's/\('"'"'\(\\.\|.\)'"'"'\)/\n\1\n/g' |
 
 # in every line that isn't a string literal,
 # join all adjacent white space into a single tab
