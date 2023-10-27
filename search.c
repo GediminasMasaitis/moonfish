@@ -176,23 +176,38 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 
 #endif
 
-int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, int d)
+int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, long int our_time, long int their_time)
 {
-	time_t t, t0, t1;
+	time_t t, d;
 	int i;
 	int score;
+	int base;
 	
-	d /= 4;
-	t0 = time(NULL);
+	d = our_time - their_time;
+	if (d < 0) d = 0;
+	d += our_time / 8;
 	
-	for (i = 0 ; i < 8 ; i++)
+	t = 0;
+	base = 3;
+	
+	while (t < 2)
 	{
+		base++;
 		t = time(NULL);
-		score = moonfish_best_move_depth(ctx, best_move, i);
-		
-		t1 = time(NULL);
-		if ((t1 - t) * 32 > d - (t1 - t0)) break;
+		score = moonfish_best_move_depth(ctx, best_move, base);
+		t = time(NULL) - t + 2;
 	}
 	
-	return score;
+	i = base;
+	
+	for (;;)
+	{
+		t *= 32;
+		if (t > d) break;
+		i++;
+		if (i >= 8) break;
+	}
+	
+	if (i == base) return score;
+	return moonfish_best_move_depth(ctx, best_move, i);
 }

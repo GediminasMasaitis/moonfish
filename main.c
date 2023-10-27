@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
-	int time;
+	long int time, wtime, btime, *xtime;
 	
 	if (argc > 1)
 	{
@@ -53,24 +53,48 @@ int main(int argc, char **argv)
 		
 		if (!strcmp(arg, "go"))
 		{
-			if (ctx->chess.white) arg = strstr(arg, " wtime ");
-			else arg = strstr(arg, " btime ");
+			wtime = -1;
+			btime = -1;
 			
-			if (arg == NULL)
+			for (;;)
 			{
-				time = 120000;
-			}
-			else
-			{
-				if (sscanf(arg + 6, "%d", &time) != 1)
+				arg = strtok(NULL, "\r\n\t ");
+				if (arg == NULL) break;
+				if (!strcmp(arg, "wtime") || !strcmp(arg, "btime"))
 				{
-					free(ctx);
-					fprintf(stderr, "%s: malformed 'go' command\n", argv[0]);
-					return 1;
+					if (!strcmp(arg, "wtime")) xtime = &wtime;
+					else xtime = &btime;
+					
+					arg = strtok(NULL, "\r\n\t ");
+					
+					if (arg == NULL || sscanf(arg, "%ld", xtime) != 1 || *xtime < 0)
+					{
+						free(ctx);
+						fprintf(stderr, "%s: malformed 'go' command\n", argv[0]);
+						return 1;
+					}
+					
+					break;
 				}
 			}
 			
-			moonfish_best_move(ctx, &move, time / 1000);
+			if (wtime < 0 && btime < 0)
+			{
+				wtime = 3600000;
+				btime = 3600000;
+			}
+			
+			if (wtime < 0) wtime = btime;
+			if (btime < 0) btime = wtime;
+			
+			if (!ctx->chess.white)
+			{
+				time = wtime;
+				wtime = btime;
+				btime = time;
+			}
+			
+			moonfish_best_move(ctx, &move, wtime / 1000, btime / 1000);
 			moonfish_to_uci(name, &move, ctx->chess.white);
 			printf("bestmove %s\n", name);
 		}

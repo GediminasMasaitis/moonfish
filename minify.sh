@@ -55,6 +55,9 @@ sed '/^$/d' |
 # remove duplicate lines (for '#include')
 awk '!x[$0]++' |
 
+# replace 'moonfish_' prefix with 'M'
+sed 's/\bmoonfish_/M/g' |
+
 # store the result into a file
 tee moonfish.c |
 
