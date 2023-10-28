@@ -188,9 +188,9 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	d += our_time / 8;
 	
 	t = 0;
-	base = 3;
+	base = 2;
 	
-	while (t < 2)
+	while (t < 4)
 	{
 		base++;
 		t = time(NULL);
