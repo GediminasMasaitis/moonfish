@@ -181,24 +181,16 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	time_t t, d;
 	int i;
 	int score;
-	int base;
 	
 	d = our_time - their_time;
 	if (d < 0) d = 0;
 	d += our_time / 8;
 	
-	t = 0;
-	base = 2;
+	i = 3;
 	
-	while (t < 4)
-	{
-		base++;
-		t = time(NULL);
-		score = moonfish_best_move_depth(ctx, best_move, base);
-		t = time(NULL) - t + 2;
-	}
-	
-	i = base;
+	t = time(NULL);
+	score = moonfish_best_move_depth(ctx, best_move, i);
+	t = time(NULL) - t + 4;
 	
 	for (;;)
 	{
@@ -208,6 +200,6 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 		if (i >= 8) break;
 	}
 	
-	if (i == base) return score;
+	if (i == 3) return score;
 	return moonfish_best_move_depth(ctx, best_move, i);
 }
