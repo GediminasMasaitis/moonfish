@@ -317,7 +317,7 @@ static int moonfish_table(int from, unsigned char piece)
 	if (x < 4) x = 4 - x;
 	else x %= 4;
 	
-	score = moonfish_piece_scores[type] + moonfish_piece_square_scores[x + y * 4 + type * 20];
+	score = moonfish_piece_scores[type] + moonfish_piece_square_scores[x + y * 4 + type * 32];
 	if (color != 0) score *= -1;
 	
 	return score;
