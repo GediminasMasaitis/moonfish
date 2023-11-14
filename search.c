@@ -181,10 +181,9 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	int i;
 	int score;
 	
-	d = (our_time - their_time) / 4;
-	if (d < 0) d = 0;
-	d += our_time / 16;
-	if (d > 30) d = 30;
+	d = (our_time * 9 / 8 - their_time) / 4;
+	if (d < 5) d = 5;
+	if (d > 20) d = 20;
 	
 	i = 4;
 	t = time(NULL);
