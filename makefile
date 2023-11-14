@@ -18,8 +18,8 @@ ifneq ($(has_pthread),no)
 moonfish_cc += -DMOONFISH_HAS_PTHREAD -pthread
 endif
 
-moonfish: moonfish.h $(src)
-	$(moonfish_cc) -o moonfish $(src)
+moonfish moonfish.exe: moonfish.h $(src)
+	$(moonfish_cc) -o $@ $(src)
 
 play: moonfish.h tools/tools.h tools/play.c tools/utils.c chess.c
 	$(tools_cc) -o play tools/play.c tools/utils.c chess.c
@@ -31,5 +31,5 @@ analyse: tools/tools.h tools/analyse.c tools/utils.c chess.c
 	$(tools_cc) -o analyse tools/analyse.c tools/utils.c chess.c
 
 clean:
-	$(RM) moonfish play lichess analyse
+	$(RM) moonfish moonfish.exe play lichess analyse
 	$(RM) moonfish.c moonfish.c.xz moonfish.sh

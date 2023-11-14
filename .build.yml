@@ -6,6 +6,7 @@ packages:
   - build-base
   - bearssl-dev
   - xz
+  - mingw-w64-gcc
 sources:
   - https://git.sr.ht/~zamfofex/moonfish
   - https://github.com/DaveGamble/cJSON#v1.7.16
@@ -21,9 +22,13 @@ tasks:
   - minify: |
       cd moonfish
       ./minify.sh
+  - windows-build: |
+      cd moonfish
+      make CC=x86_64-w64-mingw32-gcc LDFLAGS=-static moonfish.exe
 artifacts:
   - moonfish/moonfish
   - moonfish/play
   - moonfish/lichess
   - moonfish/analyse
   - moonfish/moonfish.sh
+  - moonfish/moonfish.exe
