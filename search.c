@@ -42,7 +42,6 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 	return alpha;
 }
 
-
 #ifdef MOONFISH_HAS_PTHREAD
 
 #include <pthread.h>
@@ -182,12 +181,12 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	int i;
 	int score;
 	
-	d = our_time - their_time;
+	d = (our_time - their_time) / 4;
 	if (d < 0) d = 0;
-	d += our_time / 8;
+	d += our_time / 16;
+	if (d > 30) d = 30;
 	
-	i = 3;
-	
+	i = 4;
 	t = time(NULL);
 	score = moonfish_best_move_depth(ctx, best_move, i);
 	t = time(NULL) - t + 4;
