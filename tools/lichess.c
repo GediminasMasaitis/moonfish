@@ -771,7 +771,7 @@ static void moonfish_handle_events(
 		speed = cJSON_GetObjectItem(challenge, "speed");
 		if (!cJSON_IsString(speed)) moonfish_json_error(argv0);
 		
-		if (!strcmp(speed->valuestring, "classical") || !strcmp(speed->valuestring, "correspondence"))
+		if (!strcmp(speed->valuestring, "correspondence"))
 		{
 			snprintf(line, sizeof line, "POST /api/challenge/%s/decline", id->valuestring);
 			if (moonfish_basic_request(argv0, name, port, token, line, "", "reason=tooSlow"))
