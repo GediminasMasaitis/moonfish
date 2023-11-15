@@ -109,14 +109,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	for (x = 0 ; x < 8 ; x++)
 	{
 		moonfish_moves(&ctx->chess, moves, (x + 1) + (y + 2) * 10);
-		while (moves->piece != moonfish_outside)
-		{
-			moonfish_play(&ctx->chess, moves);
-			if (moonfish_validate(&ctx->chess))
-				moonfish_unplay(&ctx->chess, moves++);
-			else
-				moonfish_unplay(&ctx->chess, moves);
-		}
+		while (moves->piece != moonfish_outside) moves++;
 	}
 	
 	moves = move_array;
@@ -124,6 +117,12 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	while (moves->piece != moonfish_outside)
 	{
 		moonfish_play(&ctx->chess, moves);
+		
+		if (!moonfish_validate(&ctx->chess))
+		{
+			moonfish_unplay(&ctx->chess, moves++);
+			continue;
+		}
 		
 		infos[i].move = *moves;
 		infos[i].chess = ctx->chess;
@@ -148,6 +147,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 				result = pthread_join(infos[j].thread, NULL);
 				if (result)
 				{
+					fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
 					exit(1);
 				}
 				
