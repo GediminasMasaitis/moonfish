@@ -74,8 +74,6 @@ int main(int argc, char **argv)
 						fprintf(stderr, "%s: malformed 'go' command\n", argv[0]);
 						return 1;
 					}
-					
-					break;
 				}
 			}
 			
