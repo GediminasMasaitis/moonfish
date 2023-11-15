@@ -114,8 +114,31 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	
 	moves = move_array;
 	i = 0;
-	while (moves->piece != moonfish_outside)
+	for (;;)
 	{
+		if (i == ctx->cpu_count || moves->piece == moonfish_outside)
+		{
+			for (j = 0 ; j < i ; j++)
+			{
+				result = pthread_join(infos[j].thread, NULL);
+				if (result)
+				{
+					fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
+					exit(1);
+				}
+				
+				if (infos[j].score > best_score)
+				{
+					*best_move = infos[j].move;
+					best_score = infos[j].score;
+				}
+			}
+			
+			if (moves->piece == moonfish_outside) break;
+			
+			i = 0;
+		}
+		
 		moonfish_play(&ctx->chess, moves);
 		
 		if (!moonfish_validate(&ctx->chess))
@@ -139,27 +162,6 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 		
 		i++;
 		moves++;
-		
-		if (i == ctx->cpu_count || moves->piece == moonfish_outside)
-		{
-			for (j = 0 ; j < i ; j++)
-			{
-				result = pthread_join(infos[j].thread, NULL);
-				if (result)
-				{
-					fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
-					exit(1);
-				}
-				
-				if (infos[j].score > best_score)
-				{
-					*best_move = infos[j].move;
-					best_score = infos[j].score;
-				}
-			}
-			
-			i = 0;
-		}
 	}
 	
 	return best_score;
