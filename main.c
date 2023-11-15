@@ -31,6 +31,7 @@ int main(int argc, char **argv)
 	}
 	
 	ctx->argv0 = argv[0];
+	ctx->cpu_count = -1;
 	moonfish_chess(&ctx->chess);
 	
 	for (;;)

@@ -48,6 +48,8 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
 
 struct moonfish_search_info
 {
@@ -69,67 +71,85 @@ static void *moonfish_start_search(void *data)
 static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
 {
 	int x, y;
-	struct moonfish_move *move, moves[32];
+	struct moonfish_move *moves, move_array[256];
 	int best_score;
-	int count, i;
-	struct moonfish_search_info *infos;
+	int i, j;
+	struct moonfish_search_info infos[32];
 	int result;
 	
-	infos = malloc(256 * sizeof *infos);
-	count = 0;
+	if (ctx->cpu_count < 0)
+	{
+		errno = 0;
+		ctx->cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+		if (ctx->cpu_count <= 0)
+		{
+			if (errno == 0) fprintf(stderr, "%s: unknown CPU count\n", ctx->argv0);
+			else perror(ctx->argv0);
+			exit(1);
+		}
+		if (ctx->cpu_count > 32) ctx->cpu_count = 32;
+	}
+	
+	moves = move_array;
 	best_score = -200 * moonfish_omega;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
 		moonfish_moves(&ctx->chess, moves, (x + 1) + (y + 2) * 10);
-		
-		for (move = moves ; move->piece != moonfish_outside ; move++)
+		while (moves->piece != moonfish_outside)
 		{
-			moonfish_play(&ctx->chess, move);
-			
-			if (!moonfish_validate(&ctx->chess))
-			{
-				moonfish_unplay(&ctx->chess, move);
-				continue;
-			}
-			
-			infos[count].move = *move;
-			infos[count].chess = ctx->chess;
-			infos[count].depth = depth;
-			
-			result = pthread_create(&infos[count].thread, NULL, &moonfish_start_search, infos + count);
-			if (result)
-			{
-				free(infos);
-				fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
-				exit(1);
-			}
-			
-			moonfish_unplay(&ctx->chess, move);
-			
-			count++;
+			moonfish_play(&ctx->chess, moves);
+			if (moonfish_validate(&ctx->chess))
+				moonfish_unplay(&ctx->chess, moves++);
+			else
+				moonfish_unplay(&ctx->chess, moves);
 		}
 	}
 	
-	for (i = 0 ; i < count ; i++)
+	moves = move_array;
+	i = 0;
+	while (moves->piece != moonfish_outside)
 	{
-		result = pthread_join(infos[i].thread, NULL);
+		moonfish_play(&ctx->chess, moves);
+		
+		infos[i].move = *moves;
+		infos[i].chess = ctx->chess;
+		infos[i].depth = depth;
+		
+		result = pthread_create(&infos[i].thread, NULL, &moonfish_start_search, infos + i);
 		if (result)
 		{
-			free(infos);
 			fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
 			exit(1);
 		}
 		
-		if (infos[i].score > best_score)
+		moonfish_unplay(&ctx->chess, moves);
+		
+		i++;
+		moves++;
+		
+		if (i == ctx->cpu_count || moves->piece == moonfish_outside)
 		{
-			*best_move = infos[i].move;
-			best_score = infos[i].score;
+			for (j = 0 ; j < i ; j++)
+			{
+				result = pthread_join(infos[j].thread, NULL);
+				if (result)
+				{
+					exit(1);
+				}
+				
+				if (infos[j].score > best_score)
+				{
+					*best_move = infos[j].move;
+					best_score = infos[j].score;
+				}
+			}
+			
+			i = 0;
 		}
 	}
 	
-	free(infos);
 	return best_score;
 }
 

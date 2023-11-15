@@ -44,6 +44,7 @@ struct moonfish
 {
 	struct moonfish_chess chess;
 	char *argv0;
+	int cpu_count;
 };
 
 struct moonfish_move
