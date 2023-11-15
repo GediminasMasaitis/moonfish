@@ -51,6 +51,10 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef __MINGW32__
+#include <sysinfoapi.h>
+#endif
+
 struct moonfish_search_info
 {
 	pthread_t thread;
@@ -76,11 +80,19 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	int i, j;
 	struct moonfish_search_info infos[32];
 	int result;
+#ifdef __MINGW32__
+	SYSTEM_INFO info;
+#endif
 	
 	if (ctx->cpu_count < 0)
 	{
 		errno = 0;
+#ifdef __MINGW32__
+		GetSystemInfo(&info);
+		ctx->cpu_count = info.dwNumberOfProcessors;
+#else
 		ctx->cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
 		if (ctx->cpu_count <= 0)
 		{
 			if (errno == 0) fprintf(stderr, "%s: unknown CPU count\n", ctx->argv0);
