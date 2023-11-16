@@ -2,6 +2,8 @@
 /* copyright 2023 zamfofex */
 
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "moonfish.h"
 
@@ -45,9 +47,7 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 #ifdef MOONFISH_HAS_PTHREAD
 
 #include <pthread.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -209,20 +209,36 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 
 #endif
 
+static clock_t moonfish_clock(struct moonfish *ctx)
+{
+	clock_t t;
+	t = clock();
+	if (t < 0)
+	{
+		fprintf(stderr, "%s: unknown clock\n", ctx->argv0);
+		exit(1);
+	}
+	return t;
+}
+
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, long int our_time, long int their_time)
 {
-	long int d;
-	time_t t;
+	clock_t t, d;
 	int i;
 	int score;
 	
-	d = our_time - their_time + our_time / 16;
+	our_time *= CLOCKS_PER_SEC;
+	their_time *= CLOCKS_PER_SEC;
+	
+	d = our_time - their_time;
 	if (d < 0) d = 0;
+	d += our_time / 16;
+	d /= 1000;
 	
 	i = 3;
-	t = time(NULL);
+	t = moonfish_clock(ctx);
 	score = moonfish_best_move_depth(ctx, best_move, i);
-	t = time(NULL) - t + 2;
+	t = moonfish_clock(ctx) - t + CLOCKS_PER_SEC / 4;
 	
 	for (;;)
 	{

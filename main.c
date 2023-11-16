@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 				btime = time;
 			}
 			
-			moonfish_best_move(ctx, &move, wtime / 1000, btime / 1000);
+			moonfish_best_move(ctx, &move, wtime, btime);
 			moonfish_to_uci(name, &move, ctx->chess.white);
 			printf("bestmove %s\n", name);
 		}
