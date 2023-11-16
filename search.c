@@ -209,36 +209,37 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 
 #endif
 
-static clock_t moonfish_clock(struct moonfish *ctx)
+static void moonfish_clock(struct moonfish *ctx, struct timespec *ts)
 {
-	clock_t t;
-	t = clock();
-	if (t < 0)
+	if (clock_gettime(CLOCK_MONOTONIC, ts))
 	{
-		fprintf(stderr, "%s: unknown clock\n", ctx->argv0);
+		perror(ctx->argv0);
 		exit(1);
 	}
-	return t;
 }
 
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, long int our_time, long int their_time)
 {
-	clock_t t, d;
+	long int d, t;
 	int i;
 	int score;
-	
-	our_time *= CLOCKS_PER_SEC;
-	their_time *= CLOCKS_PER_SEC;
+	struct timespec t0, t1;
 	
 	d = our_time - their_time;
 	if (d < 0) d = 0;
 	d += our_time / 16;
-	d /= 1000;
 	
 	i = 3;
-	t = moonfish_clock(ctx);
+	
+	moonfish_clock(ctx, &t0);
 	score = moonfish_best_move_depth(ctx, best_move, i);
-	t = moonfish_clock(ctx) - t + CLOCKS_PER_SEC / 4;
+	moonfish_clock(ctx, &t1);
+	
+	t = 1000;
+	t += t1.tv_sec * 1000;
+	t -= t0.tv_sec * 1000;
+	t += t1.tv_nsec / 1000000;
+	t -= t0.tv_nsec / 1000000;
 	
 	for (;;)
 	{
