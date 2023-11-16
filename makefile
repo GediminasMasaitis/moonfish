@@ -15,7 +15,7 @@ tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 all: moonfish play lichess analyse
 
 ifneq ($(has_pthread),no)
-moonfish_cc += -DMOONFISH_HAS_PTHREAD -pthread
+moonfish_cc += -D_POSIX_C_SOURCE=199309L -DMOONFISH_HAS_PTHREAD -pthread
 endif
 
 moonfish moonfish.exe: moonfish.h $(src)
