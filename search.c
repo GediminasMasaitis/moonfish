@@ -188,7 +188,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	
 	d = our_time - their_time;
 	if (d < 0) d = 0;
-	d += our_time / 16;
+	d += our_time / 8;
 	
 	i = 3;
 	
@@ -196,7 +196,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	score = moonfish_best_move_depth(ctx, best_move, i);
 	moonfish_clock(ctx, &t1);
 	
-	t = 1000;
+	t = 50;
 	t += t1.tv_sec * 1000;
 	t -= t0.tv_sec * 1000;
 	t += t1.tv_nsec / 1000000;
