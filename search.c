@@ -109,6 +109,12 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 		while (moves->piece != moonfish_outside) moves++;
 	}
 	
+	if (moves - move_array == 1)
+	{
+		*best_move = *move_array;
+		return 0;
+	}
+	
 	moves = move_array;
 	i = 0;
 	for (;;)
