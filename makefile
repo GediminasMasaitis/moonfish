@@ -7,16 +7,12 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 src := chess.c search.c main.c
 
-moonfish_cc := $(cc)
+moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
 .PHONY: all clean
 
 all: moonfish play lichess analyse
-
-ifneq ($(has_pthread),no)
-moonfish_cc += -D_POSIX_C_SOURCE=199309L -DMOONFISH_HAS_PTHREAD -pthread
-endif
 
 moonfish moonfish.exe: moonfish.h $(src)
 	$(moonfish_cc) -o $@ $(src)

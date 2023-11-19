@@ -4,6 +4,14 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+
+#ifdef __MINGW32__
+#include <sysinfoapi.h>
+#endif
 
 #include "moonfish.h"
 
@@ -43,17 +51,6 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 	
 	return alpha;
 }
-
-#ifdef MOONFISH_HAS_PTHREAD
-
-#include <pthread.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-
-#ifdef __MINGW32__
-#include <sysinfoapi.h>
-#endif
 
 struct moonfish_search_info
 {
@@ -166,48 +163,6 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	
 	return best_score;
 }
-
-#else
-
-static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
-{
-	int x, y;
-	struct moonfish_move moves[32];
-	struct moonfish_move *move;
-	int score, best_score;
-	
-	best_score = -200 * moonfish_omega;
-	
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
-	{
-		moonfish_moves(&ctx->chess, moves, (x + 1) + (y + 2) * 10);
-		
-		for (move = moves ; move->piece != moonfish_outside ; move++)
-		{
-			moonfish_play(&ctx->chess, move);
-			
-			if (!moonfish_validate(&ctx->chess))
-			{
-				moonfish_unplay(&ctx->chess, move);
-				continue;
-			}
-			
-			score = -moonfish_search(&ctx->chess, -100 * moonfish_omega, 100 * moonfish_omega, depth);
-			moonfish_unplay(&ctx->chess, move);
-			
-			if (score > best_score)
-			{
-				*best_move = *move;
-				best_score = score;
-			}
-		}
-	}
-	
-	return best_score;
-}
-
-#endif
 
 static void moonfish_clock(struct moonfish *ctx, struct timespec *ts)
 {

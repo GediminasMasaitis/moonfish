@@ -12,7 +12,7 @@ cat moonfish.h chess.c search.c main.c |
 sed 's/^#\(include <\)/\1/g' |
 
 # preprocess the file, add '#' back to 'include'
-gcc -E -DMOONFISH_HAS_PTHREAD -Dinclude='#include' - |
+gcc -E -Dinclude='#include' - |
 
 # remove lines starting with '# '
 sed '/^# /d' |
