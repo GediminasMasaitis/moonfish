@@ -2,11 +2,14 @@
 # copyright 2023 zamfofex
 
 image: alpine/latest
+secrets:
+  - 72a028fc-f8df-43d3-a315-305d80720e45
 packages:
   - build-base
   - bearssl-dev
   - xz
   - mingw-w64-gcc
+  - curl
 sources:
   - https://git.sr.ht/~zamfofex/moonfish
   - https://github.com/DaveGamble/cJSON#v1.7.16
@@ -25,6 +28,19 @@ tasks:
   - windows-build: |
       cd moonfish
       make CC=x86_64-w64-mingw32-gcc LDFLAGS=-static moonfish.exe
+  - deploy: |
+      set +x
+      test "$GIT_REF" = refs/heads/main || exit
+      test -f neocities-token.txt || exit
+      cd moonfish
+      curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
+        -F moonfish=@moonfish \
+        -F play=@play \
+        -F lichess=@lichess \
+        -F analyse=@analyse \
+        -F moonfish.sh=@moonfish.sh \
+        -F moonfish.exe=@moonfish.exe \
+        https://neocities.org/api/upload
 artifacts:
   - moonfish/moonfish
   - moonfish/play

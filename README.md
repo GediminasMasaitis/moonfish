@@ -37,6 +37,11 @@ These are things that I plan to fix eventually.
 - no support for `go infinite` or `go mate`
 - no move name or FEN validation (may lead to potential exploits)
 
+download
+---
+
+Prebuilt executables for Linux of moonfish (and its tools) may be found at <https://moonfish.neocities.org>
+
 building
 ---
 
