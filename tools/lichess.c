@@ -99,7 +99,8 @@ static int moonfish_write(void *data, const unsigned char *buffer, size_t length
 	for (;;)
 	{
 		write_length = write(fd, buffer, length);
-		if (write_length <= 0) {
+		if (write_length <= 0)
+		{
 			if (write_length < 0 && errno == EINTR) continue;
 			return -1;
 		}
