@@ -284,6 +284,8 @@ static int moonfish_table(int from, unsigned char piece)
 	type = (piece & 0xF) - 1;
 	color = (piece >> 4) - 1;
 	
+	if (color == 0) y = 7 - y;
+	
 	if (x < 4) x = 4 - x;
 	else x %= 4;
 	
