@@ -38,7 +38,7 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 	else
 		printf("\x1B[48;5;69m");
 	
-	if (fancy->white == fancy->chess.white) y = 7 - y;
+	if (fancy->white) y = 7 - y;
 	else x = 7 - x;
 	
 	piece = fancy->chess.board[(x + 1) + (y + 2) * 10];
@@ -48,8 +48,6 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 		printf("  ");
 		return;
 	}
-	
-	if (!fancy->chess.white) piece ^= 0x30;
 	
 	if (piece >> 4 == 1)
 		printf("\x1B[38;5;253m");
@@ -191,14 +189,20 @@ static int moonfish_move_from(struct moonfish_chess *chess, struct moonfish_move
 	struct moonfish_move *move;
 	int valid;
 	
-	y0 = 9 - y0;
-	y1 = 9 - y1;
+	if (!chess->white)
+	{
+		x0 = 9 - x0; y0 = 9 - y0;
+		x1 = 9 - x1; y1 = 9 - y1;
+	}
 	
-	moonfish_moves(chess, moves, x0 + (y0 + 1) * 10);
+	y0 = 10 - y0;
+	y1 = 10 - y1;
+	
+	moonfish_moves(chess, moves, x0 + y0 * 10);
 	
 	for (move = moves ; move->piece != moonfish_outside ; move++)
 	{
-		if (move->to == x1 + (y1 + 1) * 10)
+		if (move->to == x1 + y1 * 10)
 		{
 			moonfish_play(chess, move);
 			valid = moonfish_validate(chess);
@@ -559,7 +563,7 @@ int main(int argc, char **argv)
 			if (moonfish_move_from(&fancy->chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 			{
 				*name++ = ' ';
-				moonfish_to_uci(name, &move, fancy->chess.white);
+				moonfish_to_uci(name, &move);
 				name += strlen(name);
 				
 				pthread_mutex_lock(fancy->mutex);

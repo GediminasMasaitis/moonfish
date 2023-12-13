@@ -49,8 +49,7 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 	else
 		printf("\x1B[48;5;69m");
 	
-	if (fancy->plies[fancy->i].chess.white) y = 7 - y;
-	else x = 7 - x;
+	y = 7 - y;
 	
 	piece = fancy->plies[fancy->i].chess.board[(x + 1) + (y + 2) * 10];
 	
@@ -59,8 +58,6 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 		printf("  ");
 		return;
 	}
-	
-	if (!fancy->plies[fancy->i].chess.white) piece ^= 0x30;
 	
 	if (piece >> 4 == 1)
 		printf("\x1B[38;5;253m");
@@ -303,15 +300,7 @@ static void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moo
 	to_x = move->to % 10 - 1;
 	to_y = move->to / 10 - 2;
 	
-	if (!chess->white)
-	{
-		from_x = 7 - from_x;
-		from_y = 7 - from_y;
-		to_x = 7 - to_x;
-		to_y = 7 - to_y;
-	}
-	
-	if (move->piece == moonfish_our_pawn)
+	if (move->piece % 16 == moonfish_pawn)
 	{
 		if (from_x != to_x)
 		{
@@ -322,10 +311,10 @@ static void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moo
 		*name++ = to_x + 'a';
 		*name++ = to_y + '1';
 		
-		if (move->promotion != moonfish_our_pawn)
+		if (move->promotion % 16 != moonfish_pawn)
 		{
 			*name++ = '=';
-			*name++ = names[(move->promotion & 0xF) - 2];
+			*name++ = names[move->promotion % 16 - 2];
 		}
 		
 		*name = 0;
@@ -587,22 +576,14 @@ static int moonfish_move_from(struct moonfish_chess *chess, struct moonfish_move
 	struct moonfish_move *move;
 	int valid;
 	
-	if (chess->white)
-	{
-		y0 = 9 - y0;
-		y1 = 9 - y1;
-	}
-	else
-	{
-		x0 = 9 - x0;
-		x1 = 9 - x1;
-	}
+	y0 = 10 - y0;
+	y1 = 10 - y1;
 	
-	moonfish_moves(chess, moves, x0 + (y0 + 1) * 10);
+	moonfish_moves(chess, moves, x0 + y0 * 10);
 	
 	for (move = moves ; move->piece != moonfish_outside ; move++)
 	{
-		if (move->to == x1 + (y1 + 1) * 10)
+		if (move->to == x1 + y1 * 10)
 		{
 			moonfish_play(chess, move);
 			valid = moonfish_validate(chess);
@@ -927,7 +908,7 @@ int main(int argc, char **argv)
 				fancy->plies[fancy->i].depth = 0;
 				fancy->plies[fancy->i].score *= -1;
 				
-				moonfish_to_uci(fancy->plies[fancy->i].name, &move, fancy->plies[fancy->i].chess.white);
+				moonfish_to_uci(fancy->plies[fancy->i].name, &move);
 				moonfish_to_san(&fancy->plies[fancy->i].chess, fancy->plies[fancy->i].san, &move);
 				
 				moonfish_play(&fancy->plies[fancy->i].chess, &move);

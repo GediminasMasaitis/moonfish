@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 			}
 			
 			moonfish_best_move(ctx, &move, wtime, btime);
-			moonfish_to_uci(name, &move, ctx->chess.white);
+			moonfish_to_uci(name, &move);
 			printf("bestmove %s\n", name);
 		}
 		else if (!strcmp(arg, "quit"))

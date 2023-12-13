@@ -6,19 +6,26 @@
 
 enum
 {
-	moonfish_our_pawn = 0x11,
-	moonfish_our_knight = 0x12,
-	moonfish_our_bishop = 0x13,
-	moonfish_our_rook = 0x14,
-	moonfish_our_queen = 0x15,
-	moonfish_our_king = 0x16,
+	moonfish_white_pawn = 0x11,
+	moonfish_white_knight = 0x12,
+	moonfish_white_bishop = 0x13,
+	moonfish_white_rook = 0x14,
+	moonfish_white_queen = 0x15,
+	moonfish_white_king = 0x16,
 	
-	moonfish_their_pawn = 0x21,
-	moonfish_their_knight = 0x22,
-	moonfish_their_bishop = 0x23,
-	moonfish_their_rook = 0x24,
-	moonfish_their_queen = 0x25,
-	moonfish_their_king = 0x26,
+	moonfish_black_pawn = 0x21,
+	moonfish_black_knight = 0x22,
+	moonfish_black_bishop = 0x23,
+	moonfish_black_rook = 0x24,
+	moonfish_black_queen = 0x25,
+	moonfish_black_king = 0x26,
+	
+	moonfish_pawn = 1,
+	moonfish_knight = 2,
+	moonfish_bishop = 3,
+	moonfish_rook = 4,
+	moonfish_queen = 5,
+	moonfish_king = 6,
 	
 	moonfish_outside = 0,
 	moonfish_empty = 0xFF,
@@ -68,7 +75,7 @@ void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move);
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *move, long int our_time, long int their_time);
 
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
-void moonfish_to_uci(char *name, struct moonfish_move *move, int white);
+void moonfish_to_uci(char *name, struct moonfish_move *move);
 
 int moonfish_validate(struct moonfish_chess *chess);
 int moonfish_check(struct moonfish_chess *chess);
