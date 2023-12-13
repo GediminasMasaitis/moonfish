@@ -28,8 +28,8 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 		if (!chess->white) score *= -1;
 		
 		if (depth <= -4) return score;
-		if (chess->score >= beta) return beta;
-		if (chess->score > alpha) alpha = score;
+		if (score >= beta) return beta;
+		if (score > alpha) alpha = score;
 	}
 	
 	for (y = 0 ; y < 8 ; y++)
