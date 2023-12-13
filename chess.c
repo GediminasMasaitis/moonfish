@@ -211,7 +211,7 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 	{
 		dy = 10;
 		promotion = moonfish_white_pawn;
-		if (from > 80) promotion = moonfish_white_queen;
+		if (from > 90) promotion = moonfish_white_queen;
 	}
 	else
 	{
@@ -225,7 +225,7 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 		move = moonfish_create_move(chess, moves, from, from + dy);
 		move->promotion = promotion;
 				
-		if (chess->white ? from < 40 : from > 70)
+		if (chess->white ? from < 40 : from > 80)
 		{
 			if (chess->board[from + dy * 2] == moonfish_empty)
 			{
