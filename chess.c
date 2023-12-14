@@ -211,13 +211,13 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 	{
 		dy = 10;
 		promotion = moonfish_white_pawn;
-		if (from > 90) promotion = moonfish_white_queen;
+		if (from > 80) promotion = moonfish_white_queen;
 	}
 	else
 	{
 		dy = -10;
 		promotion = moonfish_black_pawn;
-		if (from < 30) promotion = moonfish_black_queen;
+		if (from < 40) promotion = moonfish_black_queen;
 	}
 	
 	if (chess->board[from + dy] == moonfish_empty)
