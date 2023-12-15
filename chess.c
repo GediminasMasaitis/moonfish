@@ -302,7 +302,7 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
 	unsigned char piece;
 	
 	chess->score -= moonfish_table(move->from, move->piece);
-	chess->score += moonfish_table(move->to, move->piece);
+	chess->score += moonfish_table(move->to, move->promotion);
 	chess->score -= moonfish_table(move->to, move->captured);
 	
 	chess->board[move->from] = moonfish_empty;
