@@ -39,8 +39,13 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
-			if (depth <= 0 && move->captured == moonfish_empty) continue;
-			if (move->captured % 16 == moonfish_king) return moonfish_omega * (depth + 10);
+			if (depth <= 0)
+			if (move->captured == moonfish_empty)
+			if (move->promotion == move->piece)
+				continue;
+			
+			if (move->captured % 16 == moonfish_king)
+				return moonfish_omega * (depth + 10);
 			
 			moonfish_play(chess, move);
 			score = -moonfish_search(chess, -beta, -alpha, depth - 1);
