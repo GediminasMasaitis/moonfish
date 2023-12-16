@@ -649,7 +649,7 @@ int main(int argc, char **argv)
 	
 	if (argc < 3)
 	{
-		if (argc > 0) fprintf(stderr, "usage: %s <FEN> <command>\n", argv[0]);
+		if (argc > 0) fprintf(stderr, "usage: %s <FEN> <command> <args>...\n", argv[0]);
 		return 1;
 	}
 	

@@ -859,7 +859,7 @@ int main(int argc, char **argv)
 	{
 		if (argc > 0)
 		{
-			fprintf(stderr, "usage: %s [<host-name>] [<host-port>] [--] <command>\n", argv[0]);
+			fprintf(stderr, "usage: %s [<host-name>] [<host-port>] [--] <command> <args>...\n", argv[0]);
 			fprintf(stderr, "note: '--' is only optional when both '<host-name>' and '<host-port>' are specified\n");
 		}
 		return 1;
