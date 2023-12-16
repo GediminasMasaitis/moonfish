@@ -22,8 +22,8 @@ moonfish moonfish.exe: moonfish.h $(src)
 play: moonfish.h tools/tools.h tools/play.c tools/utils.c chess.c
 	$(tools_cc) -o play tools/play.c tools/utils.c chess.c
 
-lichess: tools/tools.h tools/lichess.c tools/utils.c
-	$(tools_cc) -std=c99 -o lichess tools/lichess.c tools/utils.c -lbearssl -lcjson
+lichess: tools/tools.h tools/lichess.c tools/utils.c chess.c
+	$(tools_cc) -std=c99 -o lichess tools/lichess.c tools/utils.c chess.c -lbearssl -lcjson
 
 analyse: tools/tools.h tools/analyse.c tools/utils.c chess.c
 	$(tools_cc) -o analyse tools/analyse.c tools/utils.c chess.c

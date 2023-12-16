@@ -65,7 +65,7 @@ struct moonfish_move
 };
 
 void moonfish_chess(struct moonfish_chess *chess);
-void moonfish_fen(struct moonfish_chess *chess, char *fen);
+int moonfish_fen(struct moonfish_chess *chess, char *fen);
 
 void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
 

@@ -12,6 +12,7 @@
 #include <bearssl.h>
 #include <cjson/cJSON.h>
 
+#include "../moonfish.h"
 #include "tools.h"
 
 #define moonfish_write_text(io_ctx, text) br_sslio_write_all(io_ctx, text, strlen(text))
@@ -26,6 +27,7 @@ struct moonfish_game
 	char id[512];
 	char **argv;
 	char *username;
+	char fen[512];
 };
 
 static int moonfish_tcp(char *argv0, char *name, char *port)
@@ -443,17 +445,24 @@ static void moonfish_json_error(char *argv0)
 	exit(1);
 }
 
+static pthread_mutex_t moonfish_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_context *io_ctx, struct moonfish_game *game, FILE *in, FILE *out)
 {
 	char line[4096];
-	cJSON *root, *type, *state, *white_player, *id, *moves;
+	cJSON *root, *type, *state, *white_player, *id, *moves, *fen;
 	cJSON *wtime, *btime, *winc, *binc;
 	const char *end;
 	int white;
 	int move_count, count;
 	int i;
-	char *move;
+	char *name, name0[6];
 	int done;
+	int variant;
+	struct moonfish_chess chess;
+	struct moonfish_move move;
+	
+	pthread_mutex_lock(&moonfish_mutex);
 	
 	fprintf(in, "uci\n");
 	moonfish_wait(out, "uciok");
@@ -470,9 +479,12 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 	white = -1;
 	move_count = -1;
 	done = 0;
+	variant = 0;
 	
 	while (!done)
 	{
+		pthread_mutex_unlock(&moonfish_mutex);
+		
 		if (root != NULL)
 		{
 			cJSON_Delete(root);
@@ -480,6 +492,7 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 		}
 		
 		done = moonfish_tls_line(ctx, io_ctx, game->argv0, line, sizeof line);
+		pthread_mutex_lock(&moonfish_mutex);
 		if (line[0] == 0) continue;
 		
 		end = NULL;
@@ -510,6 +523,20 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 			{
 				if (!cJSON_IsString(id)) moonfish_json_error(game->argv0);
 				if (!strcmp(id->valuestring, game->username)) white = 1;
+			}
+			
+			fen = cJSON_GetObjectItem(root, "initialFen");
+			if (!cJSON_IsString(fen)) moonfish_json_error(game->argv0);
+			
+			if (strcmp(fen->valuestring, "startpos"))
+			{
+				strcpy(game->fen, "fen ");
+				strcat(game->fen, fen->valuestring);
+				variant = 1;
+			}
+			else
+			{
+				strcpy(game->fen, "startpos");
 			}
 		}
 		else
@@ -554,8 +581,29 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 		fprintf(in, "isready\n");
 		moonfish_wait(out, "readyok");
 		
-		fprintf(in, "position startpos");
-		if (count > 0) fprintf(in, " moves %s", moves->valuestring);
+		fprintf(in, "position %s", game->fen);
+		if (count > 0)
+		{
+			fprintf(in, " moves ");
+			if (!variant)
+			{
+				fprintf(in, "%s", moves->valuestring);
+			}
+			else
+			{
+				moonfish_fen(&chess, game->fen + 4);
+				name = strtok(moves->valuestring, " ");
+				for (;;)
+				{
+					moonfish_from_uci(&chess, &move, name);
+					moonfish_to_uci(name0, &move);
+					fprintf(in, "%s", name0);
+					name = strtok(NULL, " ");
+					if (name == NULL) break;
+					fprintf(in, " ");
+				}
+			}
+		}
 		fprintf(in, "\n");
 		
 		fprintf(in, "isready\n");
@@ -566,17 +614,29 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 		if (binc->valueint > 0) fprintf(in, " binc %d", binc->valueint);
 		fprintf(in, "\n");
 		
-		move = moonfish_wait(out, "bestmove");
-		if (move == NULL)
+		name = moonfish_wait(out, "bestmove");
+		if (name == NULL)
 		{
 			fprintf(stderr, "%s: could not find 'bestmove' command\n", game->argv0);
 			exit(1);
 		}
 		
-		snprintf(line, sizeof line, "POST /api/bot/game/%s/move/%s", game->id, move);
+		if (variant)
+		{
+			moonfish_from_uci(&chess, &move, name);
+			if (move.piece % 16 == moonfish_king)
+			{
+				if (!strcmp(name, "e1c1")) name = "e1a1";
+				else if (!strcmp(name, "e1g1")) name = "e1h1";
+				else if (!strcmp(name, "e8c8")) name = "e8a8";
+				else if (!strcmp(name, "e8g8")) name = "e8h8";
+			}
+		}
+		
+		snprintf(line, sizeof line, "POST /api/bot/game/%s/move/%s", game->id, name);
 		if (moonfish_basic_request(game->argv0, game->name, game->port, game->token, line, "", ""))
 		{
-			fprintf(stderr, "%s: could not make move '%s' in game '%s'\n", game->argv0, move, game->id);
+			fprintf(stderr, "%s: could not make move '%s' in game '%s'\n", game->argv0, name, game->id);
 			snprintf(line, sizeof line, "POST /api/bot/game/%s/resign", game->id);
 			if (moonfish_basic_request(game->argv0, game->name, game->port, game->token, line, "", ""))
 				fprintf(stderr, "%s: could not resign game '%s'\n", game->argv0, game->id);
@@ -589,6 +649,8 @@ static void moonfish_handle_game_events(br_ssl_engine_context *ctx, br_sslio_con
 	fprintf(in, "quit\n");
 	fclose(in);
 	fclose(out);
+	
+	pthread_mutex_unlock(&moonfish_mutex);
 }
 
 static void *moonfish_handle_game(void *data)
@@ -681,10 +743,12 @@ static void moonfish_handle_events(
 )
 {
 	static char line[8192];
-	cJSON *root, *type, *challenge, *id, *variant, *speed;
+	cJSON *root, *type, *challenge, *id, *variant, *speed, *fen;
 	const char *end;
 	struct moonfish_game *game;
 	pthread_t thread;
+	struct moonfish_chess chess;
+	int invalid;
 	
 	root = NULL;
 	
@@ -761,11 +825,41 @@ static void moonfish_handle_events(
 		variant = cJSON_GetObjectItem(variant, "key");
 		if (!cJSON_IsString(variant)) moonfish_json_error(argv0);
 		
-		if (strcmp(variant->valuestring, "standard"))
+		if (!strcmp(variant->valuestring, "fromPosition"))
+		{
+			fen = cJSON_GetObjectItem(challenge, "initialFen");
+			if (!cJSON_IsString(fen)) moonfish_json_error(argv0);
+			
+			invalid = moonfish_fen(&chess, fen->valuestring);
+			
+			if (!invalid)
+			if (chess.castle.white_oo || chess.castle.white_ooo)
+			if (chess.board[25] != moonfish_white_king)
+				invalid = 1;
+			
+			if (!invalid)
+			if (chess.castle.black_oo || chess.castle.black_ooo)
+			if (chess.board[95] != moonfish_black_king)
+				invalid = 1;
+			
+			if (!invalid && chess.castle.white_ooo && chess.board[21] != moonfish_white_rook) invalid = 1;
+			if (!invalid && chess.castle.white_oo && chess.board[28] != moonfish_white_rook) invalid = 1;
+			if (!invalid && chess.castle.black_ooo && chess.board[91] != moonfish_black_rook) invalid = 1;
+			if (!invalid && chess.castle.black_oo && chess.board[98] != moonfish_black_rook) invalid = 1;
+			
+			if (invalid)
+			{
+				snprintf(line, sizeof line, "POST /api/challenge/%s/decline", id->valuestring);
+				if (moonfish_basic_request(argv0, name, port, token, line, "", "reason=standard"))
+					fprintf(stderr, "%s: could not decline challenge '%s' (chess 960 FEN)\n", argv0, id->valuestring);
+				continue;
+			}
+		}
+		else if (strcmp(variant->valuestring, "standard"))
 		{
 			snprintf(line, sizeof line, "POST /api/challenge/%s/decline", id->valuestring);
 			if (moonfish_basic_request(argv0, name, port, token, line, "", "reason=standard"))
-				fprintf(stderr, "%s: could not decline challenge '%s' (standard)\n", argv0, id->valuestring);
+				fprintf(stderr, "%s: could not decline challenge '%s' (variant)\n", argv0, id->valuestring);
 			continue;
 		}
 		

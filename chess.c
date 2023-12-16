@@ -411,24 +411,22 @@ void moonfish_chess(struct moonfish_chess *chess)
 
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
 {
-	int x, y;
+	int x0, y0;
+	int x1, y1;
 	unsigned char color;
 	
-	x = name[0] - 'a';
-	y = name[1] - '1';
+	x0 = name[0] - 'a';
+	y0 = name[1] - '1';
+	x1 = name[2] - 'a';
+	y1 = name[3] - '1';
 	
-	move->from = (x + 1) + (y + 2) * 10;
-	
-	x = name[2] - 'a';
-	y = name[3] - '1';
-	
-	move->to = (x + 1) + (y + 2) * 10;
-	
-	move->piece = chess->board[move->from];
-	move->captured = chess->board[move->to];
-	move->promotion = move->piece;
-	move->castle = chess->castle;
-	move->score = chess->score;
+	moonfish_create_move(chess, &move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10);
+	if (move->piece % 16 == moonfish_king && x0 == 4)
+	{
+		if (x1 == 0) x1 = 2;
+		if (x1 == 7) x1 = 6;
+		moonfish_create_move(chess, &move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10);
+	}
 	
 	color = chess->white ? 0x10 : 0x20;
 	if (name[4] == 'q') move->promotion = color | moonfish_queen;
@@ -464,7 +462,7 @@ void moonfish_to_uci(char *name, struct moonfish_move *move)
 	}
 }
 
-void moonfish_fen(struct moonfish_chess *chess, char *fen)
+int moonfish_fen(struct moonfish_chess *chess, char *fen)
 {
 	int x, y;
 	unsigned char type, color;
@@ -488,7 +486,7 @@ void moonfish_fen(struct moonfish_chess *chess, char *fen)
 	{
 		ch = *fen++;
 		
-		if (ch == 0) return;
+		if (ch == 0) return 0;
 		if (ch == ' ') break;
 		
 		if (ch == '/')
@@ -526,17 +524,22 @@ void moonfish_fen(struct moonfish_chess *chess, char *fen)
 	}
 	
 	if (*fen++ == 'b') chess->white ^= 1;
-	if (*fen++ != ' ') return;
+	if (*fen++ != ' ') return 0;
 	
 	for (;;)
 	{
 		ch = *fen++;
-		if (ch == 0) return;
-		if (ch == ' ') break;
+		
+		if (ch == 0) return 0;
+		if (ch == ' ') return 0;
+		
 		if (ch == 'K') chess->castle.white_oo = 1;
 		if (ch == 'Q') chess->castle.white_ooo = 1;
 		if (ch == 'k') chess->castle.black_oo = 1;
 		if (ch == 'q') chess->castle.black_ooo = 1;
+		
+		if (ch >= 'A' && ch <= 'H') return 1;
+		if (ch >= 'a' && ch <= 'h') return 1;
 	}
 }
 
