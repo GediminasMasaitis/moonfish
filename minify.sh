@@ -55,8 +55,40 @@ sed '/^$/d' |
 # remove duplicate lines (for '#include')
 awk '!x[$0]++' |
 
-# replace 'moonfish_' prefix with 'M'
-sed 's/\bmoonfish_/M/g' |
+# replace common words
+sed 's/\(\b\|_\)moonfish\(\b\|_\)/_F_/g' |
+sed 's/\(\b\|_\)white\(\b\|_\)/_W_/g' |
+sed 's/\(\b\|_\)black\(\b\|_\)/_Y_/g' |
+sed 's/\(\b\|_\)pawn\(\b\|_\)/_P_/g' |
+sed 's/\(\b\|_\)knight\(\b\|_\)/_L_/g' |
+sed 's/\(\b\|_\)bishop\(\b\|_\)/_B_/g' |
+sed 's/\(\b\|_\)rook\(\b\|_\)/_R_/g' |
+sed 's/\(\b\|_\)queen\(\b\|_\)/_Q_/g' |
+sed 's/\(\b\|_\)king\(\b\|_\)/_K_/g' |
+sed 's/\(\b\|_\)chess\(\b\|_\)/_X_/g' |
+sed 's/\(\b\|_\)score\(\b\|_\)/_S_/g' |
+sed 's/\(\b\|_\)board\(\b\|_\)/_D_/g' |
+sed 's/\(\b\|_\)castle\(\b\|_\)/_O_/g' |
+sed 's/\(\b\|_\)move\(\b\|_\)/_M_/g' |
+sed 's/\(\b\|_\)moves\(\b\|_\)/_N_/g' |
+sed 's/\(\b\|_\)from\(\b\|_\)/_A_/g' |
+sed 's/\(\b\|_\)to\(\b\|_\)/_Z_/g' |
+sed 's/\(\b\|_\)piece\(\b\|_\)/_G_/g' |
+sed 's/\(\b\|_\)promotion\(\b\|_\)/_H_/g' |
+sed 's/\(\b\|_\)color\(\b\|_\)/_C_/g' |
+sed 's/\(\b\|_\)captured\(\b\|_\)/_R_/g' |
+sed 's/\(\b\|_\)empty\(\b\|_\)/_E_/g' |
+sed 's/\(\b\|_\)type\(\b\|_\)/_T_/g' |
+sed 's/\(\b\|_\)outside\(\b\|_\)/_J_/g' |
+
+# collapse underscores
+sed 's/_\+/_/g' |
+sed 's/\b_//g' |
+sed 's/_\b//g' |
+
+# restore significant underscore
+# (hacky, but it works)
+sed 's/\(SC_NPROCESSORS_ONLN\)/_\1/g' |
 
 # store the result into a file
 tee moonfish.c |
@@ -68,7 +100,7 @@ xz -9 > moonfish.c.xz
 cat - moonfish.c.xz > moonfish.sh << END
 #!/bin/sh
 t=\`mktemp\`
-tail -n +5 "\$0"|xz -d|cc -march=native -O3 -o \$t -xc - -pthread
+tail -n +5 "\$0"|xz -d|gcc -march=native -O3 -o \$t -xc - -pthread
 (sleep 3;rm \$t)&exec \$t
 END
 chmod +x moonfish.sh
