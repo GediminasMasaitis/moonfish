@@ -409,6 +409,11 @@ void moonfish_chess(struct moonfish_chess *chess)
 	moonfish_fen(chess, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
 }
 
+static void moonfish_from_xy(struct moonfish_chess *chess, struct moonfish_move *move, int x0, int y0, int x1, int y1)
+{
+	moonfish_create_move(chess, &move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10);
+}
+
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
 {
 	int x0, y0;
@@ -420,12 +425,12 @@ void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move,
 	x1 = name[2] - 'a';
 	y1 = name[3] - '1';
 	
-	moonfish_create_move(chess, &move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10);
+	moonfish_from_xy(chess, move, x0, y0, x1, y1);
 	if (move->piece % 16 == moonfish_king && x0 == 4)
 	{
 		if (x1 == 0) x1 = 2;
 		if (x1 == 7) x1 = 6;
-		moonfish_create_move(chess, &move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10);
+		moonfish_from_xy(chess, move, x0, y0, x1, y1);
 	}
 	
 	color = chess->white ? 0x10 : 0x20;
@@ -453,7 +458,10 @@ void moonfish_to_uci(char *name, struct moonfish_move *move)
 	
 	if (move->promotion != move->piece)
 	{
-		name[4] = 'q';
+		if (move->promotion % 16 == moonfish_queen) name[4] = 'q';
+		if (move->promotion % 16 == moonfish_rook) name[4] = 'r';
+		if (move->promotion % 16 == moonfish_bishop) name[4] = 'b';
+		if (move->promotion % 16 == moonfish_knight) name[4] = 'n';
 		name[5] = 0;
 	}
 	else
