@@ -100,7 +100,7 @@ xz -9 > moonfish.c.xz
 cat - moonfish.c.xz > moonfish.sh << END
 #!/bin/sh
 t=\`mktemp\`
-tail -n +5 "\$0"|xz -d|gcc -march=native -O3 -o \$t -xc - -pthread
+tail -n +5 "\$0"|xz -d|cc -march=native -O3 -o \$t -xc - -pthread
 (sleep 3;rm \$t)&exec \$t
 END
 chmod +x moonfish.sh
