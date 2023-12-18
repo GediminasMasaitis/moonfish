@@ -79,5 +79,8 @@ void moonfish_to_uci(char *name, struct moonfish_move *move);
 
 int moonfish_validate(struct moonfish_chess *chess);
 int moonfish_check(struct moonfish_chess *chess);
+int moonfish_checkmate(struct moonfish_chess *chess);
+int moonfish_stalemate(struct moonfish_chess *chess);
+int moonfish_finished(struct moonfish_chess *chess);
 
 #endif

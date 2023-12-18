@@ -31,7 +31,6 @@ These are things that I plan to fix eventually.
   - no en passant
   - no underpromotion
 - the TUI will also prevent you from making those kinds of moves
-- the TUI does not detect when the game has ended due to stalemate or checkmate
 - no transposition table
 - no good move ordering heuristic
 - no support for `go infinite` or `go mate`

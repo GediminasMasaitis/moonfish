@@ -151,6 +151,24 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 		
 		moonfish_play(&ctx->chess, moves);
 		
+		if (moonfish_checkmate(&ctx->chess))
+		{
+			*best_move = *moves;
+			moonfish_unplay(&ctx->chess, moves);
+			return -200 * moonfish_omega;
+		}
+		
+		if (moonfish_stalemate(&ctx->chess))
+		{
+			if (best_score < 0)
+			{
+				*best_move = *moves;
+				best_score = 0;
+			}
+			moonfish_unplay(&ctx->chess, moves++);
+			continue;
+		}
+		
 		if (!moonfish_validate(&ctx->chess))
 		{
 			moonfish_unplay(&ctx->chess, moves++);

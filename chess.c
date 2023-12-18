@@ -589,3 +589,38 @@ int moonfish_check(struct moonfish_chess *chess)
 	
 	return valid ^ 1;
 }
+
+int moonfish_finished(struct moonfish_chess *chess)
+{
+	int x, y;
+	struct moonfish_move moves[32];
+	struct moonfish_move *move;
+	int valid;
+	
+	for (y = 0 ; y < 8 ; y++)
+	for (x = 0 ; x < 8 ; x++)
+	{
+		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		for (move = moves ; move->piece != moonfish_outside ; move++)
+		{
+			moonfish_play(chess, move);
+			valid = moonfish_validate(chess);
+			moonfish_unplay(chess, move);
+			if (valid) return 0;
+		}
+	}
+	
+	return 1;
+}
+
+int moonfish_checkmate(struct moonfish_chess *chess)
+{
+	if (!moonfish_finished(chess)) return 0;
+	return moonfish_check(chess);
+}
+
+int moonfish_stalemate(struct moonfish_chess *chess)
+{
+	if (!moonfish_finished(chess)) return 0;
+	return moonfish_check(chess) ^ 1;
+}
