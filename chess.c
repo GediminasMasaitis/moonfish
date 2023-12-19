@@ -180,10 +180,10 @@ static void moonfish_castle_high(struct moonfish_chess *chess, struct moonfish_m
 
 static void moonfish_move_king(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from)
 {
-	moonfish_jump(chess, moves, from, 1 + 10);
-	moonfish_jump(chess, moves, from, -1 + 10);
-	moonfish_jump(chess, moves, from, 1 - 10);
-	moonfish_jump(chess, moves, from, -1 - 10);
+	moonfish_jump(chess, moves, from, 11);
+	moonfish_jump(chess, moves, from, 9);
+	moonfish_jump(chess, moves, from, -9);
+	moonfish_jump(chess, moves, from, -11);
 	moonfish_jump(chess, moves, from, 10);
 	moonfish_jump(chess, moves, from, -10);
 	moonfish_jump(chess, moves, from, 1);

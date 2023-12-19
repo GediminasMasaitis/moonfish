@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
-	long int time, wtime, btime, *xtime;
+	long int wtime, btime, *xtime;
 	
 	if (argc > 1)
 	{
@@ -78,23 +78,14 @@ int main(int argc, char **argv)
 				}
 			}
 			
-			if (wtime < 0 && btime < 0)
-			{
-				wtime = 3600000;
-				btime = 3600000;
-			}
+			if (wtime < 0) wtime = 0;
+			if (btime < 0) btime = 0;
 			
-			if (wtime < 0) wtime = btime;
-			if (btime < 0) btime = wtime;
+			if (ctx->chess.white)
+				moonfish_best_move(ctx, &move, wtime, btime);
+			else
+				moonfish_best_move(ctx, &move, btime, wtime);
 			
-			if (!ctx->chess.white)
-			{
-				time = wtime;
-				wtime = btime;
-				btime = time;
-			}
-			
-			moonfish_best_move(ctx, &move, wtime, btime);
 			moonfish_to_uci(name, &move);
 			printf("bestmove %s\n", name);
 		}
@@ -164,6 +155,7 @@ int main(int argc, char **argv)
 		{
 			printf("readyok\n");
 		}
+#ifndef moonfish_mini
 		else if (!strcmp(arg, "debug") || !strcmp(arg, "setoption") || !strcmp(arg, "ucinewgame") || !strcmp(arg, "stop"))
 		{
 		}
@@ -171,6 +163,7 @@ int main(int argc, char **argv)
 		{
 			fprintf(stderr, "%s: unknown command '%s'\n", argv[0], arg);
 		}
+#endif
 		
 		fflush(stdout);
 	}
