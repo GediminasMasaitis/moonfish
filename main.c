@@ -33,7 +33,6 @@ int main(int argc, char **argv)
 	ctx->argv0 = argv[0];
 	ctx->cpu_count = -1;
 	moonfish_chess(&ctx->chess);
-	ctx->repetition.entries[0].count = -1;
 	
 	for (;;)
 	{
@@ -132,8 +131,6 @@ int main(int argc, char **argv)
 				return 1;
 			}
 			
-			moonfish_repetition_account(&ctx->repetition, &ctx->chess, 1);
-			
 			arg = strtok(NULL, "\r\n\t ");
 			if (arg != NULL && !strcmp(arg, "moves"))
 			{
@@ -141,7 +138,6 @@ int main(int argc, char **argv)
 				{
 					moonfish_from_uci(&ctx->chess, &move, arg);
 					moonfish_play(&ctx->chess, &move);
-					moonfish_repetition_account(&ctx->repetition, &ctx->chess, 1);
 				}
 			}
 		}

@@ -572,7 +572,6 @@ int main(int argc, char **argv)
 				moonfish_play(&fancy->chess, &move);
 				moonfish_reset_time(fancy);
 				moonfish_fancy(fancy);
-				if (moonfish_finished(&fancy->chess)) break;
 				
 				pthread_mutex_unlock(fancy->mutex);
 				
@@ -584,8 +583,6 @@ int main(int argc, char **argv)
 				name += strlen(name);
 				moonfish_reset_time(fancy);
 				moonfish_fancy(fancy);
-				if (moonfish_finished(&fancy->chess)) break;
-				
 				pthread_mutex_unlock(fancy->mutex);
 				
 				printf("\x1B[?1000h");

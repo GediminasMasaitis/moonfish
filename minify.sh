@@ -60,8 +60,6 @@ sed '/^[^"'"'"']/s/\(\b\|_\)captured\(\b\|_\)/\1U\2/g' |
 sed '/^[^"'"'"']/s/\(\b\|_\)empty\(\b\|_\)/\1E\2/g' |
 sed '/^[^"'"'"']/s/\(\b\|_\)type\(\b\|_\)/\1T\2/g' |
 sed '/^[^"'"'"']/s/\(\b\|_\)outside\(\b\|_\)/\1J\2/g' |
-sed '/^[^"'"'"']/s/\(\b\|_\)repetition\(\b\|_\)/\1V\2/g' |
-sed '/^[^"'"'"']/s/\(\b\|_\)account\(\b\|_\)/\1I\2/g' |
 
 # remove inserted line breaks
 tr -d '\n' |
