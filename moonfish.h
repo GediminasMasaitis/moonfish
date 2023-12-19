@@ -47,9 +47,21 @@ struct moonfish_chess
 	int score;
 };
 
+struct moonfish_repetition_entry
+{
+	struct moonfish_chess chess;
+	int count;
+};
+
+struct moonfish_repetition
+{
+	struct moonfish_repetition_entry entries[512];
+};
+
 struct moonfish
 {
 	struct moonfish_chess chess;
+	struct moonfish_repetition repetition;
 	char *argv0;
 	int cpu_count;
 };
@@ -82,5 +94,8 @@ int moonfish_check(struct moonfish_chess *chess);
 int moonfish_checkmate(struct moonfish_chess *chess);
 int moonfish_stalemate(struct moonfish_chess *chess);
 int moonfish_finished(struct moonfish_chess *chess);
+
+void moonfish_repetition_account(struct moonfish_repetition *repetition, struct moonfish_chess *chess, int count);
+int moonfish_repetition(struct moonfish_repetition *repetition);
 
 #endif

@@ -84,6 +84,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	int i, j;
 	struct moonfish_search_info infos[32];
 	int result;
+	int repetition;
 #ifdef __MINGW32__
 	SYSTEM_INFO info;
 #endif
@@ -108,6 +109,8 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	
 	moves = move_array;
 	best_score = -200 * moonfish_omega;
+	
+	repetition = moonfish_repetition(&ctx->repetition) * 2;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
@@ -158,7 +161,14 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 			return -200 * moonfish_omega;
 		}
 		
-		if (moonfish_stalemate(&ctx->chess))
+		if (repetition != 2)
+		{
+			moonfish_repetition_account(&ctx->repetition, &ctx->chess, 1);
+			repetition = moonfish_repetition(&ctx->repetition);
+			moonfish_repetition_account(&ctx->repetition, &ctx->chess, -1);
+		}
+		
+		if (moonfish_stalemate(&ctx->chess) || repetition == 1)
 		{
 			if (best_score < 0)
 			{
