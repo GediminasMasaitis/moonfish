@@ -94,8 +94,10 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 #ifdef __MINGW32__
 		GetSystemInfo(&info);
 		ctx->cpu_count = info.dwNumberOfProcessors;
-#else
+#elif defined(_SC_NPROCESSORS_ONLN)
 		ctx->cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+		ctx->cpu_count = 4;
 #endif
 		if (ctx->cpu_count <= 0)
 		{
