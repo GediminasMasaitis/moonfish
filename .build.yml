@@ -7,40 +7,33 @@ secrets:
 packages:
   - build-base
   - bearssl-dev
+  - bearssl-static
   - xz
   - mingw-w64-gcc
   - curl
+  - cjson-dev
 sources:
   - https://git.sr.ht/~zamfofex/moonfish
-  - https://github.com/DaveGamble/cJSON#v1.7.16
 tasks:
-  - build-cjson: |
-      cd cJSON
-      make
-      mkdir cjson
-      mv cJSON.h cjson
   - build: |
       cd moonfish
-      make CPPFLAGS=-I../cJSON LDFLAGS='-static -L../cJSON'
-  - minify: |
-      cd moonfish
+      make LDFLAGS=-static
+      make LDFLAGS=-static CC=x86_64-w64-mingw32-gcc moonfish.exe
       ./minify.sh
-  - windows-build: |
-      cd moonfish
-      make CC=x86_64-w64-mingw32-gcc LDFLAGS=-static moonfish.exe
   - deploy: |
       set +x
-      test "$GIT_REF" = refs/heads/main || exit
-      test -f neocities-token.txt || exit
-      cd moonfish
-      curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
-        -F moonfish=@moonfish \
-        -F play=@play \
-        -F lichess=@lichess \
-        -F analyse=@analyse \
-        -F moonfish.sh=@moonfish.sh \
-        -F moonfish.exe=@moonfish.exe \
-        https://neocities.org/api/upload
+      if test "$GIT_REF" = refs/heads/main && test -f neocities-token.txt
+      then
+        cd moonfish
+        curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
+          -F moonfish=@moonfish \
+          -F play=@play \
+          -F lichess=@lichess \
+          -F analyse=@analyse \
+          -F moonfish.sh=@moonfish.sh \
+          -F moonfish.exe=@moonfish.exe \
+          https://neocities.org/api/upload
+      fi
 artifacts:
   - moonfish/moonfish
   - moonfish/play
