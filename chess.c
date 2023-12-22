@@ -531,7 +531,7 @@ int moonfish_fen(struct moonfish_chess *chess, char *fen)
 		x++;
 	}
 	
-	if (*fen++ == 'b') chess->white ^= 1;
+	if (*fen++ == 'b') chess->white = 0;
 	if (*fen++ != ' ') return 0;
 	
 	for (;;)
