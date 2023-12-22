@@ -78,34 +78,40 @@ static void *moonfish_start_search(void *data)
 
 static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
 {
+	static struct moonfish_search_info *infos;
+	static int thread_count = -1;
+	
 	int x, y;
 	struct moonfish_move *moves, move_array[256];
 	int best_score;
 	int i, j;
-	struct moonfish_search_info infos[32];
 	int result;
 #ifdef __MINGW32__
 	SYSTEM_INFO info;
 #endif
 	
-	if (ctx->cpu_count < 0)
+	if (thread_count < 0)
 	{
 		errno = 0;
 #ifdef __MINGW32__
 		GetSystemInfo(&info);
-		ctx->cpu_count = info.dwNumberOfProcessors;
+		thread_count = info.dwNumberOfProcessors;
 #elif defined(_SC_NPROCESSORS_ONLN)
-		ctx->cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+		thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 #else
-		ctx->cpu_count = 4;
+		thread_count = 4;
 #endif
-		if (ctx->cpu_count <= 0)
+		
+		if (thread_count <= 0)
 		{
 			if (errno == 0) fprintf(stderr, "%s: unknown CPU count\n", ctx->argv0);
 			else perror(ctx->argv0);
 			exit(1);
 		}
-		if (ctx->cpu_count > 32) ctx->cpu_count = 32;
+		
+		thread_count += thread_count / 4;
+		
+		infos = malloc(thread_count * sizeof *infos);
 	}
 	
 	moves = move_array;
@@ -128,7 +134,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	i = 0;
 	for (;;)
 	{
-		if (i == ctx->cpu_count || moves->piece == moonfish_outside)
+		if (i == thread_count || moves->piece == moonfish_outside)
 		{
 			for (j = 0 ; j < i ; j++)
 			{
