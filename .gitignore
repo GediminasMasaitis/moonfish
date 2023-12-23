@@ -14,4 +14,6 @@
 !/tools
 !/tools/tools.h
 !/tools/*.c
+!/moonfish.vcxproj
+
 /moonfish.c

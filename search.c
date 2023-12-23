@@ -1,16 +1,41 @@
 /* moonfish is licensed under the AGPL (v3 or later) */
 /* copyright 2023 zamfofex */
 
-#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 
-#ifdef __MINGW32__
-#include <sysinfoapi.h>
+#ifdef _WIN32
+
+#include <windows.h>
+
+#ifndef __MINGW32__
+#define moonfish_c11_threads
+#endif
+
+#else
+
+#include <time.h>
+#include <unistd.h>
+
+#endif
+
+#ifdef moonfish_c11_threads
+
+#include <threads.h>
+#define pthread_t thrd_t
+#define pthread_create(thread, attr, fn, arg) thrd_create(thread, fn, arg)
+#define pthread_join thrd_join
+typedef int moonfish_result_t;
+#define moonfish_value 0
+
+#else
+
+#include <pthread.h>
+typedef void *moonfish_result_t;
+#define moonfish_value NULL
+
 #endif
 
 #include "moonfish.h"
@@ -68,12 +93,12 @@ struct moonfish_search_info
 	int score;
 };
 
-static void *moonfish_start_search(void *data)
+static moonfish_result_t moonfish_start_search(void *data)
 {
 	struct moonfish_search_info *info;
 	info = data;
 	info->score = -moonfish_search(&info->chess, -100 * moonfish_omega, 100 * moonfish_omega, info->depth);
-	return NULL;
+	return moonfish_value;
 }
 
 static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
@@ -86,14 +111,14 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	int best_score;
 	int i, j;
 	int result;
-#ifdef __MINGW32__
+#ifdef _WIN32
 	SYSTEM_INFO info;
 #endif
 	
 	if (thread_count < 0)
 	{
 		errno = 0;
-#ifdef __MINGW32__
+#ifdef _WIN32
 		GetSystemInfo(&info);
 		thread_count = info.dwNumberOfProcessors;
 #elif defined(_SC_NPROCESSORS_ONLN)
@@ -185,21 +210,35 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 	return best_score;
 }
 
-static void moonfish_clock(struct moonfish *ctx, struct timespec *ts)
+#ifdef _WIN32
+
+static long int moonfish_clock(struct moonfish *ctx)
 {
-	if (clock_gettime(CLOCK_MONOTONIC, ts))
+	return GetTickCount();
+}
+
+#else
+
+static long int moonfish_clock(struct moonfish *ctx)
+{
+	struct timespec ts;
+	
+	if (clock_gettime(CLOCK_MONOTONIC, &ts))
 	{
 		perror(ctx->argv0);
 		exit(1);
 	}
+	
+	return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
+
+#endif
 
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, long int our_time, long int their_time)
 {
-	long int d, t;
+	long int d, t, t0, t1;
 	int i;
 	int score;
-	struct timespec t0, t1;
 	
 	d = our_time - their_time;
 	if (d < 0) d = 0;
@@ -207,15 +246,11 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	
 	i = 3;
 	
-	moonfish_clock(ctx, &t0);
+	t0 = moonfish_clock(ctx);
 	score = moonfish_best_move_depth(ctx, best_move, i);
-	moonfish_clock(ctx, &t1);
+	t1 = moonfish_clock(ctx);
 	
-	t = 50;
-	t += t1.tv_sec * 1000;
-	t -= t0.tv_sec * 1000;
-	t += t1.tv_nsec / 1000000;
-	t -= t0.tv_nsec / 1000000;
+	t = t1 - t0 + 50;
 	
 	for (;;)
 	{
