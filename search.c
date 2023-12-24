@@ -40,19 +40,19 @@ typedef void *moonfish_result_t;
 
 #include "moonfish.h"
 
-static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, int depth)
+static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, int depth, int qdepth, int i)
 {
 	int x, y;
 	struct moonfish_move moves[32];
 	struct moonfish_move *move;
 	int score;
 	
-	if (depth <= 0)
+	if (i >= depth)
 	{
 		score = chess->score;
 		if (!chess->white) score *= -1;
 		
-		if (depth <= -4) return score;
+		if (i >= depth + qdepth) return score;
 		if (score >= beta) return beta;
 		if (score > alpha) alpha = score;
 	}
@@ -64,16 +64,16 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
-			if (depth <= 0)
+			if (i >= depth)
 			if (move->captured == moonfish_empty)
 			if (move->promotion == move->piece)
 				continue;
 			
 			if (move->captured % 16 == moonfish_king)
-				return moonfish_omega * (depth + 10);
+				return moonfish_omega * (moonfish_depth - i);
 			
 			moonfish_play(chess, move);
-			score = -moonfish_search(chess, -beta, -alpha, depth - 1);
+			score = -moonfish_search(chess, -beta, -alpha, depth, qdepth, i + 1);
 			moonfish_unplay(chess, move);
 			
 			if (score >= beta) return beta;
@@ -82,6 +82,14 @@ static int moonfish_search(struct moonfish_chess *chess, int alpha, int beta, in
 	}
 	
 	return alpha;
+}
+
+int moonfish_countdown(int score)
+{
+	score /= -moonfish_omega;
+	if (score < 0) score += moonfish_depth;
+	else score -= moonfish_depth;
+	return score;
 }
 
 struct moonfish_search_info
@@ -97,7 +105,7 @@ static moonfish_result_t moonfish_start_search(void *data)
 {
 	struct moonfish_search_info *info;
 	info = data;
-	info->score = -moonfish_search(&info->chess, -100 * moonfish_omega, 100 * moonfish_omega, info->depth);
+	info->score = -moonfish_search(&info->chess, -100 * moonfish_omega, 100 * moonfish_omega, info->depth, 4, 0);
 	return moonfish_value;
 }
 

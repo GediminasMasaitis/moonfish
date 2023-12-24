@@ -16,6 +16,7 @@ int main(int argc, char **argv)
 	struct moonfish_move move;
 	char name[6];
 	long int wtime, btime, *xtime;
+	int score;
 	
 	if (argc > 1)
 	{
@@ -80,10 +81,14 @@ int main(int argc, char **argv)
 			if (btime < 0) btime = 0;
 			
 			if (ctx->chess.white)
-				moonfish_best_move(ctx, &move, wtime, btime);
+				score = moonfish_best_move(ctx, &move, wtime, btime);
 			else
-				moonfish_best_move(ctx, &move, btime, wtime);
+				score = moonfish_best_move(ctx, &move, btime, wtime);
 			
+			if (score >= moonfish_omega || score <= -moonfish_omega)
+				printf("info score mate %d\n", moonfish_countdown(score));
+			else
+				printf("info score cp %d\n", score);
 			moonfish_to_uci(name, &move);
 			printf("bestmove %s\n", name);
 		}

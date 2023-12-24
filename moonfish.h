@@ -30,6 +30,7 @@ enum
 	moonfish_outside = 0,
 	moonfish_empty = 0xFF,
 	
+	moonfish_depth = 50,
 	moonfish_omega = 5000000
 };
 
@@ -72,6 +73,7 @@ void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move);
 void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move);
 
 int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *move, long int our_time, long int their_time);
+int moonfish_countdown(int score);
 
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move);
