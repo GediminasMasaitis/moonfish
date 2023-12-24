@@ -9,9 +9,12 @@ moonfish
 [![Lichess blitz rating](https://lichess-shield.vercel.app/api?username=munfish&format=blitz)](https://lichess.org/@/munfish/perf/blitz)
 [![Lichess bullet rating](https://lichess-shield.vercel.app/api?username=munfish&format=bullet)](https://lichess.org/@/munfish/perf/bullet)
 
-**moonfish** is a chess bot inspired by [sunfish], written in C rather than Python. It is not nearly as complete, but it works well enough!
+**moonfish** is a chess bot inspired by [sunfish], written in C rather than Python. Besides being inspired by it, moonfish doesn’t reuse any code from sunfish, and is written completely from scratch.
+
+You may [play moonfish on Lichess]! You don’t need a Lichess account, just make sure to choose “real time” and select a fast enough time control.
 
 [sunfish]: <https://github.com/thomasahle/sunfish>
+[play moonfish on Lichess]: <https://lichess.org/?user=munfish#friend>
 
 features
 ---
@@ -20,12 +23,12 @@ features
 - alpha/beta pruning search
 - cute custom UCI TUIs
 - custom Lichess integration
-- optional threaded search support (enabled by default)
+- threaded search
 
 limitations
 ---
 
-These are things that I plan to fix eventually.
+These are things that might be fixed eventually.
 
 - the bot will never make certain moves
   - no en passant
@@ -40,16 +43,24 @@ These are things that I plan to fix eventually.
 download
 ---
 
-Prebuilt executables for Linux of moonfish (and its tools) may be found at <https://moonfish.neocities.org>
+Pre‐compiled executables for Linux of moonfish (and its tools) may be found at <https://moonfish.neocities.org>
 
-building
+compiling from source
 ---
+
+Building on UNIX should be easy. Make sure you have GNU `make` and a C compiler like GCC, then run the following command.
 
 ~~~
 make moonfish
 ~~~
 
-The two UCI TUIs, called “play” and “analyse”, may also be built.
+Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
+
+~~~
+cc -ansi -O3 -pthread -o moonfish chess.c search.c main.c
+~~~
+
+The two UCI TUIs, called “play” and “analyse”, may also be compiled.
 
 ~~~
 make play analyse
@@ -88,12 +99,25 @@ To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or 
 ./analyse initial lc0 --show-wdl
 ~~~
 
+compiling on Windows
+---
+
+Clone the repository, then open `moonfish.vcxproj` with Visual Studio. Support for [C11 `<threads.h>`][C11 threads in VS] is required. Only the UCI bot will be compiled, not its tools. (You may use a GUI like [cutechess] to try it.)
+
+Beware that, as of December of 2023, Microsoft, perhaps accidentally, [removed support for C11 threads][missing C11 threads] from Visual Studio but is planning to add it back. Meanwhile, a [workaround][C11 threads workaround] is given in their community support forum.
+
+Note that [MinGW] compilation is also supported.
+
+[cutechess]: <https://github.com/cutechess/cutechess>
+[C11 threads in VS]: <https://devblogs.microsoft.com/cppblog/c11-threads-in-visual-studio-2022-version-17-8-preview-2/>
+[missing C11 threads]: <https://developercommunity.visualstudio.com/t/Missing-threadsh-in-MSVC-178/10514752>
+[C11 threads workaround]: <https://developercommunity.visualstudio.com/t/Missing-threadsh-in-MSVC-178/10514752#T-N10540847>
+[MinGW]: <https://mingw-w64.org>
+
 license
 ---
 
-[GNU][GPL] [AGPL] ([v3][AGPLv3] [or later][GPLv3+]) © [zamfofex 2023]
+[AGPL] ([v3 or later][GPLv3+]) © zamfofex 2023
 
-[GPL]: <https://www.gnu.org/licenses/>
-[AGPL]: <LICENSE>
-[AGPLv3]: <https://www.gnu.org/licenses/agpl-3.0>
-[GPLv3+]: <https://www.gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>
+[AGPL]: <https://gnu.org/licenses/agpl-3.0>
+[GPLv3+]: <https://gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>
