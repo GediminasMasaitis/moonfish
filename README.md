@@ -56,6 +56,8 @@ make moonfish
 
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
+Note: If your C implementation doesn’t support pthreads, but supports C11 threads, you can pass in `-Dmoonfish_c11_threads`.
+
 ~~~
 cc -ansi -O3 -pthread -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c
 ~~~
