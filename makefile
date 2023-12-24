@@ -9,7 +9,7 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 src := chess.c search.c main.c
 
-moonfish_cc := $(cc) -pthread
+moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
 .PHONY: all clean install

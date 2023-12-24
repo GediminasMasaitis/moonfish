@@ -57,7 +57,7 @@ make moonfish
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
 ~~~
-cc -ansi -O3 -pthread -o moonfish chess.c search.c main.c
+cc -ansi -O3 -pthread -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c
 ~~~
 
 The two UCI TUIs, called “play” and “analyse”, may also be compiled.
