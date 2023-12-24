@@ -129,7 +129,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 #ifdef _WIN32
 		GetSystemInfo(&info);
 		thread_count = info.dwNumberOfProcessors;
-#elif defined(_SC_NPROCESSORS_ONLN)
+#elif defined(_SC_NPROCESSORS_ONLN) || defined(moonfish_mini)
 		thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 #else
 		thread_count = 4;
