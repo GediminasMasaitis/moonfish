@@ -3,37 +3,39 @@
 
 CFLAGS ?= -ansi -O3 -Wall -Wextra -Wpedantic
 PREFIX ?= /usr/local
-BINDIR ?= $PREFIX/bin
+BINDIR ?= $(PREFIX)/bin
 
 cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
-
-src := chess.c search.c main.c
 
 moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
-.PHONY: all clean install
+lichess_cc := $(tools_cc) -std=c99
+lichess_libs := -lbearssl -lcjson
+
+.PHONY: all clean install uninstall
 
 all: moonfish play lichess analyse
 
-moonfish moonfish.exe: moonfish.h $(src)
-	$(moonfish_cc) -o $@ $(src)
+chess.c: moonfish.h
+search.c: moonfish.h
+main.c: moonfish.h
+tools/*.c: tools/tools.h
 
-play: moonfish.h tools/tools.h tools/play.c tools/utils.c chess.c
-	$(tools_cc) -o play tools/play.c tools/utils.c chess.c
+moonfish moonfish.exe: chess.c search.c main.c
+	$(moonfish_cc) -o $@ $^
 
-lichess: tools/tools.h tools/lichess.c tools/utils.c chess.c
-	$(tools_cc) -std=c99 -o lichess tools/lichess.c tools/utils.c chess.c -lbearssl -lcjson
-
-analyse: tools/tools.h tools/analyse.c tools/utils.c chess.c
-	$(tools_cc) -o analyse tools/analyse.c tools/utils.c chess.c
+%: tools/%.c tools/utils.c chess.c
+	$(or $($(@)_cc),$(tools_cc)) -o $@ $^ $($(@)_libs)
 
 clean:
-	$(RM) moonfish moonfish.exe play lichess analyse
-	$(RM) moonfish.c moonfish.c.xz moonfish.sh
+	git clean -fdx
 
 install: all
 	install -m 755 moonfish $(BINDIR)/moonfish
 	install -m 755 play $(BINDIR)/moonfish-play
 	install -m 755 lichess $(BINDIR)/moonfish-lichess
 	install -m 755 analyse $(BINDIR)/moonfish-analyse
+
+uninstall:
+	$(RM) $(BINDIR)/moonfish $(BINDIR)/moonfish-*
