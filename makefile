@@ -17,15 +17,10 @@ lichess_libs := -lbearssl -lcjson
 
 all: moonfish play lichess analyse
 
-chess.c: moonfish.h
-search.c: moonfish.h
-main.c: moonfish.h
-tools/*.c: tools/tools.h
-
-moonfish moonfish.exe: chess.c search.c main.c
+moonfish moonfish.exe: moonfish.h chess.c search.c main.c
 	$(moonfish_cc) -o $@ $^
 
-%: tools/%.c tools/utils.c chess.c
+%: moonfish.h tools/tools.h tools/%.c tools/utils.c chess.c
 	$(or $($(@)_cc),$(tools_cc)) -o $@ $^ $($(@)_libs)
 
 clean:
