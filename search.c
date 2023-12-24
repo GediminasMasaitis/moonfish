@@ -214,6 +214,7 @@ static int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *
 
 static long int moonfish_clock(struct moonfish *ctx)
 {
+	(void) ctx;
 	return GetTickCount();
 }
 
