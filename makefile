@@ -9,7 +9,7 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 src := chess.c search.c main.c
 
-moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
+moonfish_cc := $(cc) -pthread
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
 .PHONY: all clean install
@@ -33,7 +33,7 @@ clean:
 	$(RM) moonfish.c moonfish.c.xz moonfish.sh
 
 install: all
-	install -m 755 moonfish $BINDIR/moonfish
-	install -m 755 play $BINDIR/moonfish-play
-	install -m 755 lichess $BINDIR/moonfish-lichess
-	install -m 755 analyse $BINDIR/moonfish-analyse
+	install -m 755 moonfish $(BINDIR)/moonfish
+	install -m 755 play $(BINDIR)/moonfish-play
+	install -m 755 lichess $(BINDIR)/moonfish-lichess
+	install -m 755 analyse $(BINDIR)/moonfish-analyse
