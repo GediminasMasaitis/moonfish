@@ -44,6 +44,7 @@ struct moonfish_chess
 {
 	unsigned char board[120];
 	unsigned char white;
+	unsigned char passing;
 	struct moonfish_castle castle;
 	int score;
 };
@@ -60,6 +61,7 @@ struct moonfish_move
 	unsigned char piece;
 	unsigned char promotion;
 	unsigned char captured;
+	unsigned char passing;
 	struct moonfish_castle castle;
 	int score;
 };
