@@ -253,7 +253,7 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 	if (d < 0) d = 0;
 	d += our_time / 8;
 	
-	i = 3;
+	i = 4;
 	
 	t0 = moonfish_clock(ctx);
 	score = moonfish_best_move_depth(ctx, best_move, i);
@@ -266,9 +266,9 @@ int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *best_move, lo
 		t *= 32;
 		if (t > d) break;
 		i++;
-		if (i >= 8) break;
+		if (i >= 16) break;
 	}
 	
-	if (i == 3) return score;
+	if (i == 4) return score;
 	return moonfish_best_move_depth(ctx, best_move, i);
 }
