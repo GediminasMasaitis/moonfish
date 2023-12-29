@@ -85,10 +85,11 @@ int main(int argc, char **argv)
 			else
 				score = moonfish_best_move(ctx, &move, btime, wtime);
 			
+			printf("info depth 4 ");
 			if (score >= moonfish_omega || score <= -moonfish_omega)
-				printf("info score mate %d\n", moonfish_countdown(score));
+				printf("score mate %d\n", moonfish_countdown(score));
 			else
-				printf("info score cp %d\n", score);
+				printf("score cp %d\n", score);
 			moonfish_to_uci(name, &move);
 			printf("bestmove %s\n", name);
 		}
