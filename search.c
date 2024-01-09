@@ -1,5 +1,5 @@
 /* moonfish is licensed under the AGPL (v3 or later) */
-/* copyright 2023 zamfofex */
+/* copyright 2023, 2024 zamfofex */
 
 #include <stdio.h>
 #include <stdlib.h>

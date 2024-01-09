@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # moonfish is licensed under the AGPL (v3 or later)
-# copyright 2023 zamfofex
+# copyright 2023, 2024 zamfofex
 
 set -e
 

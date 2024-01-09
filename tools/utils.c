@@ -1,3 +1,6 @@
+/* moonfish is licensed under the AGPL (v3 or later) */
+/* copyright 2023, 2024 zamfofex */
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>

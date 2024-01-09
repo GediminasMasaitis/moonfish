@@ -1,5 +1,5 @@
 <!-- moonfish is licensed under the AGPL (v3 or later) -->
-<!-- copyright 2023 zamfofex -->
+<!-- copyright 2023, 2024 zamfofex -->
 
 moonfish
 ===
@@ -118,7 +118,7 @@ Note that [MinGW] compilation is also supported.
 license
 ---
 
-[AGPL] ([v3 or later][GPLv3+]) © zamfofex 2023
+[AGPL] ([v3 or later][GPLv3+]) © zamfofex 2023, 2024
 
 [AGPL]: <https://gnu.org/licenses/agpl-3.0>
 [GPLv3+]: <https://gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>
