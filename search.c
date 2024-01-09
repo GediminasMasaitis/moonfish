@@ -199,9 +199,9 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *nod
 int moonfish_countdown(int score)
 {
 	score /= -moonfish_omega;
-	if (score < 0) score += moonfish_depth;
+	if (score < 0) score += moonfish_depth + 1;
 	else score -= moonfish_depth;
-	return score;
+	return score / 2;
 }
 
 static moonfish_result_t moonfish_start_search(void *data)
