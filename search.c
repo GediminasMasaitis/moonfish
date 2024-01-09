@@ -345,11 +345,10 @@ static long int moonfish_clock(struct moonfish *ctx)
 
 #endif
 
-int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *best_move, long int our_time, long int their_time)
+int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *best_move, int *i, long int our_time, long int their_time)
 {
 	long int d, t, t0, t1;
 	int score;
-	int i;
 	int init;
 	int r;
 	
@@ -361,17 +360,17 @@ int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *best_mov
 	if (d < 0) d = 0;
 	d += our_time / 8;
 	
-	for (i = 3 ; i < 32 ; i++)
+	for (*i = 1 ; *i < 32 ; (*i)++)
 	{
 		t0 = moonfish_clock(ctx);
-		score = moonfish_iteration(ctx, best_move, i, &init);
-		t1 = moonfish_clock(ctx);
+		score = moonfish_iteration(ctx, best_move, *i, &init);
+		t1 = moonfish_clock(ctx) + 50;
 		
 		r = (t1 - t0) / (t + 1);
 		t = t1 - t0;
 		
-		if (t * r > d) break;
 		d -= t;
+		if (t * r > d) break;
 	}
 	
 	return score;

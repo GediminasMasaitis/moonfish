@@ -96,11 +96,11 @@ int main(int argc, char **argv)
 			if (depth >= 0)
 				score = moonfish_best_move_depth(ctx, &move, depth);
 			else if (ctx->chess.white)
-				score = moonfish_best_move_time(ctx, &move, wtime, btime);
+				score = moonfish_best_move_time(ctx, &move, &depth, wtime, btime);
 			else
-				score = moonfish_best_move_time(ctx, &move, btime, wtime);
+				score = moonfish_best_move_time(ctx, &move, &depth, btime, wtime);
 			
-			printf("info depth 1 ");
+			printf("info depth %d ", depth);
 			if (score >= moonfish_omega || score <= -moonfish_omega)
 				printf("score mate %d\n", moonfish_countdown(score));
 			else
