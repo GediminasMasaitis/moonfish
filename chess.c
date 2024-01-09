@@ -75,6 +75,11 @@ static struct moonfish_move *moonfish_create_move(struct moonfish_chess *chess, 
 	return (*moves)++;
 }
 
+void moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to)
+{
+	moonfish_create_move(chess, &move, from, to);
+}
+
 static char moonfish_delta(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char *to, signed char delta)
 {
 	*to += delta;

@@ -74,9 +74,11 @@ void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, u
 void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move);
 void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move);
 
-int moonfish_best_move(struct moonfish *ctx, struct moonfish_move *move, long int our_time, long int their_time);
+int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *move, int depth);
+int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *move, long int our_time, long int their_time);
 int moonfish_countdown(int score);
 
+void moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move);
 

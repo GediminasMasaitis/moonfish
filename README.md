@@ -34,7 +34,6 @@ These are things that might be fixed eventually.
 - the TUI will also prevent you from underpromoting
 - the TUI does not detect when the game has ended due to stalemate or checkmate
 - no transposition table
-- no good move ordering heuristic
 - no support for `go infinite` or `go mate`
 - no move name or FEN validation (may lead to potential exploits)
 
@@ -55,6 +54,8 @@ make moonfish
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
 Note: If your C implementation doesn’t support pthreads, but supports C11 threads, you can pass in `-Dmoonfish_c11_threads`.
+
+Note: If your C implementation doesn’t support threads at all, you can pass in `-Dmoonfish_no_threads`.
 
 ~~~
 cc -ansi -O3 -pthread -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c

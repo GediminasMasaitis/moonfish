@@ -17,6 +17,7 @@ int main(int argc, char **argv)
 	char name[6];
 	long int wtime, btime, *xtime;
 	int score;
+	int depth;
 	
 	if (argc > 1)
 	{
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
 		{
 			wtime = -1;
 			btime = -1;
+			depth = -1;
 			
 			for (;;)
 			{
@@ -75,17 +77,30 @@ int main(int argc, char **argv)
 						return 1;
 					}
 				}
+				else if (!strcmp(arg, "depth"))
+				{
+					arg = strtok(NULL, "\r\n\t ");
+					
+					if (arg == NULL || sscanf(arg, "%d", &depth) != 1 || depth < 0)
+					{
+						free(ctx);
+						fprintf(stderr, "%s: malformed 'go depth' command\n", argv[0]);
+						return 1;
+					}
+				}
 			}
 			
 			if (wtime < 0) wtime = 0;
 			if (btime < 0) btime = 0;
 			
-			if (ctx->chess.white)
-				score = moonfish_best_move(ctx, &move, wtime, btime);
+			if (depth >= 0)
+				score = moonfish_best_move_depth(ctx, &move, depth);
+			else if (ctx->chess.white)
+				score = moonfish_best_move_time(ctx, &move, wtime, btime);
 			else
-				score = moonfish_best_move(ctx, &move, btime, wtime);
+				score = moonfish_best_move_time(ctx, &move, btime, wtime);
 			
-			printf("info depth 4 ");
+			printf("info depth 1 ");
 			if (score >= moonfish_omega || score <= -moonfish_omega)
 				printf("score mate %d\n", moonfish_countdown(score));
 			else
