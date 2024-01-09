@@ -10,6 +10,7 @@
 !/manifest.scm
 !/moonfish.vcxproj
 !/minify.sh
+!/rename.sh
 !/moonfish.h
 !/chess.c
 !/search.c
