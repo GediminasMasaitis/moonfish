@@ -212,7 +212,7 @@ static moonfish_result_t moonfish_start_search(void *data)
 	return moonfish_value;
 }
 
-static int moonfish_iteration(struct moonfish *ctx, struct moonfish_move *best_move, int depth, int *init)
+static int moonfish_iteration(struct moonfish *ctx, struct moonfish_move *best_move, int depth, int init)
 {
 	static struct moonfish_move all_moves[256];
 	static struct moonfish_info infos[256];
@@ -232,13 +232,14 @@ static int moonfish_iteration(struct moonfish *ctx, struct moonfish_move *best_m
 			infos[i].node.count = 0;
 	}
 	
-	if (!*init)
+	if (!init)
 	{
-		*init = 1;
 		for (i = 0 ; i < 256 ; i++)
 			moonfish_free(&infos[i].node),
 			infos[i].node.count = 0;
 	}
+	
+	if (ctx == NULL) return 0;
 	
 	best_score = -200 * moonfish_omega;
 	
@@ -308,13 +309,13 @@ int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_mo
 {
 	int i;
 	int score;
-	int init;
+	
+	moonfish_iteration(NULL, NULL, 0, 0);
 	
 	score = 0;
-	init = 0;
 	
 	i = 3;
-	do score = moonfish_iteration(ctx, best_move, i++, &init);
+	do score = moonfish_iteration(ctx, best_move, i++, 1);
 	while (i <= depth);
 	
 	return score;
@@ -349,28 +350,28 @@ int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *best_mov
 {
 	long int d, t, t0, t1;
 	int score;
-	int init;
 	int r;
 	
-	init = 0;
-	r = 20;
-	t = 0;
+	r = 24 * 2048;
+	t = -1;
 	
 	d = our_time - their_time;
 	if (d < 0) d = 0;
 	d += our_time / 8;
 	
+	moonfish_iteration(NULL, NULL, 0, 0);
+	
 	for (*i = 1 ; *i < 32 ; (*i)++)
 	{
 		t0 = moonfish_clock(ctx);
-		score = moonfish_iteration(ctx, best_move, *i, &init);
+		score = moonfish_iteration(ctx, best_move, *i, 1);
 		t1 = moonfish_clock(ctx) + 50;
 		
-		r = (t1 - t0) / (t + 1);
+		if (t >= 0) r = (t1 - t0) * 2048 / (t + 1);
 		t = t1 - t0;
 		
 		d -= t;
-		if (t * r > d) break;
+		if (t * r > d * 2048) break;
 	}
 	
 	return score;
