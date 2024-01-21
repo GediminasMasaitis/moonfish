@@ -305,6 +305,8 @@ static int moonfish_iteration(struct moonfish *ctx, struct moonfish_move *best_m
 	return best_score;
 }
 
+#ifndef moonfish_mini
+
 int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
 {
 	int i;
@@ -320,6 +322,8 @@ int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_mo
 	
 	return score;
 }
+
+#endif
 
 #ifdef _WIN32
 

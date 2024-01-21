@@ -77,6 +77,7 @@ int main(int argc, char **argv)
 						return 1;
 					}
 				}
+#ifndef moonfish_mini
 				else if (!strcmp(arg, "depth"))
 				{
 					arg = strtok(NULL, "\r\n\t ");
@@ -88,13 +89,18 @@ int main(int argc, char **argv)
 						return 1;
 					}
 				}
+#endif
 			}
 			
 			if (wtime < 0) wtime = 0;
 			if (btime < 0) btime = 0;
 			
 			if (depth >= 0)
+#ifdef moonfish_mini
+				exit(1);
+#else
 				score = moonfish_best_move_depth(ctx, &move, depth);
+#endif
 			else if (ctx->chess.white)
 				score = moonfish_best_move_time(ctx, &move, &depth, wtime, btime);
 			else
@@ -122,7 +128,12 @@ int main(int argc, char **argv)
 				return 1;
 			}
 			
-			if (!strcmp(arg, "fen"))
+			if (!strcmp(arg, "startpos"))
+			{
+				moonfish_chess(&ctx->chess);
+			}
+#ifndef moonfish_mini
+			else if (!strcmp(arg, "fen"))
 			{
 				arg = strtok(NULL, "\r\n");
 				moonfish_fen(&ctx->chess, arg);
@@ -140,10 +151,7 @@ int main(int argc, char **argv)
 					strtok("", "\r\n\t ");
 				}
 			}
-			else if (!strcmp(arg, "startpos"))
-			{
-				moonfish_chess(&ctx->chess);
-			}
+#endif
 			else
 			{
 				fprintf(stderr, "malformed 'position' command\n");
