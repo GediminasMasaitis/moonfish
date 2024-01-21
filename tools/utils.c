@@ -9,7 +9,7 @@
 
 #include "tools.h"
 
-int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
+static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd)
 {
 	int p1[2], p2[2];
 	int pid, fd;
@@ -22,8 +22,8 @@ int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
 	
 	if (pid)
 	{
-		*in = p1[1];
-		*out = p2[0];
+		*in_fd = p1[1];
+		*out_fd = p2[0];
 		close(p1[0]);
 		close(p2[1]);
 		return 0;
@@ -49,6 +49,45 @@ int moonfish_spawn(char *argv0, char **argv, int *in, int *out)
 	fprintf(stderr, "%s: %s: %s\n", argv0, argv[0], strerror(errno));
 	
 	exit(1);
+}
+
+void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out)
+{
+	int in_fd, out_fd;
+	
+	if (moonfish_fork(argv0, argv, &in_fd, &out_fd))
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	*in = fdopen(in_fd, "w");
+	if (*in == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	*out = fdopen(out_fd, "r");
+	if (*out == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	errno = 0;
+	if (setvbuf(*in, NULL, _IOLBF, 0))
+	{
+		if (errno) perror(argv0);
+		exit(1);
+	}
+	
+	errno = 0;
+	if (setvbuf(*out, NULL, _IOLBF, 0))
+	{
+		if (errno) perror(argv0);
+		exit(1);
+	}
 }
 
 char *moonfish_next(FILE *file)

@@ -312,7 +312,6 @@ int main(int argc, char **argv)
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static char names[4096] = "";
 	
-	int in_fd, out_fd;
 	FILE *in, *out;
 	struct moonfish_fancy *fancy;
 	char *arg;
@@ -324,6 +323,7 @@ int main(int argc, char **argv)
 	int x1, y1;
 	char *name;
 	struct moonfish_move move;
+	int error;
 	
 	name = names;
 	
@@ -333,11 +333,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	if (moonfish_spawn(argv[0], argv + 2, &in_fd, &out_fd))
-	{
-		perror(argv[0]);
-		return 1;
-	}
+	moonfish_spawn(argv[0], argv + 2, &in, &out);
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{
@@ -401,34 +397,6 @@ int main(int argc, char **argv)
 	fancy->our_time *= 60;
 	fancy->their_time = fancy->our_time;
 	
-	in = fdopen(in_fd, "w");
-	if (in == NULL)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	
-	out = fdopen(out_fd, "r");
-	if (out == NULL)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	
-	errno = 0;
-	if (setvbuf(in, NULL, _IOLBF, 0))
-	{
-		if (errno) perror(argv[0]);
-		return 1;
-	}
-	
-	errno = 0;
-	if (setvbuf(out, NULL, _IOLBF, 0))
-	{
-		if (errno) perror(argv[0]);
-		return 1;
-	}
-	
 	fprintf(in, "uci\n");
 	
 	for (;;)
@@ -452,7 +420,6 @@ int main(int argc, char **argv)
 		if (strcmp(arg, "name")) continue;
 		arg = strtok(NULL, "\r\n");
 		
-		while (strchr("\r\n\t ", *arg) != NULL) { }
 		if (*arg != 0) fancy->their_name = strdup(arg);
 	}
 	
@@ -485,7 +452,12 @@ int main(int argc, char **argv)
 	
 	moonfish_chess(&fancy->chess);
 	
-	pthread_create(&thread, NULL, &moonfish_start, fancy);
+	error = pthread_create(&thread, NULL, &moonfish_start, fancy);
+	if (error != 0)
+	{
+		fprintf(stderr, "%s: %s\n", fancy->argv0, strerror(error));
+		exit(1);
+	}
 	
 	if (fancy->white != fancy->chess.white)
 	{

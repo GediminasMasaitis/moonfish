@@ -657,7 +657,6 @@ static void *moonfish_handle_game(void *data)
 {
 	char request[4096];
 	struct moonfish_game *game;
-	int in_fd, out_fd;
 	FILE *in, *out;
 	br_ssl_client_context ctx;
 	br_sslio_context io_ctx;
@@ -667,39 +666,7 @@ static void *moonfish_handle_game(void *data)
 	
 	game = data;
 	
-	if (moonfish_spawn(game->argv0, game->argv, &in_fd, &out_fd))
-	{
-		perror(game->argv0);
-		exit(1);
-	}
-	
-	in = fdopen(in_fd, "w");
-	if (in == NULL)
-	{
-		perror(game->argv0);
-		exit(1);
-	}
-	
-	out = fdopen(out_fd, "r");
-	if (out == NULL)
-	{
-		perror(game->argv0);
-		exit(1);
-	}
-	
-	errno = 0;
-	if (setvbuf(in, NULL, _IOLBF, 0))
-	{
-		if (errno) perror(game->argv0);
-		exit(1);
-	}
-	
-	errno = 0;
-	if (setvbuf(out, NULL, _IOLBF, 0))
-	{
-		if (errno) perror(game->argv0);
-		exit(1);
-	}
+	moonfish_spawn(game->argv0, game->argv, &in, &out);
 	
 	buffer = malloc(BR_SSL_BUFSIZE_BIDI);
 	
@@ -749,6 +716,7 @@ static void moonfish_handle_events(
 	pthread_t thread;
 	struct moonfish_chess chess;
 	int invalid;
+	int error;
 	
 	root = NULL;
 	
@@ -806,7 +774,12 @@ static void moonfish_handle_events(
 			game->argv = argv;
 			game->username = username;
 			
-			pthread_create(&thread, NULL, &moonfish_handle_game, game);
+			error = pthread_create(&thread, NULL, &moonfish_handle_game, game);
+			if (error != 0)
+			{
+				fprintf(stderr, "%s: %s\n", argv0, strerror(error));
+				exit(1);
+			}
 			
 			continue;
 		}

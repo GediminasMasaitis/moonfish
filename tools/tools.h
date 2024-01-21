@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-int moonfish_spawn(char *argv0, char **argv, int *in, int *out);
+void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out);
 char *moonfish_next(FILE *file);
 char *moonfish_wait(FILE *file, char *name);
 

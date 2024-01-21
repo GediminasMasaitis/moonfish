@@ -33,7 +33,6 @@ struct moonfish_fancy
 	FILE *in, *out;
 	char *fen;
 	int ox, oy;
-	int out_fd;
 	int offset;
 	char pv[32];
 };
@@ -384,7 +383,13 @@ static void *moonfish_start(void *data)
 	
 	fancy = data;
 	
-	fds.fd = fancy->out_fd;
+	fds.fd = fileno(fancy->out);
+	if (fds.fd < 0)
+	{
+		perror(fancy->argv0);
+		exit(1);
+	}
+	
 	fds.events = POLLIN;
 	
 	pthread_mutex_lock(fancy->mutex);
@@ -638,7 +643,6 @@ int main(int argc, char **argv)
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static pthread_mutex_t read_mutex = PTHREAD_MUTEX_INITIALIZER;
 	
-	int in_fd, out_fd;
 	struct moonfish_fancy *fancy;
 	pthread_t thread;
 	struct termios termios;
@@ -646,16 +650,11 @@ int main(int argc, char **argv)
 	int ch, ch0;
 	int x1, y1;
 	struct moonfish_move move;
+	int error;
 	
 	if (argc < 3)
 	{
 		if (argc > 0) fprintf(stderr, "usage: %s <FEN> <command> <args>...\n", argv[0]);
-		return 1;
-	}
-	
-	if (moonfish_spawn(argv[0], argv + 2, &in_fd, &out_fd))
-	{
-		perror(argv[0]);
 		return 1;
 	}
 	
@@ -701,40 +700,13 @@ int main(int argc, char **argv)
 	fancy->argv0 = argv[0];
 	fancy->mutex = &mutex;
 	fancy->read_mutex = &read_mutex;
-	fancy->out_fd = out_fd;
 	fancy->offset = 0;
 	fancy->pv[0] = 0;
 	
 	fancy->x = 0;
 	fancy->y = 0;
 	
-	fancy->in = fdopen(in_fd, "w");
-	if (fancy->in == NULL)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	
-	fancy->out = fdopen(out_fd, "r");
-	if (fancy->out == NULL)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	
-	errno = 0;
-	if (setvbuf(fancy->in, NULL, _IOLBF, 0))
-	{
-		if (errno) perror(argv[0]);
-		return 1;
-	}
-	
-	errno = 0;
-	if (setvbuf(fancy->out, NULL, _IOLBF, 0))
-	{
-		if (errno) perror(argv[0]);
-		return 1;
-	}
+	moonfish_spawn(argv[0], argv + 2, &fancy->in, &fancy->out);
 	
 	fancy->i = 0;
 	fancy->count = 1;
@@ -792,7 +764,12 @@ int main(int argc, char **argv)
 	
 	if (scanf("[%d;%dR", &fancy->oy, &fancy->ox) != 2) return 1;
 	
-	pthread_create(&thread, NULL, &moonfish_start, fancy);
+	error = pthread_create(&thread, NULL, &moonfish_start, fancy);
+	if (error != 0)
+	{
+		fprintf(stderr, "%s: %s\n", fancy->argv0, strerror(error));
+		exit(1);
+	}
 	
 	printf("\x1B[?1000h");
 	fflush(stdout);
