@@ -88,6 +88,10 @@ int moonfish_check(struct moonfish_chess *chess);
 int moonfish_fen(struct moonfish_chess *chess, char *fen);
 int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *move, int depth);
 
+int moonfish_finished(struct moonfish_chess *chess);
+int moonfish_checkmate(struct moonfish_chess *chess);
+int moonfish_stalemate(struct moonfish_chess *chess);
+
 #endif
 
 #endif

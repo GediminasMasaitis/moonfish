@@ -39,3 +39,5 @@ artifacts:
   - moonfish/analyse
   - moonfish/moonfish.sh
   - moonfish/moonfish.exe
+  - moonfish/ugi-uci
+  - moonfish/uci-ugi

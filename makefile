@@ -15,13 +15,19 @@ lichess_libs := -lbearssl -lcjson
 
 .PHONY: all clean install uninstall
 
-all: moonfish play lichess analyse
+all: moonfish play lichess analyse uci-ugi ugi-uci
 
 moonfish moonfish.exe: moonfish.h chess.c search.c main.c
 	$(moonfish_cc) -o $@ $^
 
 %: moonfish.h tools/tools.h tools/%.c tools/utils.c chess.c
 	$(or $($(@)_cc),$(tools_cc)) -o $@ $^ $($(@)_libs)
+
+ugi-uci: moonfish.h tools/tools.h tools/ugi.h tools/utils.c tools/ugi.c tools/ugi-uci.c chess.c
+	$(tools_cc) -o $@ $^
+
+uci-ugi: tools/tools.h tools/ugi.h tools/utils.c tools/ugi.c tools/uci-ugi.c
+	$(tools_cc) -o $@ $^
 
 clean:
 	git clean -fdx
@@ -31,6 +37,8 @@ install: all
 	install -m 755 play $(BINDIR)/moonfish-play
 	install -m 755 lichess $(BINDIR)/moonfish-lichess
 	install -m 755 analyse $(BINDIR)/moonfish-analyse
+	install -m 755 ugi-uci $(BINDIR)/ugi-uci
+	install -m 755 uci-ugi $(BINDIR)/uci-ugi
 
 uninstall:
-	$(RM) $(BINDIR)/moonfish $(BINDIR)/moonfish-*
+	$(RM) $(BINDIR)/moonfish $(BINDIR)/moonfish-* $(BINDIR)/ugi-uci $(BINDIR)/uci-ugi

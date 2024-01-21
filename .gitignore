@@ -17,7 +17,11 @@
 !/main.c
 !/tools
 !/tools/tools.h
+!/tools/ugi.h
 !/tools/utils.c
 !/tools/play.c
 !/tools/analyse.c
 !/tools/lichess.c
+!/tools/ugi.c
+!/tools/ugi-uci.c
+!/tools/uci-ugi.c

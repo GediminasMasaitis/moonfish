@@ -78,6 +78,17 @@ static struct moonfish_move *moonfish_create_move(struct moonfish_chess *chess, 
 void moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to)
 {
 	moonfish_create_move(chess, &move, from, to);
+	if (chess->board[from] % 16 == moonfish_pawn)
+	{
+		if (chess->board[from] / 16 == 1)
+		{
+			if (from > 80) move[-1].promotion = moonfish_white_queen;
+		}
+		else
+		{
+			if (from < 40) move[-1].promotion = moonfish_black_queen;
+		}
+	}
 }
 
 static char moonfish_delta(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char *to, signed char delta)
@@ -656,3 +667,41 @@ int moonfish_check(struct moonfish_chess *chess)
 	
 	return valid ^ 1;
 }
+
+#ifndef moonfish_mini
+
+int moonfish_finished(struct moonfish_chess *chess)
+{
+	struct moonfish_move moves[32], *move;
+	int x, y;
+	int valid;
+	
+	for (y = 0 ; y < 8 ; y++)
+	for (x = 0 ; x < 8 ; x++)
+	{
+		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		for (move = moves ; move->piece != moonfish_outside ; move++)
+		{
+			moonfish_play(chess, move);
+			valid = moonfish_validate(chess);
+			moonfish_unplay(chess, move);
+			if (valid) return 0;
+		}
+	}
+	
+	return 1;
+}
+
+int moonfish_checkmate(struct moonfish_chess *chess)
+{
+	if (!moonfish_check(chess)) return 0;
+	return moonfish_finished(chess);
+}
+
+int moonfish_stalemate(struct moonfish_chess *chess)
+{
+	if (moonfish_check(chess)) return 0;
+	return moonfish_finished(chess);
+}
+
+#endif

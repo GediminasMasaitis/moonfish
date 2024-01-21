@@ -24,6 +24,7 @@ features
 - cute custom UCI TUIs
 - custom Lichess integration
 - threaded search
+- custom UGI/UCI translators
 
 limitations
 ---
@@ -32,7 +33,6 @@ These are things that might be fixed eventually.
 
 - the bot will never underpromote
 - the TUI will also prevent you from underpromoting
-- the TUI does not detect when the game has ended due to stalemate or checkmate
 - no transposition table
 - no support for `go infinite` or `go mate`
 - no move name or FEN validation (may lead to potential exploits)
@@ -67,6 +67,12 @@ The two UCI TUIs, called “play” and “analyse”, may also be compiled.
 make play analyse
 ~~~
 
+The UGI/UCI translators may also be compiled:
+
+~~~
+make ugi-uci uci-ugi
+~~~
+
 usage
 ---
 
@@ -99,6 +105,13 @@ To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or 
 # (analyse a game using Leela, showing win/draw/loss evaluation)
 ./analyse initial lc0 --show-wdl
 ~~~
+
+`ugi-uci` can be used to let a UGI GUI communicate with a UCI bot, and conversely, `uci-ugi` can be used to let a UCI GUI communicate with a UGI bot.
+
+Simply pass the command of the bot as arguments to either of these tools, and it’ll translate it to be used by the respective GUI.
+
+Note that if the GUI sends a `uci`/`gui` command to the bot that is the same as its protocol, no translation will happen, and the commands will be passed in verbatim between them.
+
 
 compiling on Windows
 ---
