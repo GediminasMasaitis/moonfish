@@ -11,13 +11,14 @@
 int main(int argc, char **argv)
 {
 	static char line[2048];
-	struct moonfish *ctx;
+	struct moonfish_analysis *analysis;
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
 	long int wtime, btime, *xtime;
 	int score;
 	int depth;
+	struct moonfish_chess chess;
 	
 	if (argc > 1)
 	{
@@ -25,15 +26,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	ctx = malloc(sizeof *ctx);
-	if (ctx == NULL)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	
-	ctx->argv0 = argv[0];
-	moonfish_chess(&ctx->chess);
+	analysis = moonfish_analysis(argv[0]);
+	moonfish_chess(&chess);
 	
 	for (;;)
 	{
@@ -42,7 +36,6 @@ int main(int argc, char **argv)
 		{
 			if (errno)
 			{
-				free(ctx);
 				perror(argv[0]);
 				return 1;
 			}
@@ -72,7 +65,6 @@ int main(int argc, char **argv)
 					
 					if (arg == NULL || sscanf(arg, "%ld", xtime) != 1 || *xtime < 0)
 					{
-						free(ctx);
 						fprintf(stderr, "%s: malformed 'go' command\n", argv[0]);
 						return 1;
 					}
@@ -84,7 +76,6 @@ int main(int argc, char **argv)
 					
 					if (arg == NULL || sscanf(arg, "%d", &depth) != 1 || depth < 0)
 					{
-						free(ctx);
 						fprintf(stderr, "%s: malformed 'go depth' command\n", argv[0]);
 						return 1;
 					}
@@ -99,12 +90,12 @@ int main(int argc, char **argv)
 #ifdef moonfish_mini
 				exit(1);
 #else
-				score = moonfish_best_move_depth(ctx, &move, depth);
+				score = moonfish_best_move_depth(analysis, &move, depth);
 #endif
-			else if (ctx->chess.white)
-				score = moonfish_best_move_time(ctx, &move, &depth, wtime, btime);
+			else if (chess.white)
+				score = moonfish_best_move_time(analysis, &move, &depth, wtime, btime);
 			else
-				score = moonfish_best_move_time(ctx, &move, &depth, btime, wtime);
+				score = moonfish_best_move_time(analysis, &move, &depth, btime, wtime);
 			
 			printf("info depth %d ", depth);
 			if (score >= moonfish_omega || score <= -moonfish_omega)
@@ -124,19 +115,18 @@ int main(int argc, char **argv)
 			if (arg == NULL)
 			{
 				fprintf(stderr, "incomplete 'position' command\n");
-				free(ctx);
 				return 1;
 			}
 			
 			if (!strcmp(arg, "startpos"))
 			{
-				moonfish_chess(&ctx->chess);
+				moonfish_chess(&chess);
 			}
 #ifndef moonfish_mini
 			else if (!strcmp(arg, "fen"))
 			{
 				arg = strtok(NULL, "\r\n");
-				moonfish_fen(&ctx->chess, arg);
+				moonfish_fen(&chess, arg);
 				
 				arg = strstr(arg, "moves");
 				if (arg != NULL)
@@ -155,7 +145,6 @@ int main(int argc, char **argv)
 			else
 			{
 				fprintf(stderr, "malformed 'position' command\n");
-				free(ctx);
 				return 1;
 			}
 			
@@ -164,10 +153,12 @@ int main(int argc, char **argv)
 			{
 				while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
 				{
-					moonfish_from_uci(&ctx->chess, &move, arg);
-					moonfish_play(&ctx->chess, &move);
+					moonfish_from_uci(&chess, &move, arg);
+					moonfish_play(&chess, &move);
 				}
 			}
+			
+			moonfish_new(analysis, &chess);
 		}
 		else if (!strcmp(arg, "uci"))
 		{
@@ -192,6 +183,6 @@ int main(int argc, char **argv)
 		fflush(stdout);
 	}
 	
-	free(ctx);
+	moonfish_free(analysis);
 	return 0;
 }

@@ -49,12 +49,6 @@ struct moonfish_chess
 	int score;
 };
 
-struct moonfish
-{
-	struct moonfish_chess chess;
-	char *argv0;
-};
-
 struct moonfish_move
 {
 	unsigned char from, to;
@@ -66,6 +60,8 @@ struct moonfish_move
 	int score;
 };
 
+struct moonfish_analysis;
+
 void moonfish_chess(struct moonfish_chess *chess);
 
 void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
@@ -73,8 +69,12 @@ void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, u
 void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move);
 void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move);
 
-int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *move, int *depth, long int our_time, long int their_time);
+int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *move, int *depth, long int our_time, long int their_time);
 int moonfish_countdown(int score);
+
+struct moonfish_analysis *moonfish_analysis(char *argv0);
+void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *chess);
+void moonfish_free(struct moonfish_analysis *analysis);
 
 void moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
@@ -86,7 +86,7 @@ int moonfish_check(struct moonfish_chess *chess);
 #ifndef moonfish_mini
 
 int moonfish_fen(struct moonfish_chess *chess, char *fen);
-int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *move, int depth);
+int moonfish_best_move_depth(struct moonfish_analysis *analysis, struct moonfish_move *move, int depth);
 
 int moonfish_finished(struct moonfish_chess *chess);
 int moonfish_checkmate(struct moonfish_chess *chess);

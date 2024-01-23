@@ -47,127 +47,164 @@ typedef void *moonfish_result_t;
 
 struct moonfish_node
 {
-	unsigned char from, to;
 	struct moonfish_node *children;
+	int score;
+	int visits;
+	unsigned char from, to;
 	unsigned char count;
-	short int score;
 };
 
 struct moonfish_info
 {
-	struct moonfish *ctx;
+	struct moonfish_analysis *analysis;
 	pthread_t thread;
+	struct moonfish_node *node;
 	struct moonfish_move move;
 	struct moonfish_chess chess;
 	int depth;
 	int score;
-	struct moonfish_node node;
-	struct moonfish_node *nodes;
-	int count;
 };
 
-static void moonfish_free(struct moonfish_node *node)
+struct moonfish_analysis
+{
+	char *argv0;
+	struct moonfish_chess chess;
+	struct moonfish_info info[256];
+	struct moonfish_node root;
+	int depth;
+};
+
+static void moonfish_free_node(struct moonfish_node *node)
 {
 	int i;
 	for (i = 0 ; i < node->count ; i++)
-		moonfish_free(node->children + i);
+		moonfish_free_node(node->children + i);
 	if (node->count > 0)
 		free(node->children);
+	node->count = 0;
 }
 
-static int moonfish_quiesce(struct moonfish_chess *chess, int alpha, int beta, int depth, int i)
+struct moonfish_analysis *moonfish_analysis(char *argv0)
 {
-	int x, y;
+	struct moonfish_analysis *analysis;
+	struct moonfish_chess chess;
+	
+	analysis = malloc(sizeof *analysis);
+	if (analysis == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	analysis->argv0 = argv0;
+	analysis->root.count = 0;
+	
+	moonfish_chess(&chess);
+	moonfish_new(analysis, &chess);
+	
+	return analysis;
+}
+
+void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *chess)
+{
+	moonfish_free_node(&analysis->root);
+	analysis->root.visits = 0;
+	analysis->root.count = 0;
+	analysis->chess = *chess;
+	analysis->depth = 1;
+}
+
+void moonfish_free(struct moonfish_analysis *analysis)
+{
+	struct moonfish_chess chess;
+	moonfish_new(analysis, &chess);
+	free(analysis);
+}
+
+static void moonfish_expand(char *argv0, struct moonfish_node *node, struct moonfish_chess *chess)
+{
 	struct moonfish_move moves[32];
 	struct moonfish_move *move;
-	int score;
+	int x, y;
+	int done;
 	
-	score = chess->score;
-	if (!chess->white) score *= -1;
+	if (node->count != 0) return;
 	
-	if (i >= depth) return score;
-	if (score >= beta) return beta;
-	if (score > alpha) alpha = score;
+	done = 0;
+	node->children = NULL;
 	
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
+	for (y = 0 ; y < 8 && !done ; y++)
+	for (x = 0 ; x < 8 && !done ; x++)
 	{
 		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
 		
 		for (move = moves ; move->piece != moonfish_outside ; move++)
 		{
-			if (move->captured == moonfish_empty)
-			if (move->promotion == move->piece)
-				continue;
+			node->children = realloc(node->children, (node->count + 1) * sizeof *node->children);
+			if (node->children == NULL)
+			{
+				perror(argv0);
+				exit(1);
+			}
 			
-			if (move->captured % 16 == moonfish_king)
-				return moonfish_omega * (moonfish_depth - i);
-			
-			moonfish_play(chess, move);
-			score = -moonfish_quiesce(chess, -beta, -alpha, depth, i + 1);
-			moonfish_unplay(chess, move);
-			
-			if (score >= beta) return beta;
-			if (score > alpha) alpha = score;
+			node->children[node->count].from = move->from;
+			node->children[node->count].to = move->to;
+			node->children[node->count].count = 0;
+			node->children[node->count].visits = 0;
+			node->count++;
 		}
 	}
-	
-	return alpha;
 }
 
-static int moonfish_search(struct moonfish_info *info, struct moonfish_node *node, int alpha, int beta, int depth, int qdepth, int i)
+static int moonfish_search(struct moonfish_info *info, struct moonfish_node *parent, struct moonfish_node *node, int alpha, int beta, int depth, int i)
 {
-	int x, y;
-	struct moonfish_move moves[32];
-	struct moonfish_move *move;
 	int score;
 	int j, k;
 	struct moonfish_node swap_node;
-	int done;
-	struct moonfish_move move0;
+	struct moonfish_move move;
+	int group_count;
+	unsigned char adjust[256];
 	
-	if (i >= depth) return moonfish_quiesce(&info->chess, alpha, beta, depth + qdepth, i);
-	
-	if (node->count == 0)
+	if (i >= depth)
 	{
-		done = 0;
-		node->children = NULL;
-		
-		for (y = 0 ; y < 8 && !done ; y++)
-		for (x = 0 ; x < 8 && !done ; x++)
+		node->visits++;
+		score = info->chess.score;
+		if (!info->chess.white) score *= -1;
+		return score;
+	}
+	
+	moonfish_expand(info->analysis->argv0, node, &info->chess);
+	
+	group_count = (parent->visits / parent->count) / (node->visits + 1) / 16 + 1;
+	
+	for (j = 0 ; j < node->count ; j++)
+	{
+		if (node->children[j].visits == 0)
 		{
-			moonfish_moves(&info->chess, moves, (x + 1) + (y + 2) * 10);
-			
-			for (move = moves ; move->piece != moonfish_outside ; move++)
-			{
-				node->children = realloc(node->children, (node->count + 1) * sizeof *node->children);
-				if (node->children == NULL)
-				{
-					perror(info->ctx->argv0);
-					exit(1);
-				}
-				
-				node->children[node->count].from = move->from;
-				node->children[node->count].to = move->to;
-				node->children[node->count].count = 0;
-				node->count++;
-			}
+			adjust[j] = 0;
+			continue;
 		}
+		if (node->children[j].score >= moonfish_omega || node->children[j].score <= -moonfish_omega)
+		{
+			adjust[j] = 0xFF;
+			continue;
+		}
+		adjust[j] = j * group_count / node->count;
 	}
 	
 	for (j = 0 ; j < node->count ; j++)
 	{
-		moonfish_move(&info->chess, &move0, node->children[j].from, node->children[j].to);
+		moonfish_move(&info->chess, &move, node->children[j].from, node->children[j].to);
 		
-		if (move0.captured % 16 == moonfish_king)
+		if (move.captured % 16 == moonfish_king)
 		{
 			score = moonfish_omega * (moonfish_depth - i);
 		}
 		else
 		{
-			moonfish_play(&info->chess, &move0);
-			score = -moonfish_search(info, node->children + j, -beta, -alpha, depth, qdepth, i + 1);
-			moonfish_unplay(&info->chess, &move0);
+			moonfish_play(&info->chess, &move);
+			score = -moonfish_search(info, node, node->children + j, -beta, -alpha, depth - adjust[j], i + 1);
+			moonfish_unplay(&info->chess, &move);
 		}
 		
 		node->children[j].score = score;
@@ -182,8 +219,13 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *nod
 			}
 			break;
 		}
+		
 		if (score > alpha) alpha = score;
 	}
+	
+	node->visits = 0;
+	for (j = 1 ; j < node->count ; j++)
+		node->visits += node->children[j].visits;
 	
 	for (j = 1 ; j < node->count ; j++)
 	for (k = j ; k > 0 && node->children[k - 1].score < node->children[k].score ; k--)
@@ -191,6 +233,12 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *nod
 		swap_node = node->children[k];
 		node->children[k] = node->children[k - 1];
 		node->children[k - 1] = swap_node;
+	}
+	
+	if (i > 5 && node->count > 0)
+	{
+		free(node->children);
+		node->count = 0;
 	}
 	
 	return alpha;
@@ -208,97 +256,63 @@ static moonfish_result_t moonfish_start_search(void *data)
 {
 	struct moonfish_info *info;
 	info = data;
-	info->score = -moonfish_search(info, &info->node, -100 * moonfish_omega, 100 * moonfish_omega, info->depth, 4, 0);
+	info->score = -moonfish_search(info, &info->analysis->root, info->node, -100 * moonfish_omega, 100 * moonfish_omega, info->depth, 0);
 	return moonfish_value;
 }
 
-static int moonfish_iteration(struct moonfish *ctx, struct moonfish_move *best_move, int depth, int init)
+static int moonfish_iteration(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int depth)
 {
-	static struct moonfish_move all_moves[256];
-	static struct moonfish_info infos[256];
-	static struct moonfish_move move_array[32];
-	static int init0 = 0;
-	
-	int x, y;
+	struct moonfish_move move;
 	int best_score;
-	int move_count;
-	int i;
+	int i, j;
 	int result;
 	
-	if (!init0)
-	{
-		init0 = 1;
-		for (i = 0 ; i < 256 ; i++)
-			infos[i].node.count = 0;
-	}
+	moonfish_expand(analysis->argv0, &analysis->root, &analysis->chess);
 	
-	if (!init)
-	{
-		for (i = 0 ; i < 256 ; i++)
-			moonfish_free(&infos[i].node),
-			infos[i].node.count = 0;
-	}
+	j = 0;
 	
-	if (ctx == NULL) return 0;
+	for (i = 0 ; i < analysis->root.count ; i++)
+	{
+		analysis->info[j].chess = analysis->chess;
+		
+		moonfish_move(&analysis->info[j].chess, &move, analysis->root.children[i].from, analysis->root.children[i].to);
+		moonfish_play(&analysis->info[j].chess, &move);
+		
+		if (!moonfish_validate(&analysis->chess)) continue;
+		
+		analysis->info[j].analysis = analysis;
+		analysis->info[j].node = analysis->root.children + i;
+		analysis->info[j].move = move;
+		analysis->info[j].depth = depth;
+		
+		result = pthread_create(&analysis->info[j].thread, NULL, &moonfish_start_search, analysis->info + j);
+		if (result)
+		{
+			fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
+			exit(1);
+		}
+		
+		j++;
+	}
 	
 	best_score = -200 * moonfish_omega;
+	analysis->root.visits = 0;
 	
-	move_count = 0;
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
+	for (i = 0 ; i < j ; i++)
 	{
-		moonfish_moves(&ctx->chess, move_array, (x + 1) + (y + 2) * 10);
-		
-		for (i = 0 ; move_array[i].piece != moonfish_outside ; i++)
-		{
-			moonfish_play(&ctx->chess, move_array + i);
-			if (moonfish_validate(&ctx->chess))
-			{
-				all_moves[move_count] = move_array[i];
-				move_count++;
-			}
-			moonfish_unplay(&ctx->chess, move_array + i);
-		}
-	}
-	
-	if (move_count == 1)
-	{
-		*best_move = *all_moves;
-		return 0;
-	}
-	
-	for (i = 0 ; i < move_count ; i++)
-	{
-		moonfish_play(&ctx->chess, all_moves + i);
-		
-		infos[i].ctx = ctx;
-		infos[i].move = all_moves[i];
-		infos[i].chess = ctx->chess;
-		infos[i].depth = depth;
-		
-		result = pthread_create(&infos[i].thread, NULL, &moonfish_start_search, infos + i);
+		result = pthread_join(analysis->info[i].thread, NULL);
 		if (result)
 		{
-			fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
+			fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
 			exit(1);
 		}
 		
-		moonfish_unplay(&ctx->chess, all_moves + i);
-	}
-	
-	for (i = 0 ; i < move_count ; i++)
-	{
-		result = pthread_join(infos[i].thread, NULL);
-		if (result)
-		{
-			fprintf(stderr, "%s: %s\n", ctx->argv0, strerror(result));
-			exit(1);
-		}
+		analysis->root.visits += analysis->info[i].node->visits;
 		
-		if (infos[i].score > best_score)
+		if (analysis->info[i].score > best_score)
 		{
-			*best_move = infos[i].move;
-			best_score = infos[i].score;
+			*best_move = analysis->info[i].move;
+			best_score = analysis->info[i].score;
 		}
 	}
 	
@@ -307,41 +321,36 @@ static int moonfish_iteration(struct moonfish *ctx, struct moonfish_move *best_m
 
 #ifndef moonfish_mini
 
-int moonfish_best_move_depth(struct moonfish *ctx, struct moonfish_move *best_move, int depth)
+int moonfish_best_move_depth(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int depth)
 {
-	int i;
 	int score;
-	
-	moonfish_iteration(NULL, NULL, 0, 0);
-	
-	score = 0;
-	
-	i = 3;
-	do score = moonfish_iteration(ctx, best_move, i++, 1);
-	while (i <= depth);
-	
-	return score;
+	for (;;)
+	{
+		score = moonfish_iteration(analysis, best_move, analysis->depth);
+		if (analysis->depth >= depth) return score;
+		analysis->depth++;
+	}
 }
 
 #endif
 
 #ifdef _WIN32
 
-static long int moonfish_clock(struct moonfish *ctx)
+static long int moonfish_clock(struct moonfish_analysis *analysis)
 {
-	(void) ctx;
+	(void) analysis;
 	return GetTickCount();
 }
 
 #else
 
-static long int moonfish_clock(struct moonfish *ctx)
+static long int moonfish_clock(struct moonfish_analysis *analysis)
 {
 	struct timespec ts;
 	
 	if (clock_gettime(CLOCK_MONOTONIC, &ts))
 	{
-		perror(ctx->argv0);
+		perror(analysis->argv0);
 		exit(1);
 	}
 	
@@ -350,7 +359,7 @@ static long int moonfish_clock(struct moonfish *ctx)
 
 #endif
 
-int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *best_move, int *i, long int our_time, long int their_time)
+int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int *depth, long int our_time, long int their_time)
 {
 	long int d, t, t0, t1;
 	int score;
@@ -363,20 +372,21 @@ int moonfish_best_move_time(struct moonfish *ctx, struct moonfish_move *best_mov
 	if (d < 0) d = 0;
 	d += our_time / 8;
 	
-	moonfish_iteration(NULL, NULL, 0, 0);
-	
-	for (*i = 1 ; *i < 32 ; (*i)++)
+	for (;;)
 	{
-		t0 = moonfish_clock(ctx);
-		score = moonfish_iteration(ctx, best_move, *i, 1);
-		t1 = moonfish_clock(ctx) + 50;
+		t0 = moonfish_clock(analysis);
+		score = moonfish_iteration(analysis, best_move, analysis->depth);
+		t1 = moonfish_clock(analysis) + 50;
 		
 		if (t >= 0) r = (t1 - t0) * 2048 / (t + 1);
 		t = t1 - t0;
 		
 		d -= t;
 		if (t * r > d * 2048) break;
+		
+		analysis->depth++;
 	}
 	
+	*depth = analysis->depth;
 	return score;
 }
