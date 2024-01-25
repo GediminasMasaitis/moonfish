@@ -909,8 +909,14 @@ static char *moonfish_username(char *argv0, char *name, char *port, char *token)
 int main(int argc, char **argv)
 {
 	static unsigned char buffer[BR_SSL_BUFSIZE_BIDI];
+	static char *format = "<cmd> <args>...";
+	static struct moonfish_arg args[] =
+	{
+		{"N", "host", "<name>", "lichess.org", "Lichess' host name (default: 'lichess.org')"},
+		{"P", "port", "<port>", "443", "Lichess' port (default: '443')"},
+		{NULL, NULL, NULL, NULL, NULL},
+	};
 	
-	char *name, *port;
 	char *token;
 	br_ssl_client_context ctx;
 	br_sslio_context io_ctx;
@@ -919,21 +925,11 @@ int main(int argc, char **argv)
 	int i;
 	int error;
 	char **command;
+	int command_count;
 	
-	if (argc < 1) return 1;
-	
-	if (argc < 3)
-	{
-		if (argc > 0)
-		{
-			fprintf(stderr, "usage: %s [<host-name>] [<host-port>] [--] <command> <args>...\n", argv[0]);
-			fprintf(stderr, "note: '--' is only optional when both '<host-name>' and '<host-port>' are specified\n");
-		}
-		return 1;
-	}
-	
-	name = "lichess.org";
-	port = "443";
+	command = moonfish_args(args, format, argc, argv);
+	command_count = argc - (command - argv);
+	if (command_count < 1) moonfish_usage(args, format, argv[0]);
 	
 	token = getenv("lichess_token");
 	if (token == NULL || token[0] == 0)
@@ -951,30 +947,9 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	if (!strcmp(argv[1], "--"))
-	{
-		command = argv + 2;
-	}
-	else
-	{
-		name = argv[1];
-		if (!strcmp(argv[2], "--"))
-		{
-			command = argv + 3;
-		}
-		else
-		{
-			name = argv[1];
-			if (!strcmp(argv[3], "--"))
-				command = argv + 4;
-			else
-				command = argv + 3;
-		}
-	}
-	
 	if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) return 1;
 	
-	moonfish_request(&ctx, &io_ctx, &min_ctx, buffer, sizeof buffer, argv[0], name, port, token, "GET /api/stream/event", "", 0, &fd);
+	moonfish_request(&ctx, &io_ctx, &min_ctx, buffer, sizeof buffer, argv[0], args[0].value, args[1].value, token, "GET /api/stream/event", "", 0, &fd);
 	br_sslio_flush(&io_ctx);
 	if (moonfish_response(&ctx.eng, &io_ctx, argv[0]))
 	{
@@ -982,7 +957,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	moonfish_handle_events(&ctx.eng, &io_ctx, argv[0], name, port, token, command, moonfish_username(argv[0], name, port, token));
+	moonfish_handle_events(&ctx.eng, &io_ctx, argv[0], args[0].value, args[1].value, token, command, moonfish_username(argv[0], args[0].value, args[1].value, token));
 	
 	br_ssl_engine_close(&ctx.eng);
 	close(fd);

@@ -80,30 +80,30 @@ moonfish is a UCI bot, which means you can select it and use it with any UCI pro
 
 However, note that moonfish comes with its own UCI TUIs, called “play” and “analyse”. You can use them with any UCI engine you’d like!
 
-To play against a UCI bot, use `./play` followed by a time control, then the command of whichever bot you want to play against. The color of your pieces will be decided randomly.
+To play against a UCI bot, use `./play` followed by the command of whichever bot you want to play against. The color of your pieces will be decided randomly by default.
 
 ~~~
 # (start a game against Stockfish)
-./play 1+0 stockfish
+./play stockfish
 
 # (start a game against Leela)
-./play 5+2 lc0
+./play lc0
 
 # (start a game against moonfish)
-./play 15+10 ./moonfish
+./play ./moonfish
 ~~~
 
-To analyse a game with an UCI bot, use `./analyse` followed by a FEN string (or `initial` for the starting position) in a single argument (use shell quotation marks if necessary) followed by the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
+To analyse a game with an UCI bot, use `./analyse` followed by the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
 
 ~~~
 # (analyse a game using Stockfish)
-./analyse initial stockfish
+./analyse stockfish
 
 # (analyse a game using Leela)
-./analyse initial lc0
+./analyse lc0
 
 # (analyse a game using Leela, showing win/draw/loss evaluation)
-./analyse initial lc0 --show-wdl
+./analyse lc0 --show-wdl
 ~~~
 
 `ugi-uci` can be used to let a UGI GUI communicate with a UCI bot, and conversely, `uci-ugi` can be used to let a UCI GUI communicate with a UGI bot.

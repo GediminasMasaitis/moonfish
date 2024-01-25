@@ -6,8 +6,19 @@
 
 #include <stdio.h>
 
+struct moonfish_arg
+{
+	char *letter;
+	char *name;
+	char *format;
+	char *value;
+	char *description;
+};
+
 void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out);
 char *moonfish_next(FILE *file);
 char *moonfish_wait(FILE *file, char *name);
+char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, char **argv);
+void moonfish_usage(struct moonfish_arg *args, char *rest_format, char *argv0);
 
 #endif

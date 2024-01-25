@@ -642,6 +642,12 @@ int main(int argc, char **argv)
 {
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static pthread_mutex_t read_mutex = PTHREAD_MUTEX_INITIALIZER;
+	static char *format = "<cmd> <args>...";
+	static struct moonfish_arg args[] =
+	{
+		{"F", "fen", "<FEN>", NULL, "the position to analyse"},
+		{NULL, NULL, NULL, NULL, NULL},
+	};
 	
 	struct moonfish_fancy *fancy;
 	pthread_t thread;
@@ -651,12 +657,12 @@ int main(int argc, char **argv)
 	int x1, y1;
 	struct moonfish_move move;
 	int error;
+	char **command;
+	int command_count;
 	
-	if (argc < 3)
-	{
-		if (argc > 0) fprintf(stderr, "usage: %s <FEN> <command> <args>...\n", argv[0]);
-		return 1;
-	}
+	command = moonfish_args(args, format, argc, argv);
+	command_count = argc - (command - argv);
+	if (command_count < 1) moonfish_usage(args, format, argv[0]);
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{
@@ -706,7 +712,7 @@ int main(int argc, char **argv)
 	fancy->x = 0;
 	fancy->y = 0;
 	
-	moonfish_spawn(argv[0], argv + 2, &fancy->in, &fancy->out);
+	moonfish_spawn(argv[0], command, &fancy->in, &fancy->out);
 	
 	fancy->i = 0;
 	fancy->count = 1;
@@ -721,14 +727,14 @@ int main(int argc, char **argv)
 	fancy->plies[0].score = 0;
 	
 	moonfish_chess(&fancy->plies[0].chess);
-	if (!strcmp(argv[1], "initial"))
+	if (args[0].value == NULL)
 	{
 		fancy->fen = NULL;
 	}
 	else
 	{
-		fancy->fen = argv[1];
-		moonfish_fen(&fancy->plies[0].chess, argv[1]);
+		fancy->fen = args[0].value;
+		moonfish_fen(&fancy->plies[0].chess, fancy->fen);
 	}
 	
 	fprintf(fancy->in, "uci\n");

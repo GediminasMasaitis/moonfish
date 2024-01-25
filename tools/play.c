@@ -311,6 +311,14 @@ int main(int argc, char **argv)
 {
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static char names[4096] = "";
+	static char *format = "<cmd> <args>...";
+	static struct moonfish_arg args[] =
+	{
+		{"F", "fen", "<FEN>", NULL, "starting position for the game"},
+		{"T", "time", "<time-control>", "15+10", "time control in minutes with increment in seconds (default: '15+10')"},
+		{"C", "color", "<color>", "white", "which color you are going to play as"},
+		{NULL, NULL, NULL, NULL, NULL},
+	};
 	
 	FILE *in, *out;
 	struct moonfish_fancy *fancy;
@@ -324,16 +332,16 @@ int main(int argc, char **argv)
 	char *name;
 	struct moonfish_move move;
 	int error;
+	char **command;
+	int command_count;
+	
+	command = moonfish_args(args, format, argc, argv);
+	command_count = argc - (command - argv);
+	if (command_count < 1) moonfish_usage(args, format, argv[0]);
 	
 	name = names;
 	
-	if (argc < 3)
-	{
-		if (argc > 0) fprintf(stderr, "usage: %s <time-control> <command> <args>...\n", argv[0]);
-		return 1;
-	}
-	
-	moonfish_spawn(argv[0], argv + 2, &in, &out);
+	moonfish_spawn(argv[0], command, &in, &out);
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{
@@ -354,7 +362,6 @@ int main(int argc, char **argv)
 	if (sigaction(SIGTERM, &action, NULL) || sigaction(SIGINT, &action, NULL) || sigaction(SIGQUIT, &action, NULL))
 	{
 		perror(argv[0]);
-		moonfish_exit();
 		return 1;
 	}
 	
@@ -376,18 +383,44 @@ int main(int argc, char **argv)
 	
 	fancy->argv0 = argv[0];
 	fancy->mutex = &mutex;
-	fancy->white = time(NULL) % 2;
+	
+	moonfish_chess(&fancy->chess);
+	if (args[0].value != NULL) moonfish_fen(&fancy->chess, args[0].value);
+	
+	if (args[2].value != NULL)
+	{
+		if (!strcmp(args[2].value, "white"))
+		{
+			fancy->white = 1;
+		}
+		else if (!strcmp(args[2].value, "black"))
+		{
+			fancy->white = 0;
+		}
+		else
+		{
+			fprintf(stderr, "%s: unknown color '%s'\n", argv[0], args[2].value);
+			return 1;
+		}
+	}
+	else
+	{
+		if (args[0].value == NULL)
+			fancy->white = time(NULL) % 2;
+		else
+			fancy->white = fancy->chess.white;
+	}
 	
 	fancy->x = 0;
 	fancy->y = 0;
 	
-	fancy->their_name = argv[2];
+	fancy->their_name = command[0];
 	fancy->our_name = getlogin();
 	if (fancy->our_name == NULL) fancy->our_name = "you";
 	
-	if (sscanf(argv[1], "%d+%d", &fancy->our_time, &fancy->increment) != 2)
+	if (sscanf(args[1].value, "%d+%d", &fancy->our_time, &fancy->increment) != 2)
 	{
-		fprintf(stderr, "%s: unknown time control '%s'\n", argv[0], argv[1]);
+		fprintf(stderr, "%s: unknown time control '%s'\n", argv[0], args[1].value);
 		return 1;
 	}
 	
@@ -449,8 +482,6 @@ int main(int argc, char **argv)
 	
 	if (scanf("[%d;%dR", &oy, &ox) != 2) return 1;
 	oy -= 11;
-	
-	moonfish_chess(&fancy->chess);
 	
 	error = pthread_create(&thread, NULL, &moonfish_start, fancy);
 	if (error != 0)

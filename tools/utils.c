@@ -114,3 +114,207 @@ char *moonfish_wait(FILE *file, char *name)
 			return strtok(NULL, "\r\n\t ");
 	}
 }
+
+static void moonfish_usage_to(struct moonfish_arg *args, char *rest_format, char *argv0, FILE *out)
+{
+	int i;
+	int col1, col2, n;
+	
+	if (argv0 == NULL) argv0 = "<program>";
+	if (rest_format == NULL) rest_format = "<args>...";
+	
+	col1 = 0;
+	col2 = 0;
+	
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
+	{
+		n = 0;
+		if (args[i].letter != NULL)
+		{
+			n += 1 + strlen(args[i].letter);
+			if (args[i].format != NULL) n += strlen(args[i].format);
+		}
+		if (n > col1) col1 = n;
+		
+		n = 0;
+		if (args[i].name != NULL)
+		{
+			n += 2 + strlen(args[i].name);
+			if (args[i].format != NULL) n += 1 + strlen(args[i].format);
+		}
+		if (n > col2) col2 = n;
+	}
+	
+	fprintf(out, "usage: %s <options>... [--] %s\n", argv0, rest_format);
+	fprintf(out, "options:\n");
+	
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
+	{
+		fprintf(out, "   ");
+		
+		n = 0;
+		if (args[i].letter != NULL)
+		{
+			n += 1 + strlen(args[i].letter);
+			fprintf(out, "-%s", args[i].letter);
+			if (args[i].format != NULL)
+			{
+				n += strlen(args[i].format);
+				fprintf(out, "\x1B[36m%s\x1B[0m", args[i].format);
+			}
+		}
+		
+		if (args[i].letter != NULL && args[i].name != NULL) fprintf(out, ", ");
+		else fprintf(out, "  ");
+		
+		while (n < col1)
+		{
+			fprintf(out, " ");
+			n++;
+		}
+		
+		n = 0;
+		if (args[i].name != NULL)
+		{
+			n += 2 + strlen(args[i].name);
+			fprintf(out, "--%s", args[i].name);
+			if (args[i].format != NULL)
+			{
+				n += 1 + strlen(args[i].format);
+				fprintf(out, "=\x1B[36m%s\x1B[0m", args[i].format);
+			}
+		}
+		
+		if (args[i].description != NULL)
+		{
+			while (n < col2)
+			{
+				fprintf(out, " ");
+				n++;
+			}
+			
+			fprintf(out, "   %s", args[i].description);
+		}
+		
+		fprintf(out, "\n");
+	}
+}
+
+static int moonfish_letter_arg(struct moonfish_arg *args, char *arg, int *argc, char ***argv)
+{
+	int i;
+	char *name;
+	size_t length;
+	
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
+	{
+		name = args[i].letter;
+		if (name == NULL) continue;
+		length = strlen(name);
+		if (strncmp(arg, name, length)) continue;
+		
+		if (args[i].format == NULL)
+		{
+			arg += length;
+			if (arg[0] == 0) return 0;
+			args[i].value = "";
+			continue;
+		}
+		else
+		{
+			args[i].value = arg + length;
+			if (arg[length] == 0)
+			{
+				if (*argc <= 0) return 1;
+				(*argc)--;
+				(*argv)++;
+				args[i].value = (*argv)[0];
+				return 0;
+			}
+			if (arg[length] == '=')
+			{
+				args[i].value = arg + length + 1;
+				return 0;
+			}
+		}
+	}
+	
+	return 1;
+}
+
+static int moonfish_name_arg(struct moonfish_arg *args, char *arg, int *argc, char ***argv)
+{
+	int i;
+	char *name;
+	size_t length;
+	
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
+	{
+		name = args[i].name;
+		if (name == NULL) continue;
+		length = strlen(name);
+		if (strncmp(arg, name, length)) continue;
+		
+		if (args[i].format == NULL)
+		{
+			if (arg[length] == 0) return 0;
+			if (arg[length] == '=') return 1;
+		}
+		else
+		{
+			if (arg[length] == 0)
+			{
+				if (*argc <= 0) return 1;
+				(*argc)--;
+				(*argv)++;
+				args[i].value = (*argv)[0];
+				return 0;
+			}
+			if (arg[length] == '=')
+			{
+				args[i].value = arg + length + 1;
+				return 0;
+			}
+		}
+	}
+	
+	return 1;
+}
+
+char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, char **argv)
+{
+	char *arg, *argv0;
+	
+	if (argc <= 0) return argv;
+	argv0 = argv[0];
+	
+	for (;;)
+	{
+		argc--;
+		argv++;
+		if (argc <= 0) return argv;
+		
+		arg = *argv;
+		if (!strcmp(arg, "-")) return argv;
+		if (arg[0] != '-') return argv;
+		while (arg[0] == '-') arg++;
+		if (arg[0] == 0) return argv + 1;
+		
+		if (!strcmp(arg, "help") || !strcmp(arg, "h") || !strcmp(arg, "H"))
+		{
+			moonfish_usage_to(args, rest_format, argv0, stdout);
+			exit(0);
+		}
+		
+		if (moonfish_letter_arg(args, arg, &argc, &argv) == 0) continue;
+		if (moonfish_name_arg(args, arg, &argc, &argv) == 0) continue;
+		
+		moonfish_usage(args, rest_format, argv0);
+	}
+}
+
+void moonfish_usage(struct moonfish_arg *args, char *rest_format, char *argv0)
+{
+	moonfish_usage_to(args, rest_format, argv0, stderr);
+	exit(1);
+}
