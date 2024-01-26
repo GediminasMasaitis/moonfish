@@ -93,11 +93,14 @@ To play against a UCI bot, use `./play` followed by the command of whichever bot
 ./play ./moonfish
 ~~~
 
-To analyse a game with an UCI bot, use `./analyse` followed by the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
+To analyse a game with an UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and thethe command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
 
 ~~~
 # (analyse a game using Stockfish)
 ./analyse stockfish
+
+# (analyse a game using Stockfish, showing win/draw/loss evaluation)
+./analyse UCI_ShowWDL=true stockfish
 
 # (analyse a game using Leela)
 ./analyse lc0

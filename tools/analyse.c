@@ -35,6 +35,7 @@ struct moonfish_fancy
 	int ox, oy;
 	int offset;
 	char pv[32];
+	int time;
 };
 
 static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
@@ -241,6 +242,8 @@ static void moonfish_score(struct moonfish_fancy *fancy)
 {
 	struct moonfish_ply *ply;
 	
+	printf("\x1B[38;5;111m(+)\x1B[0m ");
+	
 	ply = fancy->plies + fancy->i;
 	
 	if (ply->checkmate != 0)
@@ -267,7 +270,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 		printf("\x1B[0m\n");
 	}
 	
-	printf("\x1B[%d;24H", fancy->oy);
+	printf("\x1B[%d;23H", fancy->oy);
 	moonfish_score(fancy);
 	
 	printf("\x1B[%dH", fancy->oy + 1);
@@ -276,7 +279,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 	printf("\x1B[%d;21H", fancy->oy);
 	moonfish_evaluation(fancy);
 	
-	printf("\x1B[%d;24H", fancy->oy + 7);
+	printf("\x1B[%d;23H", fancy->oy + 7);
 	printf("best:%s%32s\n", fancy->pv, "");
 	
 	fflush(stdout);
@@ -605,7 +608,7 @@ static int moonfish_move_from(struct moonfish_chess *chess, struct moonfish_move
 	return 1;
 }
 
-static void moonfish_go(struct moonfish_fancy *fancy)
+static void moonfish_analyse(struct moonfish_fancy *fancy)
 {
 	int i;
 	
@@ -630,19 +633,30 @@ static void moonfish_go(struct moonfish_fancy *fancy)
 	
 	fprintf(fancy->in, "isready\n");
 	moonfish_wait(fancy->out, "readyok");
-	
-	fprintf(fancy->in, "go infinite\n");
+	fprintf(fancy->in, "go movetime %d\n", fancy->time);
 	
 	fancy->pv[0] = 0;
 	
 	pthread_mutex_unlock(fancy->read_mutex);
 }
 
+static void moonfish_go(struct moonfish_fancy *fancy)
+{
+	fancy->time = 4000;
+	moonfish_analyse(fancy);
+}
+
+static void moonfish_bump(struct moonfish_fancy *fancy)
+{
+	fancy->time += 2000;
+	moonfish_analyse(fancy);
+}
+
 int main(int argc, char **argv)
 {
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static pthread_mutex_t read_mutex = PTHREAD_MUTEX_INITIALIZER;
-	static char *format = "<cmd> <args>...";
+	static char *format = "<UCI-options>... [--] <cmd> <args>...";
 	static struct moonfish_arg args[] =
 	{
 		{"F", "fen", "<FEN>", NULL, "the position to analyse"},
@@ -659,10 +673,35 @@ int main(int argc, char **argv)
 	int error;
 	char **command;
 	int command_count;
+	char *value;
+	char **options;
 	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);
 	if (command_count < 1) moonfish_usage(args, format, argv[0]);
+	options = command;
+	
+	for (;;)
+	{
+		value = strchr(*command, '=');
+		if (value == NULL) break;
+		
+		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(args, format, argv[0]);
+		
+		command_count--;
+		command++;
+		
+		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+		
+		if (!strcmp(*command, "--"))
+		{
+			command_count--;
+			command++;
+			
+			if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+			break;
+		}
+	}
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{
@@ -683,7 +722,6 @@ int main(int argc, char **argv)
 	if (sigaction(SIGTERM, &action, NULL) || sigaction(SIGINT, &action, NULL) || sigaction(SIGQUIT, &action, NULL))
 	{
 		perror(argv[0]);
-		moonfish_exit();
 		return 1;
 	}
 	
@@ -740,20 +778,20 @@ int main(int argc, char **argv)
 	fprintf(fancy->in, "uci\n");
 	moonfish_wait(fancy->out, "uciok");
 	
+	for (;;)
+	{
+		value = strchr(*options, '=');
+		if (value == NULL) break;
+		fprintf(fancy->in, "setoption name %.*s value %s\n", (int) (value - *options), *options, value + 1);
+		options++;
+	}
+	
 	fprintf(fancy->in, "isready\n");
 	moonfish_wait(fancy->out, "readyok");
 	
 	fprintf(fancy->in, "ucinewgame\n");
-	fprintf(fancy->in, "isready\n");
-	moonfish_wait(fancy->out, "readyok");
 	
-	fprintf(fancy->in, "position ");
-	if (fancy->fen == NULL) fprintf(fancy->in, "startpos\n");
-	else fprintf(fancy->in, "fen %s\n", fancy->fen);
-	
-	fprintf(fancy->in, "isready\n");
-	moonfish_wait(fancy->out, "readyok");
-	fprintf(fancy->in, "go infinite\n");
+	moonfish_go(fancy);
 	
 	printf("\n\n\n\n\n\n\n\n\n\n\n");
 	printf("\x1B[10A");
@@ -862,7 +900,6 @@ int main(int argc, char **argv)
 			continue;
 		}
 		
-		if (fancy->x != 0)
 		if (ch0 == 0x20 || ch0 == 0x23)
 		{
 			ch = getchar();
@@ -873,13 +910,21 @@ int main(int argc, char **argv)
 			if (ch == EOF) break;
 			y1 = ch - 0x21 - fancy->oy + 2;
 			
+			if (y1 == 1 && x1 >= 21 && x1 <= 23)
+			{
+				moonfish_bump(fancy);
+				moonfish_fancy(fancy);
+				continue;
+			}
+			
+			if (fancy->x == 0) continue;
+			
 			x1 /= 2;
 			
 			if (x1 < 1 || x1 > 8) x1 = 0;
 			if (y1 < 1 || y1 > 8) x1 = 0;
 			
 			if (x1 == 0) continue;
-			if (y1 == 0) continue;
 			
 			if (moonfish_move_from(&fancy->plies[fancy->i].chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 			{
