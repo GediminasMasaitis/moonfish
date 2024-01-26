@@ -14,11 +14,11 @@ static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd)
 	int p1[2], p2[2];
 	int pid, fd;
 	
-	if (pipe(p1) == -1) return 1;
-	if (pipe(p2) == -1) return 1;
+	if (pipe(p1) < 0) return 1;
+	if (pipe(p2) < 0) return 1;
 	
 	pid = fork();
-	if (pid == -1) return 1;
+	if (pid < 0) return 1;
 	
 	if (pid)
 	{
@@ -47,7 +47,6 @@ static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd)
 	
 	execvp(argv[0], argv);
 	fprintf(stderr, "%s: %s: %s\n", argv0, argv[0], strerror(errno));
-	
 	exit(1);
 }
 
