@@ -11,6 +11,7 @@
 int main(int argc, char **argv)
 {
 	static char line[2048];
+	
 	struct moonfish_analysis *analysis;
 	char *arg;
 	struct moonfish_move move;
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
 			{
 				arg = strtok(NULL, "\r\n\t ");
 				if (arg == NULL) break;
+				
 				if (!strcmp(arg, "wtime") || !strcmp(arg, "btime"))
 				{
 					if (!strcmp(arg, "wtime")) xtime = &wtime;
