@@ -216,25 +216,24 @@ static int moonfish_letter_arg(struct moonfish_arg *args, char *arg, int *argc, 
 		{
 			arg += length;
 			if (arg[0] == 0) return 0;
-			args[i].value = "";
 			continue;
 		}
 		else
 		{
 			args[i].value = arg + length;
+			
+			if (arg[length] == '=')
+				args[i].value = arg + length + 1;
+			
 			if (arg[length] == 0)
 			{
 				if (*argc <= 0) return 1;
 				(*argc)--;
 				(*argv)++;
 				args[i].value = (*argv)[0];
-				return 0;
 			}
-			if (arg[length] == '=')
-			{
-				args[i].value = arg + length + 1;
-				return 0;
-			}
+			
+			return 0;
 		}
 	}
 	
