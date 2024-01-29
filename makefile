@@ -17,17 +17,17 @@ lichess_libs := -lbearssl -lcjson
 
 all: moonfish play lichess analyse uci-ugi ugi-uci
 
-moonfish moonfish.exe: moonfish.h chess.c search.c main.c
-	$(moonfish_cc) -o $@ $^
+moonfish moonfish.exe moonfish.wasm: moonfish.h chess.c search.c main.c
+	$(moonfish_cc) -o $@ $(filter %.c,$^)
 
 %: moonfish.h tools/tools.h tools/%.c tools/utils.c chess.c
-	$(or $($(@)_cc),$(tools_cc)) -o $@ $^ $($(@)_libs)
+	$(or $($(@)_cc),$(tools_cc)) -o $@ $(filter %.c,$^) $($(@)_libs)
 
 ugi-uci: moonfish.h tools/tools.h tools/ugi.h tools/utils.c tools/ugi.c tools/ugi-uci.c chess.c
-	$(tools_cc) -o $@ $^
+	$(tools_cc) -o $@ $(filter %.c,$^)
 
 uci-ugi: tools/tools.h tools/ugi.h tools/utils.c tools/ugi.c tools/uci-ugi.c
-	$(tools_cc) -o $@ $^
+	$(tools_cc) -o $@ $(filter %.c,$^)
 
 clean:
 	git clean -fdx

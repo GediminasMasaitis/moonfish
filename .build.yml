@@ -12,11 +12,15 @@ packages:
   - mingw-w64-gcc
   - curl
   - cjson-dev
+  - wasi-sdk
+  - clang
+  - lld
 tasks:
   - build: |
       cd moonfish
       make LDFLAGS=-static
       make LDFLAGS=-static CC=x86_64-w64-mingw32-gcc moonfish.exe
+      make LDFLAGS=-static CC='clang --target=wasm32-wasi-threads --sysroot=/usr/share/wasi-sysroot' moonfish.wasm
       ./minify.sh
   - deploy: |
       set +x
@@ -30,14 +34,14 @@ tasks:
           -F analyse=@analyse \
           -F moonfish.sh=@moonfish.sh \
           -F moonfish.exe=@moonfish.exe \
+          -F moonfish.wasm=@moonfish.wasm \
           https://neocities.org/api/upload
       fi
 artifacts:
   - moonfish/moonfish
+  - moonfish/moonfish.sh
+  - moonfish/moonfish.exe
+  - moonfish/moonfish.wasm
   - moonfish/play
   - moonfish/lichess
   - moonfish/analyse
-  - moonfish/moonfish.sh
-  - moonfish/moonfish.exe
-  - moonfish/ugi-uci
-  - moonfish/uci-ugi
