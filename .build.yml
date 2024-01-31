@@ -20,7 +20,7 @@ tasks:
       cd moonfish
       make LDFLAGS=-static
       make LDFLAGS=-static CC=x86_64-w64-mingw32-gcc moonfish.exe
-      make LDFLAGS=-static CC='clang --target=wasm32-wasi-threads --sysroot=/usr/share/wasi-sysroot' moonfish.wasm
+      make LDFLAGS='-static -Wl,--max-memory=1073741824' CC='clang --target=wasm32-wasi-threads --sysroot=/usr/share/wasi-sysroot' moonfish.wasm
       ./minify.sh
   - deploy: |
       set +x
