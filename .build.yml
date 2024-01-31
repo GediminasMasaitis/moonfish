@@ -15,6 +15,7 @@ packages:
   - wasi-sdk
   - clang
   - lld
+  - llvm
 tasks:
   - build: |
       cd moonfish
@@ -22,6 +23,10 @@ tasks:
       make LDFLAGS=-static CC=x86_64-w64-mingw32-gcc moonfish.exe
       make LDFLAGS='-static -Wl,--max-memory=1073741824' CC='clang --target=wasm32-wasi-threads --sysroot=/usr/share/wasi-sysroot' moonfish.wasm
       ./minify.sh
+  - strip: |
+      cd moonfish
+      strip --strip-all moonfish play lichess analyse
+      llvm-strip --strip-all moonfish.wasm
   - deploy: |
       set +x
       if test "$GIT_REF" = refs/heads/main && test -f neocities-token.txt
