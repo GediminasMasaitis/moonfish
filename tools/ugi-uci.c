@@ -10,7 +10,7 @@
 
 /* UGI GUI, UCI bot */
 
-char *moonfish_argv0;
+static char *moonfish_argv0;
 static struct moonfish_chess moonfish_ugi_chess;
 
 int main(int argc, char **argv)
