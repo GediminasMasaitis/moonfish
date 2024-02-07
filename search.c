@@ -126,15 +126,13 @@ static void moonfish_expand(char *argv0, struct moonfish_node *node, struct moon
 	struct moonfish_move moves[32];
 	struct moonfish_move *move;
 	int x, y;
-	int done;
 	
 	if (node->count != 0) return;
 	
-	done = 0;
 	node->children = NULL;
 	
-	for (y = 0 ; y < 8 && !done ; y++)
-	for (x = 0 ; x < 8 && !done ; x++)
+	for (y = 0 ; y < 8 ; y++)
+	for (x = 0 ; x < 8 ; x++)
 	{
 		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
 		
