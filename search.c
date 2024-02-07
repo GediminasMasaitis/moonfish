@@ -259,8 +259,6 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	int i, j;
 	int result;
 	
-	char res[10];
-	
 	moonfish_expand(analysis->argv0, &analysis->root, &analysis->chess);
 	
 	j = 0;
@@ -299,8 +297,6 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 			fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
 			exit(1);
 		}
-		
-		moonfish_to_uci(res, &analysis->info[i].move);
 		
 		analysis->root.visits += analysis->info[i].node->visits;
 		
