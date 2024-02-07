@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 						perror(argv[0]);
 						return 1;
 					}
-					if (*end == 0 || *xtime < 0)
+					if (*end != 0 || *xtime < 0)
 					{
 						fprintf(stderr, "%s: malformed time in 'go' command\n", argv[0]);
 						return 1;
@@ -105,9 +105,9 @@ int main(int argc, char **argv)
 						perror(argv[0]);
 						return 1;
 					}
-					if (*end == 0 || long_depth < 0 || long_depth > 100)
+					if (*end != 0 || long_depth < 0 || long_depth > 100)
 					{
-						fprintf(stderr, "%s: malformed time in 'go' command\n", argv[0]);
+						fprintf(stderr, "%s: malformed depth in 'go' command\n", argv[0]);
 						return 1;
 					}
 					
