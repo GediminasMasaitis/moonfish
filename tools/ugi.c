@@ -46,10 +46,9 @@ void moonfish_convert_ugi(char *argv0, char **argv, char *convert_arg, char *pip
 	
 	moonfish_spawn(argv0, argv, &in, &out);
 	
-	if (fgets(line, sizeof line, stdin) == NULL) return;
-	
 	for (;;)
 	{
+		if (fgets(line, sizeof line, stdin) == NULL) return;
 		arg = strtok(line, "\r\n\t ");
 		if (arg == NULL) continue;
 		
@@ -69,7 +68,7 @@ void moonfish_convert_ugi(char *argv0, char **argv, char *convert_arg, char *pip
 			break;
 		}
 		
-		fprintf(stderr, "%s: unknown protocol\n", argv0);
+		fprintf(stderr, "%s: unknown protocol '%s'\n", argv0, arg);
 		exit(1);
 	}
 	
