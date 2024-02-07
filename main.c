@@ -20,6 +20,10 @@ int main(int argc, char **argv)
 	int score;
 	int depth;
 	struct moonfish_chess chess;
+	char *end;
+#ifndef moonfish_mini
+	long int long_depth;
+#endif
 	
 	if (argc > 1)
 	{
@@ -64,10 +68,22 @@ int main(int argc, char **argv)
 					else xtime = &btime;
 					
 					arg = strtok(NULL, "\r\n\t ");
-					
-					if (arg == NULL || sscanf(arg, "%ld", xtime) != 1 || *xtime < 0)
+					if (arg == NULL)
 					{
 						fprintf(stderr, "%s: malformed 'go' command\n", argv[0]);
+						return 1;
+					}
+					
+					errno = 0;
+					*xtime = strtol(arg, &end, 10);
+					if (errno != 0)
+					{
+						perror(argv[0]);
+						return 1;
+					}
+					if (*end == 0 || *xtime < 0)
+					{
+						fprintf(stderr, "%s: malformed time in 'go' command\n", argv[0]);
 						return 1;
 					}
 				}
@@ -81,6 +97,21 @@ int main(int argc, char **argv)
 						fprintf(stderr, "%s: malformed 'go depth' command\n", argv[0]);
 						return 1;
 					}
+					
+					errno = 0;
+					long_depth = strtol(arg, &end, 10);
+					if (errno != 0)
+					{
+						perror(argv[0]);
+						return 1;
+					}
+					if (*end == 0 || long_depth < 0 || long_depth > 100)
+					{
+						fprintf(stderr, "%s: malformed time in 'go' command\n", argv[0]);
+						return 1;
+					}
+					
+					depth = long_depth;
 				}
 #endif
 			}
@@ -90,7 +121,7 @@ int main(int argc, char **argv)
 			
 			if (depth >= 0)
 #ifdef moonfish_mini
-				exit(1);
+				return 1;
 #else
 				score = moonfish_best_move_depth(analysis, &move, depth);
 #endif
