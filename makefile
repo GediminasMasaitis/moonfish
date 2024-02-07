@@ -33,12 +33,12 @@ clean:
 	git clean -fdx
 
 install: all
-	install -m 755 moonfish $(BINDIR)/moonfish
-	install -m 755 play $(BINDIR)/moonfish-play
-	install -m 755 lichess $(BINDIR)/moonfish-lichess
-	install -m 755 analyse $(BINDIR)/moonfish-analyse
-	install -m 755 ugi-uci $(BINDIR)/ugi-uci
-	install -m 755 uci-ugi $(BINDIR)/uci-ugi
+	install -D -m 755 moonfish $(BINDIR)/moonfish
+	install -D -m 755 play $(BINDIR)/moonfish-play
+	install -D -m 755 lichess $(BINDIR)/moonfish-lichess
+	install -D -m 755 analyse $(BINDIR)/moonfish-analyse
+	install -D -m 755 ugi-uci $(BINDIR)/ugi-uci
+	install -D -m 755 uci-ugi $(BINDIR)/uci-ugi
 
 uninstall:
 	$(RM) $(BINDIR)/moonfish $(BINDIR)/moonfish-* $(BINDIR)/ugi-uci $(BINDIR)/uci-ugi
