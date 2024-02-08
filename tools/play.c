@@ -316,7 +316,7 @@ int main(int argc, char **argv)
 	{
 		{"F", "fen", "<FEN>", NULL, "starting position for the game"},
 		{"T", "time", "<time-control>", "15+10", "time control in minutes with increment in seconds (default: '15+10')"},
-		{"C", "color", "<color>", "white", "which color you are going to play as"},
+		{"C", "color", "<color>", NULL, "which color you are going to play as"},
 		{NULL, NULL, NULL, NULL, NULL},
 	};
 	
