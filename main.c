@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 				{
 					arg = strtok(NULL, "\r\n\t ");
 					
-					if (arg == NULL || sscanf(arg, "%d", &depth) != 1 || depth < 0)
+					if (arg == NULL)
 					{
 						fprintf(stderr, "%s: malformed 'go depth' command\n", argv[0]);
 						return 1;
