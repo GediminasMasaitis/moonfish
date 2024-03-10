@@ -115,20 +115,15 @@ Simply pass the command of the bot as arguments to either of these tools, and it
 
 Note that if the GUI sends a `uci`/`gui` command to the bot that is the same as its protocol, no translation will happen, and the commands will be passed in verbatim between them.
 
-
 compiling on Windows
 ---
 
 Clone the repository, then open `moonfish.vcxproj` with Visual Studio. Support for [C11 `<threads.h>`][C11 threads in VS] is required. Only the UCI bot will be compiled, not its tools. (You may use a GUI like [cutechess] to try it.)
 
-Beware that, as of December of 2023, Microsoft, perhaps accidentally, [removed support for C11 threads][missing C11 threads] from Visual Studio but is planning to add it back. Meanwhile, a [workaround][C11 threads workaround] is given in their community support forum.
-
 Note that [MinGW] compilation is also supported.
 
 [cutechess]: <https://github.com/cutechess/cutechess>
 [C11 threads in VS]: <https://devblogs.microsoft.com/cppblog/c11-threads-in-visual-studio-2022-version-17-8-preview-2/>
-[missing C11 threads]: <https://developercommunity.visualstudio.com/t/Missing-threadsh-in-MSVC-178/10514752>
-[C11 threads workaround]: <https://developercommunity.visualstudio.com/t/Missing-threadsh-in-MSVC-178/10514752#T-N10540847>
 [MinGW]: <https://mingw-w64.org>
 
 license
