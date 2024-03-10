@@ -9,11 +9,10 @@ moonfish
 [![Lichess blitz rating](https://lichess-shield.vercel.app/api?username=munfish&format=blitz)](https://lichess.org/@/munfish/perf/blitz)
 [![Lichess bullet rating](https://lichess-shield.vercel.app/api?username=munfish&format=bullet)](https://lichess.org/@/munfish/perf/bullet)
 
-**moonfish** is a chess bot inspired by [sunfish], written in C rather than Python. Besides being inspired by it, moonfish doesn’t reuse any code from sunfish, and is written completely from scratch.
+**moonfish** is a very simple and small chess bot written in C 89 (ANSI C).
 
 You may [play moonfish on Lichess]! You don’t need a Lichess account, just make sure to choose “real time” and select a fast enough time control.
 
-[sunfish]: <https://github.com/thomasahle/sunfish>
 [play moonfish on Lichess]: <https://lichess.org/?user=munfish#friend>
 
 features
