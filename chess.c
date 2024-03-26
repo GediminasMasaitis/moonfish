@@ -241,11 +241,11 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 	
 	if (chess->board[from + dy] == moonfish_empty)
 	{
-		moonfish_move(chess, *moves, from, from + dy);
+		moonfish_move(chess, (*moves)++, from, from + dy);
 				
 		if (chess->white ? from < 40 : from > 80)
-			if (chess->board[from + dy * 2] == moonfish_empty)
-				moonfish_move(chess, (*moves)++, from, from + dy * 2);
+		if (chess->board[from + dy * 2] == moonfish_empty)
+			moonfish_move(chess, (*moves)++, from, from + dy * 2);
 	}
 	
 	moonfish_pawn_capture(chess, moves, from, from + dy + 1);
