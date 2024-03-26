@@ -217,7 +217,7 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *par
 	}
 	
 	node->visits = 0;
-	for (j = 1 ; j < node->count ; j++)
+	for (j = 0 ; j < node->count ; j++)
 		node->visits += node->children[j].visits;
 	
 	for (j = 1 ; j < node->count ; j++)
