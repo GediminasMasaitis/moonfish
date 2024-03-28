@@ -100,17 +100,17 @@ char *moonfish_next(FILE *file)
 
 char *moonfish_wait(FILE *file, char *name)
 {
-	char *line, *arg;
+	char *line, *arg, *buffer;
 	
 	for (;;)
 	{
 		line = moonfish_next(file);
 		if (line == NULL) exit(1);
 		
-		arg = strtok(line, "\r\n\t ");
+		arg = strtok_r(line, "\r\n\t ", &buffer);
 		if (arg == NULL) continue;
 		if (!strcmp(line, name))
-			return strtok(NULL, "\r\n\t ");
+			return strtok_r(NULL, "\r\n\t ", &buffer);
 	}
 }
 
