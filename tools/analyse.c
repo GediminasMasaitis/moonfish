@@ -241,17 +241,21 @@ static void moonfish_scoresheet(struct moonfish_fancy *fancy)
 static void moonfish_score(struct moonfish_fancy *fancy)
 {
 	struct moonfish_ply *ply;
+	int score;
 	
 	printf("\x1B[38;5;111m(+)\x1B[0m ");
 	
 	ply = fancy->plies + fancy->i;
+	score = ply->score;
+	
+	if (!ply->chess.white) score *= -1;
 	
 	if (ply->checkmate != 0)
 		printf("#%d", ply->checkmate);
-	else if (ply->score < 0)
-		printf("%d.%.2d", ply->score / 100, -ply->score % 100);
+	else if (score < 0)
+		printf("-%d.%.2d", -score / 100, -score % 100);
 	else
-		printf("%d.%.2d", ply->score / 100, ply->score % 100);
+		printf("%d.%.2d", score / 100, score % 100);
 	
 	printf(" (depth %d) %4s", ply->depth, "");
 }
