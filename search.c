@@ -171,7 +171,7 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *par
 		return score;
 	}
 	
-	group_count = (parent->visits / parent->count) / (node->visits + 1) / 16 + 1;
+	group_count = (parent->visits / parent->count) / (node->visits + 1) / 4 + 1;
 	
 	for (j = 0 ; j < node->count ; j++)
 	{
@@ -228,7 +228,7 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *par
 		node->children[k - 1] = swap_node;
 	}
 	
-	if (i > 5 && node->count > 0)
+	if (i > 4 && node->count > 0)
 	{
 		free(node->children);
 		node->count = 0;
