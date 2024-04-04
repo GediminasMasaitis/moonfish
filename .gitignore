@@ -7,7 +7,6 @@
 !/README.md
 !/makefile
 !/.build.yml
-!/manifest.scm
 !/moonfish.vcxproj
 !/minify.sh
 !/rename.sh
