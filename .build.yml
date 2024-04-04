@@ -6,8 +6,7 @@ secrets:
   - 72a028fc-f8df-43d3-a315-305d80720e45
 packages:
   - build-base
-  - bearssl-dev
-  - bearssl-static
+  - libressl-dev
   - xz
   - mingw-w64-gcc
   - curl

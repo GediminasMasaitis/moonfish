@@ -26,3 +26,5 @@
 !/tools/ugi.c
 !/tools/ugi-uci.c
 !/tools/uci-ugi.c
+!/tools/https.h
+!/tools/https.c

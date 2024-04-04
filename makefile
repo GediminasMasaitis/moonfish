@@ -10,8 +10,8 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
 
-lichess_cc := $(tools_cc) -std=c99
-lichess_libs := -lbearssl -lcjson
+tools_src := moonfish.h tools/tools.h tools/utils.c chess.c
+ugi_src := $(tools_src) tools/ugi.h tools/ugi.c tools/ugi-uci.c
 
 .PHONY: all clean install uninstall
 
@@ -19,14 +19,17 @@ all: moonfish play lichess analyse battle ribbon uci-ugi ugi-uci
 
 moonfish moonfish.exe moonfish.wasm: moonfish.h chess.c search.c main.c
 	$(moonfish_cc) -o $@ $(filter %.c,$^)
-
-%: moonfish.h tools/tools.h tools/%.c tools/utils.c chess.c
-	$(or $($(@)_cc),$(tools_cc)) -o $@ $(filter %.c,$^) $($(@)_libs)
-
-ugi-uci: moonfish.h tools/tools.h tools/ugi.h tools/utils.c tools/ugi.c tools/ugi-uci.c chess.c
+	
+%: $(tools_src) tools/%.c
 	$(tools_cc) -o $@ $(filter %.c,$^)
 
-uci-ugi: tools/tools.h tools/ugi.h tools/utils.c tools/ugi.c tools/uci-ugi.c
+lichess: $(tools_src) tools/lichess.c tools/https.c
+	$(tools_cc) -o $@ $(filter %.c,$^) -ltls -lssl -lcrypto -lcjson
+
+ugi-uci: $(ugi_src)
+	$(tools_cc) -o $@ $(filter %.c,$^)
+
+uci-ugi: $(ugi_src)
 	$(tools_cc) -o $@ $(filter %.c,$^)
 
 clean:
