@@ -429,10 +429,10 @@ void moonfish_chess(struct moonfish_chess *chess)
 	int x, y;
 	
 	chess->white = 1;
-	chess->castle.white_oo = 0;
-	chess->castle.white_ooo = 0;
-	chess->castle.black_oo = 0;
-	chess->castle.black_ooo = 0;
+	chess->castle.white_oo = 1;
+	chess->castle.white_ooo = 1;
+	chess->castle.black_oo = 1;
+	chess->castle.black_ooo = 1;
 	chess->score = 0;
 	chess->passing = 0;
 	
