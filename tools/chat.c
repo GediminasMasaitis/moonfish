@@ -220,13 +220,48 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		exit(1);
 	}
 	
+	channel = NULL;
+	message = NULL;
+	
 	for (;;)
 	{
+		if (channel != NULL) free(channel);
+		if (message != NULL) free(message);
+		
 		moonfish_read_chat(argv0, tls, username, &channel, &message);
-		if (moonfish_from_san(&chess, &move, message))
+		
+		if (!strcmp(message, "!chess reset"))
 		{
-			free(channel);
-			free(message);
+			moonfish_chess(&chess);
+			fprintf(in, "ucinewgame\n");
+			
+			moonfish_write_text(argv0, tls, "PRIVMSG ");
+			moonfish_write_text(argv0, tls, channel);
+			moonfish_write_text(argv0, tls, " :The board has been reset.\r\n");
+			
+			continue;
+		}
+		
+		if (moonfish_from_san(&chess, &move, message))
+			continue;
+		
+		moonfish_play(&chess, &move);
+		if (moonfish_finished(&chess))
+		{
+			moonfish_to_fen(&chess, fen);
+			moonfish_chess(&chess);
+			fprintf(in, "ucinewgame\n");
+			
+			moonfish_write_text(argv0, tls, "PRIVMSG ");
+			moonfish_write_text(argv0, tls, channel);
+			moonfish_write_text(argv0, tls, " :https://lichess.org/export/fen.gif?fen=");
+			moonfish_write_text(argv0, tls, fen);
+			moonfish_write_text(argv0, tls, "\r\n");
+			
+			moonfish_write_text(argv0, tls, "PRIVMSG ");
+			moonfish_write_text(argv0, tls, channel);
+			moonfish_write_text(argv0, tls, " :Game over!\r\n");
+			
 			continue;
 		}
 		
@@ -263,7 +298,6 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		strcat(names, " ");
 		strcat(names, name0);
 		
-		moonfish_play(&chess, &move);
 		moonfish_from_uci(&chess, &move, name0);
 		moonfish_to_san(&chess, name, &move);
 		moonfish_play(&chess, &move);
@@ -281,8 +315,15 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		moonfish_write_text(argv0, tls, fen);
 		moonfish_write_text(argv0, tls, "\r\n");
 		
-		free(channel);
-		free(message);
+		if (moonfish_finished(&chess))
+		{
+			moonfish_chess(&chess);
+			fprintf(in, "ucinewgame\n");
+			
+			moonfish_write_text(argv0, tls, "PRIVMSG ");
+			moonfish_write_text(argv0, tls, channel);
+			moonfish_write_text(argv0, tls, " :Game over!\r\n");
+		}
 	}
 }
 
