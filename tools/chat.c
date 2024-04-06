@@ -169,6 +169,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	char *value;
 	char *names, *name0;
 	char fen[128];
+	char *password;
 	
 	moonfish_chess(&chess);
 	
@@ -190,6 +191,15 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	fprintf(in, "ucinewgame\n");
 	
 	tls = moonfish_connect(argv0, host, port);
+	
+	/* todo: validate password */
+	password = getenv("moonfish_chat_password");
+	if (password != NULL && *password != 0)
+	{
+		moonfish_write_text(argv0, tls, "PASS ");
+		moonfish_write_text(argv0, tls, password);
+		moonfish_write_text(argv0, tls, "\r\n");
+	}
 	
 	moonfish_write_text(argv0, tls, "USER ");
 	moonfish_write_text(argv0, tls, username);
