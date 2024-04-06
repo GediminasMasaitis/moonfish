@@ -170,6 +170,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	char *names, *name0;
 	char fen[128];
 	char *password;
+	int i;
 	
 	moonfish_chess(&chess);
 	
@@ -252,6 +253,9 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 			moonfish_chess(&chess);
 			fprintf(in, "ucinewgame\n");
 			
+			for (i = 0 ; fen[i] != 0 ; i++)
+				if (fen[i] == ' ') fen[i] = '_';
+			
 			moonfish_write_text(argv0, tls, "PRIVMSG ");
 			moonfish_write_text(argv0, tls, channel);
 			moonfish_write_text(argv0, tls, " :https://lichess.org/export/fen.gif?fen=");
@@ -302,6 +306,9 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		moonfish_to_san(&chess, name, &move);
 		moonfish_play(&chess, &move);
 		moonfish_to_fen(&chess, fen);
+		
+		for (i = 0 ; fen[i] != 0 ; i++)
+			if (fen[i] == ' ') fen[i] = '_';
 		
 		moonfish_write_text(argv0, tls, "PRIVMSG ");
 		moonfish_write_text(argv0, tls, channel);

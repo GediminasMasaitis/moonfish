@@ -858,16 +858,24 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen)
 {
 	int x, y;
 	unsigned char piece;
+	int count;
 	
 	for (y = 7 ; y >= 0 ; y--)
 	{
+		count = 0;
 		for (x = 0 ; x < 8 ; x++)
 		{
 			piece = chess->board[(x + 1) + (y + 2) * 10];
 			if (piece == moonfish_empty)
 			{
-				*fen++ = '1';
+				count++;
 				continue;
+			}
+			
+			if (count != 0)
+			{
+				*fen++ = '0' + count;
+				count = 0;
 			}
 			
 			switch (piece % 16)
@@ -898,10 +906,33 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen)
 			fen++;
 		}
 		
+		if (count != 0) *fen++ = '0' + count;
+		
 		*fen++ = '/';
 	}
 	
-	fen[-1] = 0;
+	fen--;
+	
+	*fen++ = ' ';
+	if (chess->white) *fen++ = 'w';
+	else *fen++ = 'b';
+	*fen++ = ' ';
+	
+	if (chess->castle.white_oo) *fen++ = 'K';
+	if (chess->castle.white_ooo) *fen++ = 'Q';
+	if (chess->castle.black_oo) *fen++ = 'k';
+	if (chess->castle.black_ooo) *fen++ = 'q';
+	if (fen[-1] == ' ') *fen++ = '-';
+	
+	*fen++ = ' ';
+	if (chess->passing)
+	{
+		*fen++ = 'a' + chess->passing % 10 - 1;
+		*fen++ = '1' + chess->passing / 10 - 2;
+	}
+	
+	if (fen[-1] == ' ') *fen++ = '-';
+	*fen = 0;
 }
 
 void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moonfish_move *move)
