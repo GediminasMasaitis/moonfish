@@ -23,6 +23,7 @@ int main(int argc, char **argv)
 	char *end;
 #ifndef moonfish_mini
 	long int long_depth;
+	long int time;
 #endif
 	
 	if (argc > 1)
@@ -56,6 +57,9 @@ int main(int argc, char **argv)
 			wtime = -1;
 			btime = -1;
 			depth = -1;
+#ifndef moonfish_mini
+			time = -1;
+#endif
 			
 			for (;;)
 			{
@@ -113,22 +117,46 @@ int main(int argc, char **argv)
 					
 					depth = long_depth;
 				}
+				else if (!strcmp(arg, "movetime"))
+				{
+					arg = strtok(NULL, "\r\n\t ");
+					
+					if (arg == NULL)
+					{
+						fprintf(stderr, "%s: malformed 'go movetime' command\n", argv[0]);
+						return 1;
+					}
+					
+					errno = 0;
+					time = strtol(arg, &end, 10);
+					if (errno != 0)
+					{
+						perror(argv[0]);
+						return 1;
+					}
+					if (*end != 0 || time < 0)
+					{
+						fprintf(stderr, "%s: malformed move time in 'go' command\n", argv[0]);
+						return 1;
+					}
+				}
 #endif
 			}
 			
 			if (wtime < 0) wtime = 0;
 			if (btime < 0) btime = 0;
 			
+#ifndef moonfish_mini
 			if (depth >= 0)
-#ifdef moonfish_mini
-				return 1;
-#else
 				score = moonfish_best_move_depth(analysis, &move, depth);
-#endif
-			else if (chess.white)
-				score = moonfish_best_move_time(analysis, &move, &depth, wtime, btime);
+			else if (time >= 0)
+				score = moonfish_best_move_time(analysis, &move, &depth, time);
 			else
-				score = moonfish_best_move_time(analysis, &move, &depth, btime, wtime);
+#endif
+			if (chess.white)
+				score = moonfish_best_move_clock(analysis, &move, &depth, wtime, btime);
+			else
+				score = moonfish_best_move_clock(analysis, &move, &depth, btime, wtime);
 			
 			printf("info depth %d ", depth);
 			if (score >= moonfish_omega || score <= -moonfish_omega)

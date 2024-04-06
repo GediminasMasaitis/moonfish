@@ -23,6 +23,7 @@
 !/tools/lichess.c
 !/tools/battle.c
 !/tools/ribbon.c
+!/tools/chat.c
 !/tools/ugi.c
 !/tools/ugi-uci.c
 !/tools/uci-ugi.c

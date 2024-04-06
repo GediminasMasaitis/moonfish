@@ -347,17 +347,13 @@ static long int moonfish_clock(struct moonfish_analysis *analysis)
 
 #endif
 
-int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int *depth, long int our_time, long int their_time)
+int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int *depth, long int time)
 {
-	long int d, t, t0, t1;
+	long int t, t0, t1;
 	int r;
 	
 	r = 24 * 2048;
 	t = -1;
-	
-	d = our_time - their_time;
-	if (d < 0) d = 0;
-	d += our_time / 8;
 	
 	for (;;)
 	{
@@ -368,12 +364,21 @@ int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_
 		if (t >= 0) r = (t1 - t0) * 2048 / (t + 1);
 		t = t1 - t0;
 		
-		d -= t;
-		if (t * r > d * 2048) break;
+		time -= t;
+		if (t * r > time * 2048) break;
 		
 		analysis->depth++;
 	}
 	
 	*depth = analysis->depth;
 	return analysis->score;
+}
+
+int moonfish_best_move_clock(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int *depth, long int our_time, long int their_time)
+{
+	long int time;
+	time = our_time - their_time;
+	if (time < 0) time = 0;
+	time += our_time / 8;
+	return moonfish_best_move_time(analysis, best_move, depth, time);
 }
