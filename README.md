@@ -24,6 +24,7 @@ features
 - custom Lichess integration
 - threaded search
 - custom UGI/UCI translators
+- custom IRC integration
 
 limitations
 ---
@@ -76,6 +77,12 @@ The CLI tools, called “battle” and “ribbon” to (respectively) play a sin
 
 ~~~
 make battle ribbon
+~~~
+
+The IRC/UCI bot integration may also be compiled:
+
+~~~
+make chat
 ~~~
 
 All such programs may also be compiled by using the default target, `all`. Note the the Lichess integration requires BearSSL and cJSON. (The other programs require no external libraries.)
@@ -204,6 +211,23 @@ In addition, you may specify the “battle” command to “ribbon”, which mus
 while ! make
 do : ; done
 ~~~
+
+using the IRC integration
+---
+
+It is also possible to use the IRC integration, called “chat” to play with a UCI bot through IRC. The bot will connect to a given network through TLS and then start responding to move names such as “e4” written on given channels.
+
+~~~
+# have moonfish play on a given channel
+./chat -N irc.example.net -C '#my-channel' ./moonfish
+
+# have Stockfish play on the given channels with the given nickname "chess-bot"
+./chat -N irc.example.net -C '#my-channel,#other-channel' -M chess-bot stockfish
+~~~
+
+It is only possible to connect to networks using TLS. The default nickname is “moonfish”, and it will connect by default to #moonfish on [Libera Chat].
+
+[Libera Chat]: <https://libera.chat>
 
 using the UGI/UCI translators
 ---
