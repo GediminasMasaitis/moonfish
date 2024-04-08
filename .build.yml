@@ -36,6 +36,9 @@ tasks:
           -F play=@play \
           -F lichess=@lichess \
           -F analyse=@analyse \
+          -F battle=@battle \
+          -F ribbon=@ribbon \
+          -F chat=@chat \
           -F moonfish.sh=@moonfish.sh \
           -F moonfish.exe=@moonfish.exe \
           -F moonfish.wasm=@moonfish.wasm \
