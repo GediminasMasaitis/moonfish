@@ -29,3 +29,4 @@
 !/tools/uci-ugi.c
 !/tools/https.h
 !/tools/https.c
+!/tools/perft.c
