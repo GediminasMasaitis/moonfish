@@ -499,32 +499,9 @@ static void moonfish_signal(int signal)
 
 static int moonfish_move_from(struct moonfish_chess *chess, struct moonfish_move *found, int x0, int y0, int x1, int y1)
 {
-	struct moonfish_move moves[32];
-	struct moonfish_move *move;
-	int valid;
-	
 	y0 = 10 - y0;
 	y1 = 10 - y1;
-	
-	moonfish_moves(chess, moves, x0 + y0 * 10);
-	
-	for (move = moves ; move->piece != moonfish_outside ; move++)
-	{
-		if (move->to == x1 + y1 * 10)
-		{
-			moonfish_play(chess, move);
-			valid = moonfish_validate(chess);
-			moonfish_unplay(chess, move);
-			
-			if (valid)
-			{
-				*found = *move;
-				return 0;
-			}
-		}
-	}
-	
-	return 1;
+	return moonfish_move(chess, found, x0 + y0 * 10, x1 + y1 * 10);
 }
 
 static void moonfish_analyse(struct moonfish_fancy *fancy)

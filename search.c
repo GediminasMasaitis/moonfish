@@ -52,6 +52,7 @@ struct moonfish_node
 	int visits;
 	unsigned char from, to;
 	unsigned char count;
+	unsigned char promotion;
 };
 
 struct moonfish_info
@@ -147,6 +148,7 @@ static void moonfish_expand(char *argv0, struct moonfish_node *node, struct moon
 			
 			node->children[node->count].from = move->from;
 			node->children[node->count].to = move->to;
+			node->children[node->count].promotion = move->promotion;
 			node->children[node->count].count = 0;
 			node->children[node->count].visits = 0;
 			node->count++;
@@ -187,7 +189,8 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_node *par
 	
 	for (j = 0 ; j < node->count ; j++)
 	{
-		moonfish_move(&info->chess, &move, node->children[j].from, node->children[j].to);
+		moonfish_force_move(&info->chess, &move, node->children[j].from, node->children[j].to);
+		move.promotion = node->children[j].promotion;
 		
 		if (move.captured % 16 == moonfish_king)
 		{
@@ -267,7 +270,9 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	{
 		analysis->info[j].chess = analysis->chess;
 		
-		moonfish_move(&analysis->info[j].chess, &move, analysis->root.children[i].from, analysis->root.children[i].to);
+		moonfish_force_move(&analysis->info[j].chess, &move, analysis->root.children[i].from, analysis->root.children[i].to);
+		move.promotion = analysis->root.children[i].promotion;
+		
 		moonfish_play(&analysis->info[j].chess, &move);
 		
 		if (!moonfish_validate(&analysis->chess)) continue;

@@ -31,10 +31,9 @@ limitations
 
 These are things that might be fixed eventually.
 
-- the bot will never underpromote
-- the TUI will also prevent you from underpromoting
+- the TUIs do not let you underpromote
 - no transposition table
-- no support for `go infinite` or `go mate`
+- no support for `go infinite`, `go mate`, or `go nodes`
 - no move name or FEN validation (may lead to potential exploits)
 
 download
