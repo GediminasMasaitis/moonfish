@@ -80,12 +80,7 @@ int main(int argc, char **argv)
 					
 					errno = 0;
 					*xtime = strtol(arg, &end, 10);
-					if (errno != 0)
-					{
-						perror(argv[0]);
-						return 1;
-					}
-					if (*end != 0 || *xtime < 0)
+					if (errno != 0 || *end != 0 || *xtime < 0)
 					{
 						fprintf(stderr, "%s: malformed time in 'go' command\n", argv[0]);
 						return 1;

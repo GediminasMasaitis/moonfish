@@ -54,12 +54,7 @@ int main(int argc, char **argv)
 	
 	errno = 0;
 	depth = strtol(args[1].value, &end, 10);
-	if (errno != 0)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	if (*end != 0 || depth < 0 || depth >= 24)
+	if (errno != 0 || *end != 0 || depth < 0 || depth >= 24)
 		moonfish_usage(args, format, argv[0]);
 	
 	moonfish_chess(&chess);
