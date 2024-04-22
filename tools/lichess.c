@@ -254,7 +254,7 @@ static void *moonfish_handle_game(void *data)
 	
 	game = data;
 	
-	moonfish_spawn(game->argv0, game->argv, &in, &out);
+	moonfish_spawn(game->argv0, game->argv, &in, &out, NULL);
 	tls = moonfish_connect(game->argv0, game->host, game->port);
 	
 	snprintf(request, sizeof request, "GET /api/bot/game/stream/%s", game->id);

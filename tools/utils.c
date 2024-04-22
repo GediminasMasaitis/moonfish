@@ -9,10 +9,10 @@
 
 #include "tools.h"
 
-static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd)
+static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd, char *directory)
 {
 	int p1[2], p2[2];
-	int pid, fd;
+	int pid;
 	
 	if (pipe(p1) < 0) return 1;
 	if (pipe(p2) < 0) return 1;
@@ -29,11 +29,13 @@ static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd)
 		return 0;
 	}
 	
-	fd = open("/dev/null", O_RDONLY);
-	if (fd < 0)
+	if (directory != NULL)
 	{
-		fprintf(stderr, "%s: %s: %s\n", argv0, argv[0], strerror(errno));
-		exit(1);
+		if (chdir(directory))
+		{
+			perror(argv0);
+			exit(1);
+		}
 	}
 	
 	dup2(p1[0], 0);
@@ -50,11 +52,11 @@ static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd)
 	exit(1);
 }
 
-void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out)
+void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out, char *directory)
 {
 	int in_fd, out_fd;
 	
-	if (moonfish_fork(argv0, argv, &in_fd, &out_fd))
+	if (moonfish_fork(argv0, argv, &in_fd, &out_fd, directory))
 	{
 		perror(argv0);
 		exit(1);

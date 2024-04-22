@@ -174,7 +174,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	
 	moonfish_chess(&chess);
 	
-	moonfish_spawn(argv0, command, &in, &out);
+	moonfish_spawn(argv0, command, &in, &out, NULL);
 	fprintf(in, "uci\n");
 	moonfish_wait(out, "uciok");
 	

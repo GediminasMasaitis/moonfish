@@ -319,7 +319,7 @@ int main(int argc, char **argv)
 	
 	name = names;
 	
-	moonfish_spawn(argv[0], command, &in, &out);
+	moonfish_spawn(argv[0], command, &in, &out, NULL);
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{

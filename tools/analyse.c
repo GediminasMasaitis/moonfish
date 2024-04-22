@@ -646,7 +646,7 @@ int main(int argc, char **argv)
 	fancy->x = 0;
 	fancy->y = 0;
 	
-	moonfish_spawn(argv[0], command, &fancy->in, &fancy->out);
+	moonfish_spawn(argv[0], command, &fancy->in, &fancy->out, NULL);
 	
 	fancy->i = 0;
 	fancy->count = 1;
