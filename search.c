@@ -117,7 +117,7 @@ void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *che
 
 void moonfish_free(struct moonfish_analysis *analysis)
 {
-	struct moonfish_chess chess;
+	struct moonfish_chess chess = {0};
 	moonfish_new(analysis, &chess);
 	free(analysis);
 }
