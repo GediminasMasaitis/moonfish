@@ -413,7 +413,6 @@ void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move)
 		}
 	}
 	
-	
 	if (move->piece % 16 == moonfish_king)
 	{
 		x0 = 0;
