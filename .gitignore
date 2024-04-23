@@ -10,6 +10,7 @@
 !/moonfish.vcxproj
 !/minify.sh
 !/rename.sh
+!/compare.sh
 !/moonfish.h
 !/chess.c
 !/search.c
