@@ -201,10 +201,17 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		fprintf(in, "isready\n");
 		moonfish_wait(out, "readyok");
 		
-		fprintf(in, "go wtime %d btime %d", wtime->valueint, btime->valueint);
-		if (winc->valueint > 0) fprintf(in, " winc %d", winc->valueint);
-		if (binc->valueint > 0) fprintf(in, " binc %d", binc->valueint);
-		fprintf(in, "\n");
+		if (count > 1)
+		{
+			fprintf(in, "go wtime %d btime %d", wtime->valueint, btime->valueint);
+			if (winc->valueint > 0) fprintf(in, " winc %d", winc->valueint);
+			if (binc->valueint > 0) fprintf(in, " binc %d", binc->valueint);
+			fprintf(in, "\n");
+		}
+		else
+		{
+			fprintf(in, "go movetime 6000\n");
+		}
 		
 		name = moonfish_wait(out, "bestmove");
 		if (name == NULL)
