@@ -145,13 +145,15 @@ int main(int argc, char **argv)
 			if (depth >= 0)
 				score = moonfish_best_move_depth(analysis, &move, depth);
 			else if (time >= 0)
-				score = moonfish_best_move_time(analysis, &move, &depth, time);
+				score = moonfish_best_move_time(analysis, &move, time);
 			else
 #endif
 			if (chess.white)
-				score = moonfish_best_move_clock(analysis, &move, &depth, wtime, btime);
+				score = moonfish_best_move_clock(analysis, &move, wtime, btime);
 			else
-				score = moonfish_best_move_clock(analysis, &move, &depth, btime, wtime);
+				score = moonfish_best_move_clock(analysis, &move, btime, wtime);
+			
+			if (depth < 0) depth = 4;
 			
 			printf("info depth %d ", depth);
 			if (score >= moonfish_omega || score <= -moonfish_omega)

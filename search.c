@@ -130,7 +130,7 @@ static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int 
 	struct moonfish_move moves[256];
 	int x, y;
 	int count;
-	long int t1;
+	long int t1, c;
 	
 	if (depth < 0)
 	{
@@ -143,9 +143,7 @@ static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int 
 	}
 	else if (info->analysis->time >= 0 && time < 0)
 	{
-		score = info->chess.score;
-		if (!info->chess.white) score *= -1;
-		return score;
+		depth = 0;
 	}
 	
 	count = 0;
@@ -171,9 +169,10 @@ static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int 
 			continue;
 		
 		t1 = moonfish_clock(info->analysis);
+		c = time * i / count - t1 + t0;
 		
 		moonfish_play(&info->chess, moves + i);
-		score = -moonfish_search(info, -beta, -alpha, depth - 1, t1, (time - t1 + t0) / (count - i));
+		score = -moonfish_search(info, -beta, -alpha, depth - 1, t1, time / count + c);
 		moonfish_unplay(&info->chess, moves + i);
 		
 		if (score >= beta) return beta;
@@ -271,22 +270,21 @@ int moonfish_best_move_depth(struct moonfish_analysis *analysis, struct moonfish
 
 #endif
 
-int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int *depth, long int time)
+int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *best_move, long int time)
 {
 	time -= 125;
 	if (time < 10) time = 10;
-	analysis->depth = 8;
+	analysis->depth = 16;
 	analysis->time = time;
 	moonfish_iteration(analysis, best_move);
-	*depth = 4;
 	return analysis->score;
 }
 
-int moonfish_best_move_clock(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int *depth, long int our_time, long int their_time)
+int moonfish_best_move_clock(struct moonfish_analysis *analysis, struct moonfish_move *best_move, long int our_time, long int their_time)
 {
-	long int time;
-	time = our_time * 3 / 4 - their_time;
-	if (time < 0) time = 0;
-	time += our_time / 8;
-	return moonfish_best_move_time(analysis, best_move, depth, time);
+	long int time0, time1;
+	time0 = our_time / 16;
+	time1 = our_time - time0 - their_time * 7 / 8;
+	if (time1 < 0) time1 = 0;
+	return moonfish_best_move_time(analysis, best_move, time0 + time1);
 }

@@ -70,8 +70,8 @@ void moonfish_force_move(struct moonfish_chess *chess, struct moonfish_move *mov
 void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move);
 void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move);
 
-int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *move, int *depth, long int time);
-int moonfish_best_move_clock(struct moonfish_analysis *analysis, struct moonfish_move *move, int *depth, long int our_time, long int their_time);
+int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *move, long int time);
+int moonfish_best_move_clock(struct moonfish_analysis *analysis, struct moonfish_move *move, long int our_time, long int their_time);
 int moonfish_countdown(int score);
 
 struct moonfish_analysis *moonfish_analysis(char *argv0);
