@@ -24,7 +24,7 @@ tasks:
       ./minify.sh
   - strip: |
       cd moonfish
-      strip --strip-all moonfish play lichess analyse
+      strip --strip-all moonfish play lichess analyse battle ribbon chat
       llvm-strip --strip-all moonfish.wasm
   - deploy: |
       set +x
