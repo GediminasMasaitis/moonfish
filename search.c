@@ -212,6 +212,28 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	int result;
 	int x, y;
 	struct moonfish_move *move, moves[32];
+#ifdef moonfish_no_threads
+	int count;
+	
+	if (analysis->time >= 0)
+	{
+		count = 0;
+		
+		for (y = 0 ; y < 8 ; y++)
+		for (x = 0 ; x < 8 ; x++)
+		{
+			moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
+			for (move = moves ; move->piece != moonfish_outside ; move++)
+			{
+				moonfish_play(&analysis->chess, move);
+				if (moonfish_validate(&analysis->chess)) count++;
+				moonfish_unplay(&analysis->chess, move);
+			}
+		}
+		
+		analysis->time /= count;
+	}
+#endif
 	
 	j = 0;
 	
