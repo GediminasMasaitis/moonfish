@@ -84,7 +84,13 @@ The IRC/UCI bot integration may also be compiled:
 make chat
 ~~~
 
-All such programs may also be compiled by using the default target, `all`. Note the the Lichess integration requires BearSSL and cJSON. (The other programs require no external libraries.)
+The opening book utility may also be compiled:
+
+~~~
+make book
+~~~
+
+All such programs may also be compiled by using the default target, `all`. Note the the Lichess integration requires LibreSSL (for libtls) and cJSON. (The other programs require no external libraries.)
 
 ~~~
 make
@@ -96,6 +102,20 @@ using moonfish
 moonfish is a UCI bot, which means you may select it and use it with any UCI program (though see “limitations” above). You may invoke `./moonfish` to start its UCI interface.
 
 However, note that moonfish comes with its own UCI TUIs, called “play” and “analyse”. You may use them with any UCI bot you’d like!
+
+using “book”
+---
+
+Opening book support for moonfish is handled with the “book” utility. You specify a opening book file name to it as well as the command for a UCI bot, and it will intercept that bot’s communication with the GUI to make it play certain openings.
+
+The format for opening book files is very simple: One opening per line with move names in either SAN or UCI format separated by spaces. (Move numbers are no allowed.) Empty lines are ignores, `#` is used for comments. Check out the `book.txt` file for an example.
+
+Invalid opening book files will be rejected early.
+
+~~~
+# (have moonfish play openings from the given file)
+./book --file=book.txt ./moonfish
+~~~
 
 using “play” and “analyse”
 ---

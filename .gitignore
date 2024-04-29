@@ -15,6 +15,7 @@
 !/chess.c
 !/search.c
 !/main.c
+!/book.txt
 !/tools
 !/tools/tools.h
 !/tools/ugi.h
@@ -31,3 +32,4 @@
 !/tools/https.h
 !/tools/https.c
 !/tools/perft.c
+!/tools/book.c

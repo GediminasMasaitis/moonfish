@@ -24,7 +24,7 @@ tasks:
       ./minify.sh
   - strip: |
       cd moonfish
-      strip --strip-all moonfish play lichess analyse battle ribbon chat
+      strip --strip-all moonfish play lichess analyse battle ribbon chat book
       llvm-strip --strip-all moonfish.wasm
   - deploy: |
       set +x
@@ -42,6 +42,7 @@ tasks:
           -F moonfish.sh=@moonfish.sh \
           -F moonfish.exe=@moonfish.exe \
           -F moonfish.wasm=@moonfish.wasm \
+          -F book.txt=@book.txt \
           https://neocities.org/api/upload
       fi
 artifacts:
@@ -52,3 +53,4 @@ artifacts:
   - moonfish/play
   - moonfish/lichess
   - moonfish/analyse
+  - moonfish/book
