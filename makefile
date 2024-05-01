@@ -2,10 +2,12 @@
 # copyright 2023, 2024 zamfofex
 
 CFLAGS ?= -ansi -O3 -Wall -Wextra -Wpedantic
+CXXFLAGS ?= -std=c++20 -O3 -Wall -Wextra -Wpedantic
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 
 cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
+cxx := $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
@@ -34,6 +36,21 @@ ugi-uci: $(ugi_src)
 
 uci-ugi: $(ugi_src)
 	$(tools_cc) -o $@ $(filter %.c,$^)
+
+tuner: \
+	extras/texel-tuner/src/main.cpp \
+	extras/texel-tuner/src/tuner.cpp \
+	extras/texel-tuner/src/threadpool.cpp \
+	extras/texel-tuner/src/base.h \
+	extras/texel-tuner/src/threadpool.h \
+	extras/texel-tuner/src/tuner.h \
+	extras/moonfish.cc \
+	extras/moonfish.hh \
+	extras/config.h \
+	chess.c moonfish.h
+	$(RM) extras/texel-tuner/src/config.h
+	$(cc) -c chess.c
+	$(cxx) -pthread -iquote extras -o $@ $(filter %.cc %.cpp,$^) chess.o
 
 clean:
 	git clean -fdx

@@ -33,3 +33,8 @@
 !/tools/https.c
 !/tools/perft.c
 !/tools/book.c
+!/extras
+!/extras/texel-tuner
+!/extras/moonfish.cc
+!/extras/moonfish.hh
+!/extras/config.h

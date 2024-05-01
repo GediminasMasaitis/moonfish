@@ -1,0 +1,3 @@
+[submodule "extras/texel-tuner"]
+	path = extras/texel-tuner
+	url = https://github.com/GediminasMasaitis/texel-tuner
