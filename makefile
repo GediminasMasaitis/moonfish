@@ -15,7 +15,7 @@ ugi_src := $(tools_src) tools/ugi.h tools/ugi.c tools/ugi-uci.c
 
 .PHONY: all clean install uninstall
 
-all: moonfish play lichess analyse battle ribbon chat uci-ugi ugi-uci perft book
+all: moonfish play lichess analyse battle ribbon chat uci-ugi ugi-uci book
 
 moonfish moonfish.exe moonfish.wasm: moonfish.h chess.c search.c main.c
 	$(moonfish_cc) -o $@ $(filter %.c,$^)
