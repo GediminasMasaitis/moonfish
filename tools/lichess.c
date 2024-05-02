@@ -183,7 +183,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 			}
 			else
 			{
-				moonfish_fen(&chess, game->fen + 4);
+				moonfish_from_fen(&chess, game->fen + 4);
 				name = strtok(moves->valuestring, " ");
 				for (;;)
 				{
@@ -384,7 +384,7 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 			fen = cJSON_GetObjectItem(challenge, "initialFen");
 			if (!cJSON_IsString(fen)) moonfish_json_error(argv0);
 			
-			invalid = moonfish_fen(&chess, fen->valuestring);
+			invalid = moonfish_from_fen(&chess, fen->valuestring);
 			
 			if (!invalid)
 			if (chess.castle.white_oo || chess.castle.white_ooo)

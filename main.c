@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 			else if (!strcmp(arg, "fen"))
 			{
 				arg = strtok(NULL, "\r\n");
-				moonfish_fen(&chess, arg);
+				moonfish_from_fen(&chess, arg);
 				
 				arg = strstr(arg, "moves");
 				if (arg != NULL)

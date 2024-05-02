@@ -86,11 +86,14 @@ int moonfish_check(struct moonfish_chess *chess);
 
 #ifndef moonfish_mini
 
-int moonfish_fen(struct moonfish_chess *chess, char *fen);
 int moonfish_best_move_depth(struct moonfish_analysis *analysis, struct moonfish_move *move, int depth);
+
+int moonfish_from_fen(struct moonfish_chess *chess, char *fen);
+void moonfish_to_fen(struct moonfish_chess *chess, char *fen);
+
 int moonfish_from_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moonfish_move *move);
-void moonfish_to_fen(struct moonfish_chess *chess, char *fen);
+
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
 
 int moonfish_finished(struct moonfish_chess *chess);

@@ -363,7 +363,7 @@ int main(int argc, char **argv)
 	fancy->mutex = &mutex;
 	
 	moonfish_chess(&fancy->chess);
-	if (args[0].value != NULL) moonfish_fen(&fancy->chess, args[0].value);
+	if (args[0].value != NULL) moonfish_from_fen(&fancy->chess, args[0].value);
 	
 	if (args[2].value != NULL)
 	{

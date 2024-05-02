@@ -589,7 +589,7 @@ int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, uns
 	return 1;
 }
 
-int moonfish_fen(struct moonfish_chess *chess, char *fen)
+int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 {
 	int x, y;
 	unsigned char type, color;

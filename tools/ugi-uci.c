@@ -130,7 +130,7 @@ void *moonfish_convert_in(void *data)
 					fprintf(stderr, "%s: malformed 'position fen' command\n", moonfish_argv0);
 					exit(1);
 				}
-				moonfish_fen(&moonfish_ugi_chess, arg);
+				moonfish_from_fen(&moonfish_ugi_chess, arg);
 				
 				arg = strstr(arg, "moves");
 				if (arg != NULL)

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 		moonfish_usage(args, format, argv[0]);
 	
 	moonfish_chess(&chess);
-	if (args[0].value != NULL && moonfish_fen(&chess, args[0].value))
+	if (args[0].value != NULL && moonfish_from_fen(&chess, args[0].value))
 		moonfish_usage(args, format, argv[0]);
 	
 	printf("perft %ld: %ld\n", depth, moonfish_perft(&chess, depth));

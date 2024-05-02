@@ -668,7 +668,7 @@ int main(int argc, char **argv)
 	else
 	{
 		fancy->fen = args[0].value;
-		moonfish_fen(&fancy->plies[0].chess, fancy->fen);
+		moonfish_from_fen(&fancy->plies[0].chess, fancy->fen);
 	}
 	
 	fprintf(fancy->in, "uci\n");

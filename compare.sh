@@ -34,7 +34,7 @@ cutechess-cli \
 	-engine {name,cmd}=moonfish \
 	-engine {name,cmd}=moonfish-"$rev" \
 	-openings file=openings.pgn order=random \
-	-each proto=uci tc=inf/8+0.125 \
+	-each proto=uci tc=inf/12+0.125 \
 	-games 2 -rounds 64 -repeat 2 -maxmoves 256 \
 	-sprt elo0=0 elo1=12 alpha=0.05 beta=0.05 \
 	-ratinginterval 12 \

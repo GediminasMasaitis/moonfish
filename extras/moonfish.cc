@@ -62,7 +62,7 @@ EvalResult moonfish::MoonfishEval::get_fen_eval_result(std::string fen)
 	EvalResult result;
 	
 	moonfish_chess(&chess);
-	moonfish_fen(&chess, (char *) fen.c_str());
+	moonfish_from_fen(&chess, (char *) fen.c_str());
 	
 	for (y0 = 0 ; y0 < 8 ; y0++)
 	for (x0 = 0 ; x0 < 8 ; x0++)

@@ -461,7 +461,7 @@ int main(int argc, char **argv)
 	if (!battle.ugi)
 	{
 		moonfish_chess(&battle.chess);
-		if (battle.fen && moonfish_fen(&battle.chess, battle.fen)) moonfish_usage0(argv0);
+		if (battle.fen && moonfish_from_fen(&battle.chess, battle.fen)) moonfish_usage0(argv0);
 	}
 	
 	battle.moves = NULL;
