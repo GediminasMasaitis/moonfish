@@ -116,13 +116,6 @@ void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *che
 	analysis->time = -1;
 }
 
-void moonfish_free(struct moonfish_analysis *analysis)
-{
-	struct moonfish_chess chess = {0};
-	moonfish_new(analysis, &chess);
-	free(analysis);
-}
-
 static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int depth, long int t0, long int time)
 {
 	int score;

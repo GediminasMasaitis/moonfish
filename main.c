@@ -241,6 +241,9 @@ int main(int argc, char **argv)
 		fflush(stdout);
 	}
 	
-	moonfish_free(analysis);
+#ifndef moonfish_mini
+	free(analysis);
+#endif
+	
 	return 0;
 }

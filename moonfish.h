@@ -76,7 +76,6 @@ int moonfish_countdown(int score);
 
 struct moonfish_analysis *moonfish_analysis(char *argv0);
 void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *chess);
-void moonfish_free(struct moonfish_analysis *analysis);
 
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_uci(char *name, struct moonfish_move *move);
