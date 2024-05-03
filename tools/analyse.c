@@ -372,7 +372,7 @@ static void *moonfish_start(void *data)
 					arg = strtok_r(NULL, "\r\n\t ", &buffer);
 					if (arg == NULL) break;
 					moonfish_from_uci(&ply.chess, &move, arg);
-					moonfish_to_san(&ply.chess, san, &move);
+					moonfish_to_san(&ply.chess, &move, san);
 					length = strlen(san);
 					if (i + length > sizeof fancy->pv - 2) break;
 					moonfish_play(&ply.chess, &move);
@@ -832,8 +832,8 @@ int main(int argc, char **argv)
 				fancy->plies[fancy->i].depth = 0;
 				fancy->plies[fancy->i].score *= -1;
 				
-				moonfish_to_uci(fancy->plies[fancy->i].name, &move);
-				moonfish_to_san(&fancy->plies[fancy->i].chess, fancy->plies[fancy->i].san, &move);
+				moonfish_to_uci(&move, fancy->plies[fancy->i].name);
+				moonfish_to_san(&fancy->plies[fancy->i].chess, &move, fancy->plies[fancy->i].san);
 				
 				moonfish_play(&fancy->plies[fancy->i].chess, &move);
 				fancy->x = 0;

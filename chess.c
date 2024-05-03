@@ -486,7 +486,7 @@ void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move,
 	if (name[4] == 'n') move->promotion = color | moonfish_knight;
 }
 
-void moonfish_to_uci(char *name, struct moonfish_move *move)
+void moonfish_to_uci(struct moonfish_move *move, char *name)
 {
 	int x, y;
 	
@@ -965,7 +965,7 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen)
 	*fen = 0;
 }
 
-void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moonfish_move *move)
+void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
 {
 	static char names[] = "NBRQK";
 	

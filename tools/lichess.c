@@ -188,7 +188,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 				for (;;)
 				{
 					moonfish_from_uci(&chess, &move, name);
-					moonfish_to_uci(name0, &move);
+					moonfish_to_uci(&move, name0);
 					fprintf(in, "%s", name0);
 					name = strtok(NULL, " ");
 					if (name == NULL) break;

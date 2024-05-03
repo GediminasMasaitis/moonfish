@@ -544,7 +544,7 @@ int main(int argc, char **argv)
 			if (moonfish_move_from(&fancy->chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 			{
 				*name++ = ' ';
-				moonfish_to_uci(name, &move);
+				moonfish_to_uci(&move, name);
 				name += strlen(name);
 				
 				pthread_mutex_lock(fancy->mutex);

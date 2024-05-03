@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 			}
 			
 			moonfish_play(&chess, &move);
-			moonfish_to_uci(book[i][j++], &move);
+			moonfish_to_uci(&move, book[i][j++]);
 			
 			arg = strtok(NULL, "\r\n\t ");
 			if (arg == NULL || arg[0] == '#')

@@ -78,7 +78,7 @@ struct moonfish_analysis *moonfish_analysis(char *argv0);
 void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *chess);
 
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
-void moonfish_to_uci(char *name, struct moonfish_move *move);
+void moonfish_to_uci(struct moonfish_move *move, char *name);
 
 int moonfish_validate(struct moonfish_chess *chess);
 int moonfish_check(struct moonfish_chess *chess);
@@ -91,7 +91,7 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen);
 void moonfish_to_fen(struct moonfish_chess *chess, char *fen);
 
 int moonfish_from_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
-void moonfish_to_san(struct moonfish_chess *chess, char *name, struct moonfish_move *move);
+void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
 
