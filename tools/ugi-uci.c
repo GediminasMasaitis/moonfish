@@ -167,7 +167,7 @@ void *moonfish_convert_in(void *data)
 					arg = strtok_r(NULL, " ", &save);
 					if (arg == NULL) break;
 					moonfish_from_uci(&moonfish_ugi_chess, &move, arg);
-					moonfish_play(&moonfish_ugi_chess, &move);
+					moonfish_ugi_chess = move.chess;
 				}
 			}
 		}
@@ -175,7 +175,6 @@ void *moonfish_convert_in(void *data)
 		fputs(line2, in);
 	}
 }
-
 
 /* read from bot, write to GUI */
 void *moonfish_convert_out(void *data)

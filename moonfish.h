@@ -89,61 +89,37 @@ enum
 	moonfish_omega = 5000000
 };
 
-/* bitfield booleans representing castling rights */
-struct moonfish_castle
-{
-	unsigned int white_oo:1, white_ooo:1;
-	unsigned int black_oo:1, black_ooo:1;
-};
-
 /* represents a chess position */
 struct moonfish_chess
 {
 	/* 10 x 12 array board representation */
 	unsigned char board[120];
 	
-	/* whether it's white's turn (a boolean) */
-	/* 1 means white's turn */
-	/* 0 means black's turn */
-	unsigned char white;
+	/* bitfield booleans representing castling rights */
+	unsigned int white_oo:1, white_ooo:1;
+	unsigned int black_oo:1, black_ooo:1;
+	
+	/* PST score for the position */
+	int score;
 	
 	/* square index of a pawn that may be captured via e.p. */
 	/* or zero if there is no such pawn */
 	unsigned char passing;
 	
-	/* castling rights */
-	struct moonfish_castle castle;
-	
-	/* PST score for the position */
-	int score;
+	/* whether it's white's turn (a boolean) */
+	/* 1 means white's turn */
+	/* 0 means black's turn */
+	unsigned char white;
 };
 
-/* represents a possible move in a specific position */
-/* note: a move will only be sensibly useful in the position that it is meant for! */
-/* using a move on a position that it is not meant for might cause weird things */
+/* represents a move that can be made on a given position */
 struct moonfish_move
 {
-	/* indices of the squares the piece is moving from and to */
+	/* the position after the move is played */
+	struct moonfish_chess chess;
+	
+	/* square indices of where the piece moved from and to */
 	unsigned char from, to;
-	
-	/* integer representing the piece that is moving */
-	unsigned char piece;
-	
-	/* represents the piece that a pawn promotes to (if the move is a promotion) */
-	/* if the move is not a promotion, then "promotion == piece" */
-	unsigned char promotion;
-	
-	/* integer representing the captured piece (or "moonfish_empty" if the move isn't a capture) */
-	unsigned char captured;
-	
-	/* square index of the pawn that may have been captured via e.p. *before* this move was played (or zero if there was no such pawn) */
-	unsigned char passing;
-	
-	/* castling rights *before* the move was played */
-	struct moonfish_castle castle;
-	
-	/* PST score of the position *before* the move was played */
-	int score;
 };
 
 /* opaque analysis struct */
@@ -160,20 +136,9 @@ void moonfish_chess(struct moonfish_chess *chess);
 /* note: an array of moves of size 32 is always enough (since its impossible to have a piece have more moves available than that in chess) */
 /* note: this might generate a move that leaves the king in check (which is invalid!) */
 /* note: it will not generate any other kind of invalid move */
-/* to filter out invalid moves, you may use "moonfish_validate" below on the position *after* playing the given move */
-void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
-
-/* assumes that a move (with the given "from" and "to" indices) is valid in the given position and creates it */
-/* the generated move is stored in the given move pointer */
-/* this will ignore underpromotions (always promotes to queen when the pawn reaches the last rank) */
-void moonfish_force_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
-
-/* play or unplay ("makes" or "unmakes") a given move by mutating the given position */
-/* note: a move must be played on the position it is meant for! */
-/* note: a move must be unplayed on the position that resulted from playing it! */
-/* that means move playing/unplaying must be balanced (surrounded by playing/unplaying the same move) */
-void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move);
-void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move);
+/* to filter out invalid moves, you may use "moonfish_validate" below on the position *after* the generated move was played */
+/* this will return the number of moves generated */
+int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
 
 /* tries to find the best move in the given position in at most the given time */
 /* the move is stored in the "move" pointer, and the score for the position is returned */
@@ -210,7 +175,7 @@ void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move,
 /* converts a move to UCI notation */
 /* the name is stored in the given "char" pointer (including the trailing NUL), so make sure you pass in a pointer that can fit it */
 /* a "char" array of size 6 is always enough to fit a given move name */
-void moonfish_to_uci(struct moonfish_move *move, char *name);
+void moonfish_to_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 
 /* returns whether an iinvalid move was just played (i.e. whether the opponent king is attacked on the given position) */
 /* return 0: the opponent king is attacked, an invalid move was just played */
@@ -243,8 +208,11 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen);
 int moonfish_from_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 
-/* similar to "moonfish_force_move", but this will perform validation, and only return 0 for a valid move */
-/* on failure (i.e. invalid move), it will return 1, and the move is not usable */
+/* checks whether there is a valid move with the given from/to square indices */
+/* then, if so, generates the move and stores it in the given move pointer */
+/* if the move is valid, this will return 0, and the pointer will point to a move that can be used */
+/* on failure (i.e. invalid move), this will return 1, and the move the pointer points to will not be usable */
+/* note: this will ignore underpromotions (always promotes to queen when a pawn reaches the last rank) */
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
 
 /* returns whether the game ended due to either checkmate or stalemate */

@@ -246,7 +246,9 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		if (moonfish_from_san(&chess, &move, message))
 			continue;
 		
-		moonfish_play(&chess, &move);
+		moonfish_to_uci(&chess, &move, name);
+		chess = move.chess;
+		
 		if (moonfish_finished(&chess))
 		{
 			moonfish_to_fen(&chess, fen);
@@ -268,8 +270,6 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 			
 			continue;
 		}
-		
-		moonfish_to_uci(&move, name);
 		
 		names = realloc(names, strlen(names) + strlen(name) + 2);
 		if (names == NULL)
@@ -304,7 +304,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		
 		moonfish_from_uci(&chess, &move, name0);
 		moonfish_to_san(&chess, &move, name);
-		moonfish_play(&chess, &move);
+		chess = move.chess;
 		moonfish_to_fen(&chess, fen);
 		
 		for (i = 0 ; fen[i] != 0 ; i++)

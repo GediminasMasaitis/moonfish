@@ -282,7 +282,7 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	
 	pthread_mutex_lock(fancy->mutex);
 	moonfish_from_uci(&fancy->chess, &move, arg);
-	moonfish_play(&fancy->chess, &move);
+	fancy->chess = move.chess;
 }
 
 int main(int argc, char **argv)
@@ -544,13 +544,13 @@ int main(int argc, char **argv)
 			if (moonfish_move_from(&fancy->chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 			{
 				*name++ = ' ';
-				moonfish_to_uci(&move, name);
+				moonfish_to_uci(&fancy->chess, &move, name);
 				name += strlen(name);
 				
 				pthread_mutex_lock(fancy->mutex);
 				
 				fancy->x = 0;
-				moonfish_play(&fancy->chess, &move);
+				fancy->chess = move.chess;
 				moonfish_reset_time(fancy);
 				moonfish_fancy(fancy);
 				if (moonfish_finished(&fancy->chess)) break;

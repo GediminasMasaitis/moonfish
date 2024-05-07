@@ -50,7 +50,6 @@ struct moonfish_info
 	struct moonfish_analysis *analysis;
 	pthread_t thread;
 	struct moonfish_move move;
-	struct moonfish_chess chess;
 	int score;
 };
 
@@ -116,7 +115,7 @@ void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *che
 	analysis->time = -1;
 }
 
-static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int depth, long int t0, long int time)
+static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *chess, int alpha, int beta, int depth, long int t0, long int time)
 {
 	int score;
 	int i;
@@ -127,8 +126,8 @@ static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int 
 	
 	if (depth < 0)
 	{
-		score = info->chess.score;
-		if (!info->chess.white) score *= -1;
+		score = chess->score;
+		if (!chess->white) score *= -1;
 		
 		if (depth < -3) return score;
 		if (score >= beta) return beta;
@@ -143,30 +142,23 @@ static int moonfish_search(struct moonfish_info *info, int alpha, int beta, int 
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
-	{
-		moonfish_moves(&info->chess, moves + count, (x + 1) + (y + 2) * 10);
-		
-		while (moves[count].piece != moonfish_outside)
-		{
-			if (moves[count].captured % 16 == moonfish_king)
-				return moonfish_omega * (moonfish_depth - depth);
-			count++;
-		}
-	}
+		count += moonfish_moves(chess, moves + count, (x + 1) + (y + 2) * 10);
 	
-	for (i = 0 ; moves[i].piece != moonfish_outside ; i++)
+	for (i = 0 ; i < count ; i++)
+		if (chess->board[moves[i].to] % 16 == moonfish_king)
+			return moonfish_omega * (moonfish_depth - depth);
+	
+	for (i = 0 ; i < count ; i++)
 	{
 		if (depth < 0)
-		if (moves[i].captured == moonfish_empty)
-		if (moves[i].promotion == moves[i].piece)
+		if (chess->board[moves[i].to] == moonfish_empty)
+		if (moves[i].chess.board[moves[i].to] == chess->board[moves[i].from])
 			continue;
 		
 		t1 = moonfish_clock(info->analysis);
 		c = time * i / count - t1 + t0;
 		
-		moonfish_play(&info->chess, moves + i);
-		score = -moonfish_search(info, -beta, -alpha, depth - 1, t1, time / count + c);
-		moonfish_unplay(&info->chess, moves + i);
+		score = -moonfish_search(info, &moves[i].chess, -beta, -alpha, depth - 1, t1, time / count + c);
 		
 		if (score >= beta) return beta;
 		if (score > alpha) alpha = score;
@@ -195,36 +187,33 @@ static moonfish_result_t moonfish_start_search(void *data)
 	t0 = moonfish_clock(info->analysis);
 	time = info->analysis->time;
 	
-	info->score = -moonfish_search(info, -100 * moonfish_omega, 100 * moonfish_omega, depth, t0, time);
+	info->score = -moonfish_search(info, &info->move.chess, -100 * moonfish_omega, 100 * moonfish_omega, depth, t0, time);
 	return moonfish_value;
 }
 
 static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfish_move *best_move)
 {
-	int i, j;
 	int result;
 	int x, y;
-	struct moonfish_move *move, moves[32];
+	struct moonfish_move moves[32];
+	int i, j, count;
 #ifdef moonfish_no_threads
-	int count;
+	int total;
 	
 	if (analysis->time >= 0)
 	{
-		count = 0;
+		total = 0;
 		
 		for (y = 0 ; y < 8 ; y++)
 		for (x = 0 ; x < 8 ; x++)
 		{
-			moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
+			count = moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
 			for (move = moves ; move->piece != moonfish_outside ; move++)
-			{
-				moonfish_play(&analysis->chess, move);
-				if (moonfish_validate(&analysis->chess)) count++;
-				moonfish_unplay(&analysis->chess, move);
-			}
+				if (!moonfish_validate(&analysis->chess)) count--;
+			total += count;
 		}
 		
-		analysis->time /= count;
+		analysis->time /= total;
 	}
 #endif
 	
@@ -233,15 +222,13 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
-		for (move = moves ; move->piece != moonfish_outside ; move++)
+		count = moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
+		for (i = 0 ; i < count ; i++)
 		{
-			analysis->info[j].chess = analysis->chess;
-			moonfish_play(&analysis->info[j].chess, move);
-			if (!moonfish_validate(&analysis->info[j].chess)) continue;
+			if (!moonfish_validate(&moves[i].chess)) continue;
 			
 			analysis->info[j].analysis = analysis;
-			analysis->info[j].move = *move;
+			analysis->info[j].move = moves[i];
 			
 			result = pthread_create(&analysis->info[j].thread, NULL, &moonfish_start_search, analysis->info + j);
 			if (result)

@@ -188,7 +188,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 				for (;;)
 				{
 					moonfish_from_uci(&chess, &move, name);
-					moonfish_to_uci(&move, name0);
+					moonfish_to_uci(&chess, &move, name0);
 					fprintf(in, "%s", name0);
 					name = strtok(NULL, " ");
 					if (name == NULL) break;
@@ -223,7 +223,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		if (variant)
 		{
 			moonfish_from_uci(&chess, &move, name);
-			if (move.piece % 16 == moonfish_king)
+			if (chess.board[move.from] % 16 == moonfish_king)
 			{
 				if (!strcmp(name, "e1c1")) name = "e1a1";
 				else if (!strcmp(name, "e1g1")) name = "e1h1";
@@ -387,19 +387,19 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 			invalid = moonfish_from_fen(&chess, fen->valuestring);
 			
 			if (!invalid)
-			if (chess.castle.white_oo || chess.castle.white_ooo)
+			if (chess.white_oo || chess.white_ooo)
 			if (chess.board[25] != moonfish_white_king)
 				invalid = 1;
 			
 			if (!invalid)
-			if (chess.castle.black_oo || chess.castle.black_ooo)
+			if (chess.black_oo || chess.black_ooo)
 			if (chess.board[95] != moonfish_black_king)
 				invalid = 1;
 			
-			if (!invalid && chess.castle.white_ooo && chess.board[21] != moonfish_white_rook) invalid = 1;
-			if (!invalid && chess.castle.white_oo && chess.board[28] != moonfish_white_rook) invalid = 1;
-			if (!invalid && chess.castle.black_ooo && chess.board[91] != moonfish_black_rook) invalid = 1;
-			if (!invalid && chess.castle.black_oo && chess.board[98] != moonfish_black_rook) invalid = 1;
+			if (!invalid && chess.white_ooo && chess.board[21] != moonfish_white_rook) invalid = 1;
+			if (!invalid && chess.white_oo && chess.board[28] != moonfish_white_rook) invalid = 1;
+			if (!invalid && chess.black_ooo && chess.board[91] != moonfish_black_rook) invalid = 1;
+			if (!invalid && chess.black_oo && chess.board[98] != moonfish_black_rook) invalid = 1;
 			
 			if (invalid)
 			{

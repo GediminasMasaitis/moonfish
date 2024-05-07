@@ -309,7 +309,7 @@ static char *moonfish_bot_play(char *argv0, struct moonfish_battle *battle, stru
 	if (!battle->ugi)
 	{
 		moonfish_from_uci(&battle->chess, &move, arg);
-		moonfish_play(&battle->chess, &move);
+		battle->chess = move.chess;
 	}
 	
 	if (!bot->fixed_time)

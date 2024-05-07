@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 				printf("score mate %d\n", moonfish_countdown(score));
 			else
 				printf("score cp %d\n", score);
-			moonfish_to_uci(&move, name);
+			moonfish_to_uci(&chess, &move, name);
 			printf("bestmove %s\n", name);
 		}
 		else if (!strcmp(arg, "quit"))
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
 				while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
 				{
 					moonfish_from_uci(&chess, &move, arg);
-					moonfish_play(&chess, &move);
+					chess = move.chess;
 				}
 			}
 			

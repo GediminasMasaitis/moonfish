@@ -119,8 +119,8 @@ int main(int argc, char **argv)
 				return 1;
 			}
 			
-			moonfish_play(&chess, &move);
-			moonfish_to_uci(&move, book[i][j++]);
+			moonfish_to_uci(&chess, &move, book[i][j++]);
+			chess = move.chess;
 			
 			arg = strtok(NULL, "\r\n\t ");
 			if (arg == NULL || arg[0] == '#')

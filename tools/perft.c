@@ -12,27 +12,23 @@ static long int moonfish_perft(struct moonfish_chess *chess, int depth)
 {
 	struct moonfish_move moves[32];
 	int x, y;
-	long int count;
-	struct moonfish_move *move;
+	long int perft;
+	int i, count;
 	
 	if (depth == 0) return 1;
 	
-	count = 0;
+	perft = 0;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-		for (move = moves ; move->piece != moonfish_outside ; move++)
-		{
-			moonfish_play(chess, move);
-			if (moonfish_validate(chess))
-				count += moonfish_perft(chess, depth - 1);
-			moonfish_unplay(chess, move);
-		}
+		count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		for (i = 0 ; i < count ; i++)
+			if (moonfish_validate(&moves[i].chess))
+				perft += moonfish_perft(&moves[i].chess, depth - 1);
 	}
 	
-	return count;
+	return perft;
 }
 
 int main(int argc, char **argv)

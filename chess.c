@@ -60,47 +60,62 @@ static int moonfish_piece_square_scores[] =
 	-14, -21, 16, -2,
 };
 
-void moonfish_force_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to)
+static int moonfish_table(int from, unsigned char piece)
 {
-	move->from = from;
-	move->to = to;
-	move->piece = chess->board[from];
-	move->promotion = chess->board[from];
-	move->captured = chess->board[to];
-	move->castle = chess->castle;
-	move->score = chess->score;
-	move->passing = chess->passing;
+	int x, y;
+	unsigned char type, color;
+	int score;
+	
+	if (piece == moonfish_empty) return 0;
+	
+	x = from % 10 - 1;
+	y = from / 10 - 2;
+	
+	type = (piece % 16) - 1;
+	color = (piece / 16) - 1;
+	
+	if (color == 0) y = 7 - y;
+	
+	if (x < 4) x = 3 - x;
+	else x %= 4;
+	
+	score = moonfish_piece_square_scores[x + y * 4 + type * 32];
+	if (color != 0) score *= -1;
+	
+	return score;
 }
 
-static void moonfish_pawn_moves(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to)
+static void moonfish_force_promotion(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to, unsigned char promotion)
 {
-	unsigned char color;
+	(*moves)->from = from;
+	(*moves)->to = to;
+	(*moves)->chess = *chess;
+	(*moves)->chess.board[to] = promotion;
+	(*moves)->chess.board[from] = moonfish_empty;
+	(*moves)->chess.score -= moonfish_table(from, chess->board[from]);
+	(*moves)->chess.score += moonfish_table(to, promotion);
+	(*moves)->chess.score -= moonfish_table(to, chess->board[to]);
+	(*moves)->chess.passing = 0;
+	(*moves)->chess.white ^= 1;
 	
-	moonfish_force_move(chess, (*moves)++, from, to);
-	if (chess->board[from] % 16 != moonfish_pawn) return;
+	if (from == 21 || to == 21) (*moves)->chess.white_ooo = 0;
+	if (from == 28 || to == 28) (*moves)->chess.white_oo = 0;
+	if (from == 91 || to == 91) (*moves)->chess.black_ooo = 0;
+	if (from == 98 || to == 98) (*moves)->chess.black_oo = 0;
 	
-	color = chess->board[from] & 0xF0;
-	if (color == 0x10 && from < 80) return;
-	if (color == 0x20 && from > 40) return;
-	
-	(*moves)--;
-	(*moves)[1] = **moves;
-	(*moves)[2] = **moves;
-	(*moves)[3] = **moves;
-	
-	(*moves)++->promotion = moonfish_queen | color;
-	(*moves)++->promotion = moonfish_rook | color;
-	(*moves)++->promotion = moonfish_bishop | color;
-	(*moves)++->promotion = moonfish_knight | color;
+	(*moves)++;
+}
+
+static void moonfish_force_move(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to)
+{
+	moonfish_force_promotion(chess, moves, from, to, chess->board[from]);
 }
 
 static void moonfish_jump(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, signed char delta)
 {
-	unsigned char to;
-	to = from + delta;
-	if (chess->board[to] == moonfish_outside) return;
-	if (chess->board[to] / 16 == chess->board[from] / 16) return;
-	moonfish_force_move(chess, (*moves)++, from, to);
+	if (chess->board[from + delta] == moonfish_outside) return;
+	if (chess->board[from] / 16 == chess->board[from + delta] / 16) return;
+	moonfish_force_move(chess, moves, from, from + delta);
 }
 
 static void moonfish_slide(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, signed char delta)
@@ -113,7 +128,7 @@ static void moonfish_slide(struct moonfish_chess *chess, struct moonfish_move **
 		to += delta;
 		if (chess->board[to] == moonfish_outside) break;
 		if (chess->board[to] / 16 == chess->board[from] / 16) break;
-		moonfish_force_move(chess, (*moves)++, from, to);
+		moonfish_force_move(chess, moves, from, to);
 		if (chess->board[to] != moonfish_empty) break;
 	}
 }
@@ -172,7 +187,7 @@ static void moonfish_castle_low(struct moonfish_chess *chess, struct moonfish_mo
 {
 	unsigned char to;
 	
-	to = chess->white ? 22 : 92;
+	to = from - 3;
 	while (to != from)
 		if (chess->board[to++] != moonfish_empty)
 			return;
@@ -181,14 +196,17 @@ static void moonfish_castle_low(struct moonfish_chess *chess, struct moonfish_mo
 	if (moonfish_attacked(chess, from, from - 1)) return;
 	if (moonfish_attacked(chess, from, from - 2)) return;
 	
-	moonfish_jump(chess, moves, from, -2);
+	moonfish_force_move(chess, moves, from - 4, from - 1);
+	(*moves)--;
+	(*moves)->chess.white = chess->white;
+	moonfish_force_move(&(*moves)->chess, moves, from, from - 2);
 }
 
 static void moonfish_castle_high(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from)
 {
 	unsigned char to;
 	
-	to = chess->white ? 27 : 97;
+	to = from + 2;
 	while (to != from)
 		if (chess->board[to--] != moonfish_empty)
 			return;
@@ -197,7 +215,10 @@ static void moonfish_castle_high(struct moonfish_chess *chess, struct moonfish_m
 	if (moonfish_attacked(chess, from, from + 1)) return;
 	if (moonfish_attacked(chess, from, from + 2)) return;
 	
-	moonfish_jump(chess, moves, from, 2);
+	moonfish_force_move(chess, moves, from + 3, from + 1);
+	(*moves)--;
+	(*moves)->chess.white = chess->white;
+	moonfish_force_move(&(*moves)->chess, moves, from, from + 2);
 }
 
 static void moonfish_move_king(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from)
@@ -213,21 +234,44 @@ static void moonfish_move_king(struct moonfish_chess *chess, struct moonfish_mov
 	
 	if (chess->white)
 	{
-		if (chess->castle.white_oo) moonfish_castle_high(chess, moves, from);
-		if (chess->castle.white_ooo) moonfish_castle_low(chess, moves, from);
+		if (chess->white_oo) moonfish_castle_high(chess, moves, from);
+		if (chess->white_ooo) moonfish_castle_low(chess, moves, from);
 	}
 	else
 	{
-		if (chess->castle.black_oo) moonfish_castle_high(chess, moves, from);
-		if (chess->castle.black_ooo) moonfish_castle_low(chess, moves, from);
+		if (chess->black_oo) moonfish_castle_high(chess, moves, from);
+		if (chess->black_ooo) moonfish_castle_low(chess, moves, from);
 	}
+}
+
+static void moonfish_pawn_moves(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to)
+{
+	unsigned char color;
+	
+	color = chess->board[from] & 0xF0;
+	if ((color == 0x10 && from < 80) || (color == 0x20 && from > 40))
+	{
+		moonfish_force_move(chess, moves, from, to);
+		return;
+	}
+	
+	moonfish_force_promotion(chess, moves, from, to, moonfish_queen | color);
+	moonfish_force_promotion(chess, moves, from, to, moonfish_rook | color);
+	moonfish_force_promotion(chess, moves, from, to, moonfish_bishop | color);
+	moonfish_force_promotion(chess, moves, from, to, moonfish_knight | color);
 }
 
 static void moonfish_pawn_capture(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to)
 {
+	int dy;
+	
 	if (to == chess->passing)
 	{
-		moonfish_force_move(chess, (*moves)++, from, to);
+		dy = chess->white ? 10 : -10;
+		
+		moonfish_force_move(chess, moves, from, to);
+		(*moves)[-1].chess.score -= moonfish_table(to - dy, chess->board[to - dy]);
+		(*moves)[-1].chess.board[to - dy] = moonfish_empty;
 		return;
 	}
 	
@@ -246,20 +290,26 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 	if (chess->board[from + dy] == moonfish_empty)
 	{
 		moonfish_pawn_moves(chess, moves, from, from + dy);
-				
+		
 		if (chess->white ? from < 40 : from > 80)
 		if (chess->board[from + dy * 2] == moonfish_empty)
-			moonfish_pawn_moves(chess, moves, from, from + dy * 2);
+		{
+			moonfish_force_move(chess, moves, from, from + dy * 2);
+			(*moves)[-1].chess.passing = from + dy;
+		}
 	}
 	
 	moonfish_pawn_capture(chess, moves, from, from + dy + 1);
 	moonfish_pawn_capture(chess, moves, from, from + dy - 1);
 }
 
-void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from)
+int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from)
 {
+	struct moonfish_move *moves0;
 	unsigned char piece;
+	int i, count;
 	
+	moves0 = moves;
 	piece = chess->board[from];
 	
 	if (chess->white ? piece / 16 == 1 : piece / 16 == 2)
@@ -269,161 +319,30 @@ void moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, u
 		if (piece % 16 == moonfish_bishop) moonfish_move_bishop(chess, &moves, from);
 		if (piece % 16 == moonfish_rook) moonfish_move_rook(chess, &moves, from);
 		if (piece % 16 == moonfish_queen) moonfish_move_queen(chess, &moves, from);
-		if (piece % 16 == moonfish_king) moonfish_move_king(chess, &moves, from);
-	}
-	
-	moves->piece = moonfish_outside;
-}
-
-static int moonfish_table(int from, unsigned char piece)
-{
-	int x, y;
-	unsigned char type, color;
-	int score;
-	
-	if (piece == moonfish_empty) return 0;
-	
-	x = from % 10 - 1;
-	y = from / 10 - 2;
-	
-	type = (piece % 16) - 1;
-	color = (piece / 16) - 1;
-	
-	if (color == 0) y = 7 - y;
-	
-	if (x < 4) x = 3 - x;
-	else x %= 4;
-	
-	score = moonfish_piece_square_scores[x + y * 4 + type * 32];
-	if (color != 0) score *= -1;
-	
-	return score;
-}
-
-void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move)
-{
-	int x0, x1;
-	int dy;
-	unsigned char piece;
-	
-	chess->score -= moonfish_table(move->from, move->piece);
-	chess->score += moonfish_table(move->to, move->promotion);
-	chess->score -= moonfish_table(move->to, move->captured);
-	
-	chess->board[move->from] = moonfish_empty;
-	chess->board[move->to] = move->promotion;
-	
-	chess->passing = 0;
-	
-	if (move->piece % 16 == moonfish_pawn)
-	{
-		if ((move->to - move->from) / 10 == 2) chess->passing = move->from + 10;
-		if ((move->from - move->to) / 10 == 2) chess->passing = move->from - 10;
 		
-		if ((move->to - move->from) % 10)
-		if (move->captured == moonfish_empty)
+		if (piece % 16 == moonfish_king)
 		{
-			if (chess->white) dy = 10, piece = moonfish_black_pawn;
-			else dy = -10, piece = moonfish_white_pawn;
+			moonfish_move_king(chess, &moves, from);
 			
-			chess->score -= moonfish_table(move->to - dy, piece);
-			chess->board[move->to - dy] = moonfish_empty;
-		}
-	}
-	
-	if (move->piece % 16 == moonfish_king)
-	{
-		x0 = 0;
-		if (move->from == 25 && move->to == 27) x0 = 28, x1 = 26;
-		if (move->from == 25 && move->to == 23) x0 = 21, x1 = 24;
-		if (move->from == 95 && move->to == 97) x0 = 98, x1 = 96;
-		if (move->from == 95 && move->to == 93) x0 = 91, x1 = 94;
-		if (x0)
-		{
-			piece = chess->white ? moonfish_white_rook : moonfish_black_rook;
-			chess->score -= moonfish_table(x0, piece);
-			chess->score += moonfish_table(x1, piece);
-			chess->board[x0] = moonfish_empty;
-			chess->board[x1] = piece;
-		}
-		
-		if (chess->white)
-		{
-			chess->castle.white_oo = 0;
-			chess->castle.white_ooo = 0;
-		}
-		else
-		{
-			chess->castle.black_oo = 0;
-			chess->castle.black_ooo = 0;
-		}
-	}
-	
-	if (move->piece == moonfish_white_rook)
-	{
-		if (move->from % 10 == 1) chess->castle.white_ooo = 0;
-		if (move->from % 10 == 8) chess->castle.white_oo = 0;
-	}
-	if (move->piece == moonfish_black_rook)
-	{
-		if (move->from % 10 == 1) chess->castle.black_ooo = 0;
-		if (move->from % 10 == 8) chess->castle.black_oo = 0;
-	}
-	
-	if (move->captured == moonfish_white_rook)
-	{
-		if (move->to % 10 == 1) chess->castle.white_ooo = 0;
-		if (move->to % 10 == 8) chess->castle.white_oo = 0;
-	}
-	if (move->captured == moonfish_black_rook)
-	{
-		if (move->to % 10 == 1) chess->castle.black_ooo = 0;
-		if (move->to % 10 == 8) chess->castle.black_oo = 0;
-	}
-	
-	chess->white ^= 1;
-}
-
-void moonfish_unplay(struct moonfish_chess *chess, struct moonfish_move *move)
-{
-	int x0, x1;
-	int dy;
-	unsigned char piece;
-	
-	chess->white ^= 1;
-	
-	chess->board[move->from] = move->piece;
-	chess->board[move->to] = move->captured;
-	chess->castle = move->castle;
-	chess->score = move->score;
-	chess->passing = move->passing;
-	
-	if (move->piece % 16 == moonfish_pawn)
-	{
-		if ((move->to - move->from) % 10)
-		if (move->captured == moonfish_empty)
-		{
-			if (chess->white) dy = 10, piece = moonfish_black_pawn;
-			else dy = -10, piece = moonfish_white_pawn;
+			count = moves - moves0;
 			
-			chess->score += moonfish_table(move->to - dy, piece);
-			chess->board[move->to - dy] = piece;
+			for (i = 0 ; i < count ; i++)
+			{
+				if (chess->white)
+				{
+					moves0[i].chess.white_oo = 0;
+					moves0[i].chess.white_ooo = 0;
+				}
+				else
+				{
+					moves0[i].chess.black_oo = 0;
+					moves0[i].chess.black_ooo = 0;
+				}
+			}
 		}
 	}
 	
-	if (move->piece % 16 == moonfish_king)
-	{
-		x0 = 0;
-		if (move->from == 25 && move->to == 27) x0 = 28, x1 = 26;
-		if (move->from == 25 && move->to == 23) x0 = 21, x1 = 24;
-		if (move->from == 95 && move->to == 97) x0 = 98, x1 = 96;
-		if (move->from == 95 && move->to == 93) x0 = 91, x1 = 94;
-		if (x0)
-		{
-			chess->board[x1] = moonfish_empty;
-			chess->board[x0] = chess->white ? moonfish_white_rook : moonfish_black_rook;
-		}
-	}
+	return moves - moves0;
 }
 
 void moonfish_chess(struct moonfish_chess *chess)
@@ -432,10 +351,10 @@ void moonfish_chess(struct moonfish_chess *chess)
 	int x, y;
 	
 	chess->white = 1;
-	chess->castle.white_oo = 1;
-	chess->castle.white_ooo = 1;
-	chess->castle.black_oo = 1;
-	chess->castle.black_ooo = 1;
+	chess->white_oo = 1;
+	chess->white_ooo = 1;
+	chess->black_oo = 1;
+	chess->black_ooo = 1;
 	chess->score = 0;
 	chess->passing = 0;
 	
@@ -455,40 +374,36 @@ void moonfish_chess(struct moonfish_chess *chess)
 	}
 }
 
-static void moonfish_from_xy(struct moonfish_chess *chess, struct moonfish_move *move, int x0, int y0, int x1, int y1)
-{
-	moonfish_force_move(chess, move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10);
-}
-
 void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
 {
 	int x0, y0;
 	int x1, y1;
-	unsigned char color;
+	unsigned char piece;
 	
 	x0 = name[0] - 'a';
 	y0 = name[1] - '1';
 	x1 = name[2] - 'a';
 	y1 = name[3] - '1';
 	
-	moonfish_from_xy(chess, move, x0, y0, x1, y1);
-	if (move->piece % 16 == moonfish_king && x0 == 4)
+	piece = chess->board[(x0 + 1) + (y0 + 2) * 10];
+	if (piece % 16 == moonfish_king && x0 == 4)
 	{
 		if (x1 == 0) x1 = 2;
 		if (x1 == 7) x1 = 6;
-		moonfish_from_xy(chess, move, x0, y0, x1, y1);
 	}
 	
-	color = chess->white ? 0x10 : 0x20;
-	if (name[4] == 'q') move->promotion = color | moonfish_queen;
-	if (name[4] == 'r') move->promotion = color | moonfish_rook;
-	if (name[4] == 'b') move->promotion = color | moonfish_bishop;
-	if (name[4] == 'n') move->promotion = color | moonfish_knight;
+	if (name[4] == 'q') piece = moonfish_queen;
+	if (name[4] == 'r') piece = moonfish_rook;
+	if (name[4] == 'b') piece = moonfish_bishop;
+	if (name[4] == 'n') piece = moonfish_knight;
+	
+	moonfish_force_promotion(chess, &move, (x0 + 1) + (y0 + 2) * 10, (x1 + 1) + (y1 + 2) * 10, piece);
 }
 
-void moonfish_to_uci(struct moonfish_move *move, char *name)
+void moonfish_to_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
 {
 	int x, y;
+	unsigned char piece;
 	
 	x = move->from % 10 - 1;
 	y = move->from / 10 - 2;
@@ -502,17 +417,17 @@ void moonfish_to_uci(struct moonfish_move *move, char *name)
 	name[2] = x + 'a';
 	name[3] = y + '1';
 	
-	if (move->promotion != move->piece)
+	name[4] = 0;
+	
+	piece = move->chess.board[move->to];
+	
+	if (piece != chess->board[move->from])
 	{
-		if (move->promotion % 16 == moonfish_queen) name[4] = 'q';
-		if (move->promotion % 16 == moonfish_rook) name[4] = 'r';
-		if (move->promotion % 16 == moonfish_bishop) name[4] = 'b';
-		if (move->promotion % 16 == moonfish_knight) name[4] = 'n';
+		if (piece % 16 == moonfish_queen) name[4] = 'q';
+		if (piece % 16 == moonfish_rook) name[4] = 'r';
+		if (piece % 16 == moonfish_bishop) name[4] = 'b';
+		if (piece % 16 == moonfish_knight) name[4] = 'n';
 		name[5] = 0;
-	}
-	else
-	{
-		name[4] = 0;
 	}
 }
 
@@ -520,14 +435,14 @@ int moonfish_validate(struct moonfish_chess *chess)
 {
 	int x, y;
 	struct moonfish_move moves[32];
-	struct moonfish_move *move;
+	int i, count;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-		for (move = moves ; move->piece != moonfish_outside ; move++)
-			if (move->captured % 16 == moonfish_king)
+		count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		for (i = 0 ; i < count ; i++)
+			if (chess->board[moves[i].to] % 16 == moonfish_king)
 				return 0;
 	}
 	
@@ -537,23 +452,30 @@ int moonfish_validate(struct moonfish_chess *chess)
 int moonfish_check(struct moonfish_chess *chess)
 {
 	int valid;
-	struct moonfish_castle castle;
 	unsigned char passing;
+	int white_oo, white_ooo;
+	int black_oo, black_ooo;
 	
-	castle = chess->castle;
 	passing = chess->passing;
+	white_oo = chess->white_oo;
+	white_ooo = chess->white_ooo;
+	black_oo = chess->black_oo;
+	black_ooo = chess->black_ooo;
 	
-	chess->castle.white_oo = 0;
-	chess->castle.white_ooo = 0;
-	chess->castle.black_oo = 0;
-	chess->castle.black_ooo = 0;
+	chess->white_oo = 0;
+	chess->white_ooo = 0;
+	chess->black_oo = 0;
+	chess->black_ooo = 0;
 	
 	chess->white ^= 1;
 	valid = moonfish_validate(chess);
 	chess->white ^= 1;
 	
-	chess->castle = castle;
 	chess->passing = passing;
+	chess->white_oo = white_oo;
+	chess->white_ooo = white_ooo;
+	chess->black_oo = black_oo;
+	chess->black_ooo = black_ooo;
 	
 	return valid ^ 1;
 }
@@ -565,22 +487,17 @@ int moonfish_check(struct moonfish_chess *chess)
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, unsigned char from, unsigned char to)
 {
 	struct moonfish_move moves[32];
-	struct moonfish_move *move;
-	int valid;
+	int i, count;
 	
-	moonfish_moves(chess, moves, from);
+	count = moonfish_moves(chess, moves, from);
 	
-	for (move = moves ; move->piece != moonfish_outside ; move++)
+	for (i = 0 ; i < count ; i++)
 	{
-		if (move->to == to)
+		if (moves[i].to == to)
 		{
-			moonfish_play(chess, move);
-			valid = moonfish_validate(chess);
-			moonfish_unplay(chess, move);
-			
-			if (valid)
+			if (moonfish_validate(&moves[i].chess))
 			{
-				*found = *move;
+				*found = moves[i];
 				return 0;
 			}
 		}
@@ -603,10 +520,10 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 	y = 0;
 	
 	chess->white = 1;
-	chess->castle.white_oo = 0;
-	chess->castle.white_ooo = 0;
-	chess->castle.black_oo = 0;
-	chess->castle.black_ooo = 0;
+	chess->white_oo = 0;
+	chess->white_ooo = 0;
+	chess->black_oo = 0;
+	chess->black_ooo = 0;
 	chess->score = 0;
 	chess->passing = 0;
 	
@@ -661,10 +578,10 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 		if (ch == 0) return 0;
 		if (ch == ' ') break;
 		
-		if (ch == 'K') chess->castle.white_oo = 1;
-		if (ch == 'Q') chess->castle.white_ooo = 1;
-		if (ch == 'k') chess->castle.black_oo = 1;
-		if (ch == 'q') chess->castle.black_ooo = 1;
+		if (ch == 'K') chess->white_oo = 1;
+		if (ch == 'Q') chess->white_ooo = 1;
+		if (ch == 'k') chess->black_oo = 1;
+		if (ch == 'q') chess->black_ooo = 1;
 		
 		if (ch >= 'A' && ch <= 'H') return 1;
 		if (ch >= 'a' && ch <= 'h') return 1;
@@ -682,21 +599,17 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 
 int moonfish_finished(struct moonfish_chess *chess)
 {
-	struct moonfish_move moves[32], *move;
+	struct moonfish_move moves[32];
 	int x, y;
-	int valid;
+	int i, count;
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
 	{
-		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-		for (move = moves ; move->piece != moonfish_outside ; move++)
-		{
-			moonfish_play(chess, move);
-			valid = moonfish_validate(chess);
-			moonfish_unplay(chess, move);
-			if (valid) return 0;
-		}
+		count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		for (i = 0 ; i < count ; i++)
+			if (moonfish_validate(&moves[i].chess))
+				return 0;
 	}
 	
 	return 1;
@@ -714,14 +627,13 @@ int moonfish_stalemate(struct moonfish_chess *chess)
 	return moonfish_finished(chess);
 }
 
-static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_move *result_move, unsigned char type, unsigned char promotion, int x0, int y0, int x1, int y1, int check, int captured)
+static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char type, unsigned char promotion, int x0, int y0, int x1, int y1, int check, int captured)
 {
 	int found;
 	int x, y;
 	struct moonfish_move moves[32];
-	struct moonfish_move *move;
 	int xi0, yi0, xi1, yi1;
-	int valid;
+	int i, count;
 	
 	xi0 = 0, xi1 = 8;
 	yi0 = 0, yi1 = 8;
@@ -734,24 +646,21 @@ static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_mov
 	for (y = yi0 ; y < yi1 ; y++)
 	for (x = xi0 ; x < xi1 ; x++)
 	{
-		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-		for (move = moves ; move->piece != moonfish_outside ; move++)
+		count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		for (i = 0 ; i < count ; i++)
 		{
-			if (move->piece % 16 != type) continue;
-			if (captured && move->captured == moonfish_empty) continue;
-			if (promotion && promotion != move->promotion % 16) continue;
-			if (move->to % 10 != x1) continue;
-			if (move->to / 10 - 1 != y1) continue;
+			if (chess->board[moves[i].from] % 16 != type) continue;
+			if (captured && chess->board[moves[i].to] == moonfish_empty) continue;
+			if (promotion && promotion != moves[i].chess.board[moves[i].to] % 16) continue;
+			if (moves[i].to % 10 != x1) continue;
+			if (moves[i].to / 10 - 1 != y1) continue;
 			
-			moonfish_play(chess, move);
-			valid = moonfish_validate(chess);
-			if (valid && check) if (!moonfish_check(chess)) valid = 0;
-			if (valid && check == 2) if (!moonfish_checkmate(chess)) valid = 0;
-			moonfish_unplay(chess, move);
-			if (!valid) continue;
-			if (found) continue;
+			if (!moonfish_validate(&moves[i].chess)) continue;
+			if (check && !moonfish_check(chess)) continue;
+			if (check == 2 && !moonfish_checkmate(chess)) continue;
+			if (found) return 1;
 			found = 1;
-			*result_move = *move;
+			*move = moves[i];
 		}
 	}
 	
@@ -883,7 +792,6 @@ int moonfish_from_san(struct moonfish_chess *chess, struct moonfish_move *move, 
 	return moonfish_match_move(chess, move, type, promotion, x0, y0, x1, y1, check, capture);
 }
 
-/* todo: improve this */
 void moonfish_to_fen(struct moonfish_chess *chess, char *fen)
 {
 	int x, y;
@@ -948,10 +856,10 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen)
 	else *fen++ = 'b';
 	*fen++ = ' ';
 	
-	if (chess->castle.white_oo) *fen++ = 'K';
-	if (chess->castle.white_ooo) *fen++ = 'Q';
-	if (chess->castle.black_oo) *fen++ = 'k';
-	if (chess->castle.black_ooo) *fen++ = 'q';
+	if (chess->white_oo) *fen++ = 'K';
+	if (chess->white_ooo) *fen++ = 'Q';
+	if (chess->black_oo) *fen++ = 'k';
+	if (chess->black_ooo) *fen++ = 'q';
 	if (fen[-1] == ' ') *fen++ = '-';
 	
 	*fen++ = ' ';
@@ -971,10 +879,10 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	
 	int x, y;
 	struct moonfish_move moves[32];
-	struct moonfish_move *other_move;
 	char file_ambiguity, rank_ambiguity, ambiguity;
 	int to_x, to_y;
 	int from_x, from_y;
+	int i, count;
 	
 	from_x = move->from % 10 - 1;
 	from_y = move->from / 10 - 2;
@@ -982,7 +890,7 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	to_x = move->to % 10 - 1;
 	to_y = move->to / 10 - 2;
 	
-	if (move->piece % 16 == moonfish_pawn)
+	if (chess->board[move->from] % 16 == moonfish_pawn)
 	{
 		if (from_x != to_x)
 		{
@@ -993,10 +901,10 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 		*name++ = to_x + 'a';
 		*name++ = to_y + '1';
 		
-		if (move->promotion % 16 != moonfish_pawn)
+		if (move->chess.board[move->to] % 16 != moonfish_pawn)
 		{
 			*name++ = '=';
-			*name++ = names[move->promotion % 16 - 2];
+			*name++ = names[move->chess.board[move->to] % 16 - 2];
 		}
 		
 		*name = 0;
@@ -1012,20 +920,20 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	for (x = 0 ; x < 8 ; x++)
 	{
 		if ((x + 1) + (y + 2) * 10 == move->from) continue;
-		moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+		count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
 		
-		for (other_move = moves ; other_move->piece != moonfish_outside ; other_move++)
+		for (i = 0 ; i < count ; i++)
 		{
-			if (other_move->to != move->to) continue;
-			if (other_move->piece != move->piece) continue;
+			if (moves[i].to != move->to) continue;
+			if (chess->board[moves[i].from] != chess->board[move->from]) continue;
 			
 			ambiguity = 1;
-			if (other_move->from % 10 - 1 == from_x) file_ambiguity = 1;
-			if (other_move->from / 10 - 2 == from_y) rank_ambiguity = 1;
+			if (moves[i].from % 10 - 1 == from_x) file_ambiguity = 1;
+			if (moves[i].from / 10 - 2 == from_y) rank_ambiguity = 1;
 		}
 	}
 	
-	*name++ = names[(move->piece & 0xF) - 2];
+	*name++ = names[(chess->board[move->from] & 0xF) - 2];
 	
 	if (ambiguity)
 	{
@@ -1041,7 +949,7 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 		}
 	}
 	
-	if (move->captured != moonfish_empty)
+	if (chess->board[move->to] != moonfish_empty)
 		*name++ = 'x';
 		
 	*name++ = to_x + 'a';
