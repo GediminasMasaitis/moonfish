@@ -5,24 +5,41 @@ moonfish
 ===
 
 [![builds.sr.ht status](https://builds.sr.ht/~zamfofex/moonfish/commits/main.svg)](https://builds.sr.ht/~zamfofex/moonfish/commits/main)
+[![Lichess classical rating](https://lichess-shield.vercel.app/api?username=munfish&format=classical)](https://lichess.org/@/munfish/perf/classical)
 [![Lichess rapid rating](https://lichess-shield.vercel.app/api?username=munfish&format=rapid)](https://lichess.org/@/munfish/perf/rapid)
 [![Lichess blitz rating](https://lichess-shield.vercel.app/api?username=munfish&format=blitz)](https://lichess.org/@/munfish/perf/blitz)
-[![Lichess bullet rating](https://lichess-shield.vercel.app/api?username=munfish&format=bullet)](https://lichess.org/@/munfish/perf/bullet)
 
-**moonfish** is a very simple and small chess bot written in C 89 (ANSI C).
+**moonfish** is a simple chess bot written in C 89 (ANSI C).
 
 You may [play moonfish on Lichess]! You don’t need a Lichess account, just make sure to choose “real time” and select a fast enough time control.
 
 [play moonfish on Lichess]: <https://lichess.org/?user=munfish#friend>
 
+table of contents
+---
+
+- [features](#features) and [limitations](#limitations)
+- [download](#download)
+- [compiling from source](#compiling-from-source) (for UNIX and clones)
+- using moonfish’s tools
+  - [using “play” and “analyse”](#using-play-and-analyse)
+  - [using “book”](#using-book) (for adding simple opening book support to bots without it by wrapping them)
+  - [using “battle” and “ribbon”](#using-battle-and-ribbon) (for setting up tournaments between bots)
+  - [using “ugi-uci” and “uci-ugi”](#using-ugi-uci-and-uci-ugi) (for using UCI bots in UGI programs and vice-versa)
+  - [using “chat”](#using-chat) and [using “lichess”](#using-lichess) (for integrating with IRC and Lichess)
+- compiling on other systems
+  - [compiling on Plan 9](#compiling-on-plan-9)
+  - [compiling on Windows](#compiling-on-windows)
+  - [porting to other systems](#porting-moonfish)
+- [license](#license)
+
 features
 ---
 
-- simple HCE based on PSTs
+- simple evaluation based on PSTs
 - alpha/beta pruning search
 - cute custom UCI TUIs
 - custom Lichess integration
-- threaded search
 - custom UGI/UCI translators
 - custom IRC integration
 
@@ -39,12 +56,12 @@ These are things that might be fixed eventually.
 download
 ---
 
-Pre‐compiled executables for Linux of moonfish (and its tools) may be found at <https://moonfish.neocities.org>
+Pre‐compiled executables for Linux of moonfish (and some of its tools) may be found at <https://moonfish.neocities.org> (Windows binaries are also provided.)
 
 compiling from source
 ---
 
-Building on UNIX should be easy. Make sure you have GNU `make` and a C compiler like GCC, then run the following command.
+Building on UNIX (and clones) should be easy. Make sure you have GNU Make and a C compiler like GCC, then run the following command.
 
 ~~~
 make moonfish
@@ -52,73 +69,24 @@ make moonfish
 
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
-Note: If your C implementation doesn’t support pthreads, but supports C11 threads, you may pass in `-Dmoonfish_c11_threads`.
-
-Note: If your C implementation doesn’t support threads at all, you may pass in `-Dmoonfish_no_threads`.
-
 ~~~
 cc -ansi -O3 -pthread -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c
 ~~~
 
-The two UCI TUIs, called “play” and “analyse”, may also be compiled.
+Note: If your C implementation doesn’t support pthreads, but supports C11 threads, you may pass in `-Dmoonfish_c11_threads`.
+
+Note: If your C implementation doesn’t support threads at all, you may pass in `-Dmoonfish_no_threads`.
+
+using “play” and “analyse”
+---
 
 ~~~
 make play analyse
 ~~~
 
-The UGI/UCI translators may also be compiled:
+“play” and “analyse” are TUI that allows you to play against and analyse with UCI bots respectively.
 
-~~~
-make ugi-uci uci-ugi
-~~~
-
-The CLI tools, called “battle” and “ribbon” to (respectively) play a single game between two bots and to play a tournament between any given number of bots may also be compiled.
-
-~~~
-make battle ribbon
-~~~
-
-The IRC/UCI bot integration may also be compiled:
-
-~~~
-make chat
-~~~
-
-The opening book utility may also be compiled:
-
-~~~
-make book
-~~~
-
-All such programs may also be compiled by using the default target, `all`. Note the the Lichess integration requires LibreSSL (for libtls) and cJSON. (The other programs require no external libraries.)
-
-~~~
-make
-~~~
-
-using moonfish
----
-
-moonfish is a UCI bot, which means you may select it and use it with any UCI program (though see “limitations” above). You may invoke `./moonfish` to start its UCI interface.
-
-However, note that moonfish comes with its own UCI TUIs, called “play” and “analyse”. You may use them with any UCI bot you’d like!
-
-using “book”
----
-
-Opening book support for moonfish is handled with the “book” utility. You specify a opening book file name to it as well as the command for a UCI bot, and it will intercept that bot’s communication with the GUI to make it play certain openings.
-
-The format for opening book files is very simple: One opening per line with move names in either SAN or UCI format separated by spaces. (Move numbers are no allowed.) Empty lines are ignores, `#` is used for comments. Check out the `book.txt` file for an example.
-
-Invalid opening book files will be rejected early.
-
-~~~
-# (have moonfish play openings from the given file)
-./book --file=book.txt ./moonfish
-~~~
-
-using “play” and “analyse”
----
+After compiling and running them, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
 
 To play against a UCI bot, use `./play` followed by the command of whichever bot you want to play against. The color of your pieces will be decided randomly by default.
 
@@ -133,7 +101,7 @@ To play against a UCI bot, use `./play` followed by the command of whichever bot
 ./play ./moonfish
 ~~~
 
-To analyse a game with an UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and thethe command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
+To analyse a game with a UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and then the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
 
 ~~~
 # (analyse a game using Stockfish)
@@ -149,8 +117,32 @@ To analyse a game with an UCI bot, use `./analyse` followed optionally by the UC
 ./analyse lc0 --show-wdl
 ~~~
 
-using “battle”
+using "book"
 ---
+
+~~~
+make book
+~~~
+
+Opening book support for moonfish is handled with the “book” utility. You specify a opening book file name to it as well as the command for a UCI bot, and it will intercept that bot’s communication with the GUI to make it play certain openings.
+
+The format for opening book files is very simple: One opening per line with move names in either SAN or UCI format separated by spaces. (Move numbers are no allowed.) Empty lines are ignores, `#` is used for comments. Check out the `book.txt` file for an example.
+
+Invalid opening book files will be rejected early.
+
+~~~
+# (have moonfish play openings from the given file)
+./book --file=book.txt ./moonfish
+~~~
+
+using “battle” and “ribbon”
+---
+
+~~~
+make battle ribbon
+~~~
+
+The CLI tools, called “battle” and “ribbon” can be used to (respectively) play a single game between two bots and to play a tournament between any given number of bots.
 
 The “battle” CLI may be used to have two UCI or UGI bots play against each other. Each bot has to be specified between brackets (these ones: `[` and `]`).
 
@@ -176,8 +168,7 @@ You may also pass in `x` as the first character of the given time control to mak
 
 In order to use a UGI bot, you may also pass in `--protocol=ugi` to that bot, like `./battle [ --protocol=ugi some-bot ] [ stockfish ]`. If both bots are UGI, then the game is not assumed to be chess, and the bot playing as p1 will be queried for the status of the game.
 
-using “ribbon”
----
+- - -
 
 “ribbon” is a CLI for setting up a round‐robin tournament between multiple bots with the help of the “battle” program mentioned above and a makefile (currently requiring GNU Make).
 
@@ -231,10 +222,27 @@ while ! make
 do : ; done
 ~~~
 
-using the IRC integration
+using “ugi-uci“ and “uci-ugi”
 ---
 
-It is also possible to use the IRC integration, called “chat” to play with a UCI bot through IRC. The bot will connect to a given network through TLS and then start responding to move names such as “e4” written on given channels.
+~~~
+make ugi-uci uci-ugi
+~~~
+
+`ugi-uci` may be used to let a UGI GUI communicate with a UCI bot, and conversely, `uci-ugi` may be used to let a UCI GUI communicate with a UGI bot.
+
+Simply pass the command of the bot as arguments to either of these tools, and it’ll translate it to be used by the respective GUI.
+
+Note that if the GUI sends a `uci`/`gui` command to the bot that is the same as its protocol, no translation will happen, and the commands will be passed in verbatim between them.
+
+using “chat”
+---
+
+~~~
+make chat
+~~~
+
+moonfish’s IRC integration, called “chat” may be used to play with a UCI bot through IRC. The bot will connect to a given network through TLS and then start responding to move names such as “e4” written on given channels.
 
 ~~~
 # have moonfish play on a given channel
@@ -248,14 +256,39 @@ It is only possible to connect to networks using TLS. The default nickname is �
 
 [Libera Chat]: <https://libera.chat>
 
-using the UGI/UCI translators
+using “lichess”
 ---
 
-`ugi-uci` may be used to let a UGI GUI communicate with a UCI bot, and conversely, `uci-ugi` may be used to let a UCI GUI communicate with a UGI bot.
+~~~
+make lichess
+~~~
 
-Simply pass the command of the bot as arguments to either of these tools, and it’ll translate it to be used by the respective GUI.
+In order to integrate a UCI bot with [Lichess], it is possible to use “lichess”. Simply write `./lichess` followed by your bot’s command. The Lichess bot token may be specified with the `lichess_token` environment variable.
 
-Note that if the GUI sends a `uci`/`gui` command to the bot that is the same as its protocol, no translation will happen, and the commands will be passed in verbatim between them.
+[Lichess]: <https://lichess.org>
+
+~~~
+# (use Stockfish as a Lichess bot)
+lichess_token=XXX ./lichess stockfish
+
+# (use moonfish as a Lichess bot)
+lichess_token=XXX ./lichess ./moonfish
+~~~
+
+compiling on Plan 9
+---
+
+Note: [NPE] is required.
+
+[NPE]: <https://git.sr.ht/~ft/npe>
+
+After installing NPE, each file may be compiled and linked as expected. (Note: A `mkfile` isn’t provided.)
+
+~~~
+6c -I/sys/include/npe chess.c search.c main.c
+6l -o moonfish chess.6 search.6 main.6
+moonfish
+~~~
 
 compiling on Windows
 ---
@@ -267,6 +300,13 @@ Note that [MinGW] compilation is also supported.
 [cutechess]: <https://github.com/cutechess/cutechess>
 [C11 threads in VS]: <https://devblogs.microsoft.com/cppblog/c11-threads-in-visual-studio-2022-version-17-8-preview-2/>
 [MinGW]: <https://mingw-w64.org>
+
+porting moonfish
+---
+
+The only pieces of functionality the moonfish depends on that are not specified entirely in C89 are pthreads (POSIX threads) and `clock_gettime`. POSIX threads are not required, and may be substituted by C11 threads or even disabled altogether with compile-time macros. (See [“compiling from source”](#compile-from-source)) `clock_gettime` is required and cannot be replaced, however.
+
+Porting moonfish to a different platform should be a matter of simply providing a “mostly C89-compliant” environment alongside `clock_gettime` and pthreads. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on Plan 9](#compiling-on-plan-9), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
 
 license
 ---
