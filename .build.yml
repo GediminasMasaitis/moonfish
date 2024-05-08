@@ -49,6 +49,7 @@ tasks:
         -F "$root"/moonfish.sh=@moonfish.sh \
         -F "$root"/moonfish.exe=@moonfish.exe \
         -F "$root"/moonfish.wasm=@moonfish.wasm \
+        -F "$root"/book=@book \
         -F "$root"/book.txt=@book.txt \
         https://neocities.org/api/upload
 artifacts:
