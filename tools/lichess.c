@@ -468,7 +468,7 @@ static char *moonfish_username(char *argv0, char *host, char *port, char *token)
 	if (username == NULL)
 	{
 		perror(argv0);
-		exit(0);
+		exit(1);
 	}
 	
 	moonfish_close(argv0, tls);
