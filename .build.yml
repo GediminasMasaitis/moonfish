@@ -28,11 +28,11 @@ tasks:
       llvm-strip --strip-all moonfish.wasm
   - deploy: |
       set +x
-      if test "x$GIT_REF" = x
+      if test "x$GIT_REF" = x || ! test -f neocities-token.txt
       then exit 0
       fi
       
-      if test "$GIT_REF" = refs/heads/main && test -f neocities-token.txt
+      if test "$GIT_REF" = refs/heads/main
       then root=
       else root="${GIT_REF#refs/heads/}"
       fi
