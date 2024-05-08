@@ -169,8 +169,9 @@ void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *che
 
 /* creates a move from UCI notation */
 /* the move is stored in "move" */
-/* the given move it is not validated! (so make sure the move is actually valid) */
-void moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
+/* on success, the parser will return 0, on failure, it will return 1 (and the move is unusable) */
+/* parsing is somewhat robust, so you can trust it won't succeed with an invalid move */
+int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 
 /* converts a move to UCI notation */
 /* the name is stored in the given "char" pointer (including the trailing NUL), so make sure you pass in a pointer that can fit it */
@@ -203,7 +204,7 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen);
 
 /* similar to "moonfish_from_uci" and "moonfish_to_uci", but for SAN instead */
 /* SAN parsing is very loose, so it will accept many forms, including UCI */
-/* on succes, SAN parsing will return 0, on failure, it will return 1 (and the move is unchanged) */
+/* on success, the parser will return 0, on failure, it will return 1 (and the move is unusable) */
 /* parsing is somewhat robust, so you can trust it won't succeed with an invalid move */
 int moonfish_from_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
 void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);

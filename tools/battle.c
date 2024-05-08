@@ -308,7 +308,12 @@ static char *moonfish_bot_play(char *argv0, struct moonfish_battle *battle, stru
 	battle->moves[battle->move_count++] = arg;
 	if (!battle->ugi)
 	{
-		moonfish_from_uci(&battle->chess, &move, arg);
+		if (moonfish_from_uci(&battle->chess, &move, arg))
+		{
+			fprintf(stderr, "%s: invalid move '%s' from the bot\n", argv0, arg);
+			exit(1);
+		}
+		
 		battle->chess = move.chess;
 	}
 	

@@ -281,7 +281,13 @@ static void moonfish_go(struct moonfish_fancy *fancy, char *names, char *name, F
 	strcpy(name, arg);
 	
 	pthread_mutex_lock(fancy->mutex);
-	moonfish_from_uci(&fancy->chess, &move, arg);
+	
+	if (moonfish_from_uci(&fancy->chess, &move, arg))
+	{
+		fprintf(stderr, "%s: invalid move '%s' from the bot\n", fancy->argv0, arg);
+		exit(1);
+	}
+	
 	fancy->chess = move.chess;
 }
 

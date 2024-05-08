@@ -187,7 +187,12 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 				name = strtok(moves->valuestring, " ");
 				for (;;)
 				{
-					moonfish_from_uci(&chess, &move, name);
+					if (moonfish_from_uci(&chess, &move, name))
+					{
+						fprintf(stderr, "%s: invalid move '%s' from the bot\n", game->argv0, name);
+						exit(1);
+					}
+					
 					moonfish_to_uci(&chess, &move, name0);
 					fprintf(in, "%s", name0);
 					name = strtok(NULL, " ");
@@ -222,13 +227,21 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		
 		if (variant)
 		{
-			moonfish_from_uci(&chess, &move, name);
-			if (chess.board[move.from] % 16 == moonfish_king)
+			if (chess.board[25] == moonfish_white_king)
 			{
 				if (!strcmp(name, "e1c1")) name = "e1a1";
-				else if (!strcmp(name, "e1g1")) name = "e1h1";
-				else if (!strcmp(name, "e8c8")) name = "e8a8";
-				else if (!strcmp(name, "e8g8")) name = "e8h8";
+				if (!strcmp(name, "e1g1")) name = "e1h1";
+			}
+			if (chess.board[25] % 16 == moonfish_black_king)
+			{
+				if (!strcmp(name, "e8c8")) name = "e8a8";
+				if (!strcmp(name, "e8g8")) name = "e8h8";
+			}
+			
+			if (moonfish_from_uci(&chess, &move, name))
+			{
+				fprintf(stderr, "%s: invalid move '%s' from the bot\n", game->argv0, name);
+				exit(1);
 			}
 		}
 		

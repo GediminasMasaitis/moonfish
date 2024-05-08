@@ -302,7 +302,12 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		strcat(names, " ");
 		strcat(names, name0);
 		
-		moonfish_from_uci(&chess, &move, name0);
+		if (moonfish_from_uci(&chess, &move, name0))
+		{
+			fprintf(stderr, "%s: invalid move '%s' by the bot\n", argv0, name0);
+			exit(1);
+		}
+		
 		moonfish_to_san(&chess, &move, name);
 		chess = move.chess;
 		moonfish_to_fen(&chess, fen);

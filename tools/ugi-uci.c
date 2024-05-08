@@ -166,7 +166,11 @@ void *moonfish_convert_in(void *data)
 				{
 					arg = strtok_r(NULL, " ", &save);
 					if (arg == NULL) break;
-					moonfish_from_uci(&moonfish_ugi_chess, &move, arg);
+					if (moonfish_from_uci(&moonfish_ugi_chess, &move, arg))
+					{
+						fprintf(stderr, "%s: invalid move '%s' from bot\n", moonfish_argv0, arg);
+						exit(1);
+					}
 					moonfish_ugi_chess = move.chess;
 				}
 			}

@@ -51,7 +51,7 @@ These are things that might be fixed eventually.
 - the TUIs do not let you underpromote
 - no transposition table
 - no support for `go infinite`, `go mate`, or `go nodes`
-- no move name or FEN validation (may lead to potential exploits)
+- no FEN validation (may lead to potential exploits)
 
 download
 ---

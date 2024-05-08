@@ -211,7 +211,11 @@ int main(int argc, char **argv)
 			{
 				while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
 				{
-					moonfish_from_uci(&chess, &move, arg);
+					if (moonfish_from_uci(&chess, &move, arg))
+					{
+						fprintf(stderr, "%s: invalid move '%s'\n", argv[0], arg);
+						return 1;
+					}
 					chess = move.chess;
 				}
 			}
