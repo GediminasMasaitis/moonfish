@@ -28,23 +28,29 @@ tasks:
       llvm-strip --strip-all moonfish.wasm
   - deploy: |
       set +x
-      if test "$GIT_REF" = refs/heads/main && test -f neocities-token.txt
-      then
-        cd moonfish
-        curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
-          -F moonfish=@moonfish \
-          -F play=@play \
-          -F lichess=@lichess \
-          -F analyse=@analyse \
-          -F battle=@battle \
-          -F ribbon=@ribbon \
-          -F chat=@chat \
-          -F moonfish.sh=@moonfish.sh \
-          -F moonfish.exe=@moonfish.exe \
-          -F moonfish.wasm=@moonfish.wasm \
-          -F book.txt=@book.txt \
-          https://neocities.org/api/upload
+      if test "x$GIT_REF" = x
+      then exit 0
       fi
+      
+      if test "$GIT_REF" = refs/heads/main && test -f neocities-token.txt
+      then root=
+      else root="${GIT_REF#refs/heads/}"
+      fi
+      
+      cd moonfish
+      curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
+        -F "$root"/moonfish=@moonfish \
+        -F "$root"/play=@play \
+        -F "$root"/lichess=@lichess \
+        -F "$root"/analyse=@analyse \
+        -F "$root"/battle=@battle \
+        -F "$root"/ribbon=@ribbon \
+        -F "$root"/chat=@chat \
+        -F "$root"/moonfish.sh=@moonfish.sh \
+        -F "$root"/moonfish.exe=@moonfish.exe \
+        -F "$root"/moonfish.wasm=@moonfish.wasm \
+        -F "$root"/book.txt=@book.txt \
+        https://neocities.org/api/upload
 artifacts:
   - moonfish/moonfish
   - moonfish/moonfish.sh
