@@ -15,6 +15,7 @@
 !/chess.c
 !/search.c
 !/main.c
+!/mini.c
 !/book.txt
 !/tools
 !/tools/tools.h

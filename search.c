@@ -78,11 +78,15 @@ static long int moonfish_clock(struct moonfish_analysis *analysis)
 {
 	struct timespec ts;
 	
+#ifdef moonfish_mini
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
 	if (clock_gettime(CLOCK_MONOTONIC, &ts))
 	{
 		perror(analysis->argv0);
 		exit(1);
 	}
+#endif
 	
 	return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
@@ -95,11 +99,13 @@ struct moonfish_analysis *moonfish_analysis(char *argv0)
 	struct moonfish_chess chess;
 	
 	analysis = malloc(sizeof *analysis);
+#ifndef moonfish_mini
 	if (analysis == NULL)
 	{
 		perror(argv0);
 		exit(1);
 	}
+#endif
 	
 	analysis->argv0 = argv0;
 	
@@ -234,11 +240,13 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 			analysis->info[j].move = moves[i];
 			
 			result = pthread_create(&analysis->info[j].thread, NULL, &moonfish_start_search, analysis->info + j);
+#ifndef moonfish_mini
 			if (result)
 			{
 				fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
 				exit(1);
 			}
+#endif
 			
 			j++;
 		}
@@ -249,11 +257,13 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	for (i = 0 ; i < j ; i++)
 	{
 		result = pthread_join(analysis->info[i].thread, NULL);
+#ifndef moonfish_mini
 		if (result)
 		{
 			fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
 			exit(1);
 		}
+#endif
 		
 		if (analysis->info[i].score > analysis->score)
 		{

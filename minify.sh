@@ -6,14 +6,17 @@
 set -e
 
 # for every C source file
-cat moonfish.h chess.c search.c main.c |
+cat moonfish.h chess.c search.c mini.c |
 
 # remove the '#' from system '#include'
 sed 's/^#\(include <\)/\1/g' |
 
-# preprocess the file, add '#' back to 'include', remove debug statements
+# remove top-level 'static'
+sed 's/^static\b//g' |
+
+# preprocess the file, add '#' back to 'include'
 # note: this materialises the whole file
-gcc -E -Dinclude='#include' -D'perror(...)=' -D'fprintf(...)=' -Dmoonfish_mini - |
+gcc -E -Dinclude='#include' -Dmoonfish_mini - |
 
 # remove lines starting with '# '
 sed '/^# /d' |
@@ -23,7 +26,7 @@ sed 's/^[\t ]\+#/#/g' |
 
 # place all '#include' lines on top
 # note: this materialises the whole file
-( txt="$(tee)" && { grep '^#' <<< "$txt" ; } && { grep -v '^#' <<< "$txt" ; } ) |
+( txt="$(tee)" && { grep '^#' <<< "$txt" || : ; grep -v '^#' <<< "$txt" ; } ) |
 
 # put line breaks around string literals
 sed 's/\("\(\\.\|[^"]\)*"\)/\n\1\n/g' |

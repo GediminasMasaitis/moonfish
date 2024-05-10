@@ -16,15 +16,12 @@ int main(int argc, char **argv)
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
-	long int wtime, btime, *xtime;
-	int score;
+	long int our_time, their_time, *xtime;
+	long int score;
 	int depth;
 	struct moonfish_chess chess;
 	char *end;
-#ifndef moonfish_mini
-	long int long_depth;
 	long int time;
-#endif
 	
 	if (argc > 1)
 	{
@@ -54,12 +51,10 @@ int main(int argc, char **argv)
 		
 		if (!strcmp(arg, "go"))
 		{
-			wtime = -1;
-			btime = -1;
+			our_time = -1;
+			their_time = -1;
 			depth = -1;
-#ifndef moonfish_mini
 			time = -1;
-#endif
 			
 			for (;;)
 			{
@@ -68,8 +63,16 @@ int main(int argc, char **argv)
 				
 				if (!strcmp(arg, "wtime") || !strcmp(arg, "btime"))
 				{
-					if (!strcmp(arg, "wtime")) xtime = &wtime;
-					else xtime = &btime;
+					if (chess.white)
+					{
+						if (!strcmp(arg, "wtime")) xtime = &our_time;
+						else xtime = &their_time;
+					}
+					else
+					{
+						if (!strcmp(arg, "wtime")) xtime = &their_time;
+						else xtime = &our_time;
+					}
 					
 					arg = strtok(NULL, "\r\n\t ");
 					if (arg == NULL)
@@ -86,7 +89,6 @@ int main(int argc, char **argv)
 						return 1;
 					}
 				}
-#ifndef moonfish_mini
 				else if (!strcmp(arg, "depth"))
 				{
 					arg = strtok(NULL, "\r\n\t ");
@@ -98,19 +100,17 @@ int main(int argc, char **argv)
 					}
 					
 					errno = 0;
-					long_depth = strtol(arg, &end, 10);
+					depth = strtol(arg, &end, 10);
 					if (errno != 0)
 					{
 						perror(argv[0]);
 						return 1;
 					}
-					if (*end != 0 || long_depth < 0 || long_depth > 100)
+					if (*end != 0 || depth < 0 || depth > 100)
 					{
 						fprintf(stderr, "%s: malformed depth in 'go' command\n", argv[0]);
 						return 1;
 					}
-					
-					depth = long_depth;
 				}
 				else if (!strcmp(arg, "movetime"))
 				{
@@ -135,31 +135,26 @@ int main(int argc, char **argv)
 						return 1;
 					}
 				}
-#endif
 			}
 			
-			if (wtime < 0) wtime = 0;
-			if (btime < 0) btime = 0;
+			if (our_time < 0) our_time = 0;
+			if (their_time < 0) their_time = 0;
 			
-#ifndef moonfish_mini
 			if (depth >= 0)
 				score = moonfish_best_move_depth(analysis, &move, depth);
 			else if (time >= 0)
 				score = moonfish_best_move_time(analysis, &move, time);
 			else
-#endif
-			if (chess.white)
-				score = moonfish_best_move_clock(analysis, &move, wtime, btime);
-			else
-				score = moonfish_best_move_clock(analysis, &move, btime, wtime);
+				score = moonfish_best_move_clock(analysis, &move, our_time, their_time);
 			
 			if (depth < 0) depth = 4;
-			
 			printf("info depth %d ", depth);
+			
 			if (score >= moonfish_omega || score <= -moonfish_omega)
 				printf("score mate %d\n", moonfish_countdown(score));
 			else
-				printf("score cp %d\n", score);
+				printf("score cp %ld\n", score);
+			
 			moonfish_to_uci(&chess, &move, name);
 			printf("bestmove %s\n", name);
 		}
@@ -180,7 +175,6 @@ int main(int argc, char **argv)
 			{
 				moonfish_chess(&chess);
 			}
-#ifndef moonfish_mini
 			else if (!strcmp(arg, "fen"))
 			{
 				arg = strtok(NULL, "\r\n");
@@ -199,7 +193,6 @@ int main(int argc, char **argv)
 					strtok("", "\r\n\t ");
 				}
 			}
-#endif
 			else
 			{
 				fprintf(stderr, "malformed 'position' command\n");
@@ -232,7 +225,6 @@ int main(int argc, char **argv)
 		{
 			printf("readyok\n");
 		}
-#ifndef moonfish_mini
 		else if (!strcmp(arg, "debug") || !strcmp(arg, "setoption") || !strcmp(arg, "ucinewgame") || !strcmp(arg, "stop"))
 		{
 		}
@@ -240,14 +232,11 @@ int main(int argc, char **argv)
 		{
 			fprintf(stderr, "%s: unknown command '%s'\n", argv[0], arg);
 		}
-#endif
 		
 		fflush(stdout);
 	}
 	
-#ifndef moonfish_mini
 	free(analysis);
-#endif
 	
 	return 0;
 }

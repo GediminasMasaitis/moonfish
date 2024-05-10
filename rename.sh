@@ -9,8 +9,8 @@ alphabet=({a..z} {a..z}{a..z} {a..z}{a..z}{a..z})
 alphabet2=("${alphabet[@]}")
 declare -A names
 
-functions="main printf fprintf strtol fgets fflush stdin stdout stderr strcmp strcpy strtok strstr malloc realloc free exit errno clock_gettime timespec tv_sec tv_nsec pthread_create pthread_join pthread_t typedef moonfish_type_t"
-keywords="do while for if else break continue return static struct enum unsigned signed long short int char void sizeof $functions"
+functions="main printf fprintf sscanf fgets fflush stdin stdout stderr strcmp strncmp strcpy strtok strstr strchr malloc realloc free exit errno clock_gettime timespec tv_sec tv_nsec pthread_create pthread_join pthread_t typedef moonfish_type_t"
+keywords="do while for if else switch case break continue return static struct enum unsigned signed long short int char void sizeof $functions"
 
 while read -r name
 do
