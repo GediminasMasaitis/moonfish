@@ -178,6 +178,11 @@ int main(int argc, char **argv)
 			else if (!strcmp(arg, "fen"))
 			{
 				arg = strtok(NULL, "\r\n");
+				if (arg == NULL)
+				{
+					fprintf(stderr, "incomplete 'position fen' command\n");
+					return 1;
+				}
 				moonfish_from_fen(&chess, arg);
 				
 				arg = strstr(arg, "moves");
