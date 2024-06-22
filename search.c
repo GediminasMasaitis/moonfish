@@ -208,6 +208,7 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	int i, j, count;
 #ifdef moonfish_no_threads
 	int total;
+	int invalid_count;
 	
 	if (analysis->time >= 0)
 	{
@@ -216,10 +217,12 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 		for (y = 0 ; y < 8 ; y++)
 		for (x = 0 ; x < 8 ; x++)
 		{
+			invalid_count = 0;
 			count = moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
-			for (move = moves ; move->piece != moonfish_outside ; move++)
-				if (!moonfish_validate(&analysis->chess)) count--;
-			total += count;
+			for (i = 0 ; i < count ; i++)
+				if (!moonfish_validate(&moves[i].chess))
+					invalid_count--;
+			total += count - invalid_count;
 		}
 		
 		analysis->time /= total;
