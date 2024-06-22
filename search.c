@@ -38,7 +38,7 @@ typedef int moonfish_result_t;
 #else
 
 #include <pthread.h>
-typedef void *moonfish_result_t;
+#define moonfish_result_t void *
 #define moonfish_value NULL
 
 #endif
@@ -56,7 +56,6 @@ struct moonfish_info
 
 struct moonfish_analysis
 {
-	char *argv0;
 	struct moonfish_chess chess;
 	struct moonfish_info info[256];
 	int score;
@@ -66,15 +65,14 @@ struct moonfish_analysis
 
 #ifdef _WIN32
 
-static long int moonfish_clock(struct moonfish_analysis *analysis)
+static long int moonfish_clock(void)
 {
-	(void) analysis;
 	return GetTickCount();
 }
 
 #else
 
-static long int moonfish_clock(struct moonfish_analysis *analysis)
+static long int moonfish_clock(void)
 {
 	struct timespec ts;
 	
@@ -83,7 +81,7 @@ static long int moonfish_clock(struct moonfish_analysis *analysis)
 #else
 	if (clock_gettime(CLOCK_MONOTONIC, &ts))
 	{
-		perror(analysis->argv0);
+		perror(NULL);
 		exit(1);
 	}
 #endif
@@ -92,35 +90,6 @@ static long int moonfish_clock(struct moonfish_analysis *analysis)
 }
 
 #endif
-
-struct moonfish_analysis *moonfish_analysis(char *argv0)
-{
-	struct moonfish_analysis *analysis;
-	struct moonfish_chess chess;
-	
-	analysis = malloc(sizeof *analysis);
-#ifndef moonfish_mini
-	if (analysis == NULL)
-	{
-		perror(argv0);
-		exit(1);
-	}
-#endif
-	
-	analysis->argv0 = argv0;
-	
-	moonfish_chess(&chess);
-	moonfish_new(analysis, &chess);
-	
-	return analysis;
-}
-
-void moonfish_new(struct moonfish_analysis *analysis, struct moonfish_chess *chess)
-{
-	analysis->chess = *chess;
-	analysis->depth = 1;
-	analysis->time = -1;
-}
 
 static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *chess, struct moonfish_move *moves, int alpha, int beta, int depth, long int t0, long int time)
 {
@@ -142,7 +111,7 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *ch
 		if (score >= beta) return beta;
 		if (score > alpha) alpha = score;
 	}
-	else if (info->analysis->time >= 0 && time < 0)
+	else if (info->analysis->time >= 0 && time < 5)
 	{
 		depth = 0;
 	}
@@ -164,7 +133,7 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *ch
 		if (moves[i].chess.board[moves[i].to] == chess->board[moves[i].from])
 			continue;
 		
-		t1 = moonfish_clock(info->analysis);
+		t1 = moonfish_clock();
 		c = time * i / count - t1 + t0;
 		
 		score = -moonfish_search(info, &moves[i].chess, moves + count, -beta, -alpha, depth - 1, t1, time / count + c);
@@ -176,27 +145,29 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *ch
 	return alpha;
 }
 
+#ifndef moonfish_mini
+
 int moonfish_countdown(int score)
 {
-	score /= -moonfish_omega;
-	if (score < 0) score += moonfish_depth + 1;
-	else score -= moonfish_depth;
+	score /= moonfish_omega;
+	if (score < 0) score -= moonfish_depth + 1;
+	else score += moonfish_depth;
 	return score / 2;
 }
+
+#endif
 
 static moonfish_result_t moonfish_start_search(void *data)
 {
 	struct moonfish_info *info;
-	long int time, t0;
-	int depth;
 	
 	info = data;
+	info->score = -moonfish_search(
+		info, &info->move.chess, info->moves,
+		-100 * moonfish_omega, 100 * moonfish_omega,
+		info->analysis->depth, moonfish_clock(), info->analysis->time
+	);
 	
-	depth = info->analysis->depth;
-	t0 = moonfish_clock(info->analysis);
-	time = info->analysis->time;
-	
-	info->score = -moonfish_search(info, &info->move.chess, info->moves, -100 * moonfish_omega, 100 * moonfish_omega, depth, t0, time);
 	return moonfish_value;
 }
 
@@ -246,7 +217,7 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 #ifndef moonfish_mini
 			if (result)
 			{
-				fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
+				fprintf(stderr, "%s\n", strerror(result));
 				exit(1);
 			}
 #endif
@@ -263,7 +234,7 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 #ifndef moonfish_mini
 		if (result)
 		{
-			fprintf(stderr, "%s: %s\n", analysis->argv0, strerror(result));
+			fprintf(stderr, "%s\n", strerror(result));
 			exit(1);
 		}
 #endif
@@ -278,31 +249,38 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 
 #ifndef moonfish_mini
 
-int moonfish_best_move_depth(struct moonfish_analysis *analysis, struct moonfish_move *best_move, int depth)
+int moonfish_best_move_depth(struct moonfish_chess *chess, struct moonfish_move *best_move, int depth)
 {
-	analysis->depth = depth;
-	analysis->time = -1;
-	moonfish_iteration(analysis, best_move);
-	return analysis->score;
+	static struct moonfish_analysis analysis;
+	
+	analysis.chess = *chess;
+	analysis.depth = depth;
+	analysis.time = -1;
+	moonfish_iteration(&analysis, best_move);
+	return analysis.score;
 }
 
 #endif
 
-int moonfish_best_move_time(struct moonfish_analysis *analysis, struct moonfish_move *best_move, long int time)
+int moonfish_best_move_time(struct moonfish_chess *chess, struct moonfish_move *best_move, long int time)
 {
+	static struct moonfish_analysis analysis;
+	
+	analysis.chess = *chess;
 	time -= 125;
 	if (time < 10) time = 10;
-	analysis->depth = 16;
-	analysis->time = time;
-	moonfish_iteration(analysis, best_move);
-	return analysis->score;
+	analysis.depth = 16;
+	analysis.time = time;
+	moonfish_iteration(&analysis, best_move);
+	return analysis.score;
 }
 
-int moonfish_best_move_clock(struct moonfish_analysis *analysis, struct moonfish_move *best_move, long int our_time, long int their_time)
+int moonfish_best_move_clock(struct moonfish_chess *chess, struct moonfish_move *best_move, long int our_time, long int their_time)
 {
 	long int time0, time1;
+	
 	time0 = our_time / 16;
 	time1 = our_time - time0 - their_time * 7 / 8;
 	if (time1 < 0) time1 = 0;
-	return moonfish_best_move_time(analysis, best_move, time0 + time1);
+	return moonfish_best_move_time(chess, best_move, time0 + time1);
 }

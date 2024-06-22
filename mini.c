@@ -11,15 +11,11 @@ int main(void)
 {
 	static char line[2048];
 	
-	struct moonfish_analysis *analysis;
 	struct moonfish_move move;
 	char name[6];
 	int our_time, their_time, time;
-	int score;
 	struct moonfish_chess chess;
 	char *arg;
-	
-	analysis = moonfish_analysis(NULL);
 	
 	for (;;)
 	{
@@ -38,15 +34,7 @@ int main(void)
 				their_time = time;
 			}
 			
-			score = moonfish_best_move_clock(analysis, &move, our_time, their_time);
-			
-			printf("info depth 4 ");
-			
-			if (score >= moonfish_omega || score <= -moonfish_omega)
-				printf("score mate %d\n", moonfish_countdown(score));
-			else
-				printf("score cp %d\n", score);
-			
+			moonfish_best_move_clock(&chess, &move, our_time, their_time);
 			moonfish_to_uci(&chess, &move, name);
 			printf("bestmove %s\n", name);
 		}
@@ -59,13 +47,11 @@ int main(void)
 			
 			arg = strtok(arg, " ");
 			
-			while ((arg = strtok(NULL, "\r\n\t ")) != NULL)
+			while (arg = strtok(NULL, "\n "))
 			{
 				moonfish_from_uci(&chess, &move, arg);
 				chess = move.chess;
 			}
-			
-			moonfish_new(analysis, &chess);
 		}
 		else if (!strcmp(line, "uci"))
 			printf("uciok\n");
@@ -76,6 +62,4 @@ int main(void)
 		
 		fflush(stdout);
 	}
-	
-	return 0;
 }

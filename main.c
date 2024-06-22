@@ -12,7 +12,6 @@ int main(int argc, char **argv)
 {
 	static char line[2048];
 	
-	struct moonfish_analysis *analysis;
 	char *arg;
 	struct moonfish_move move;
 	char name[6];
@@ -25,11 +24,10 @@ int main(int argc, char **argv)
 	
 	if (argc > 1)
 	{
-		if (argc > 0) fprintf(stderr, "usage: %s\n", argv[0]);
+		fprintf(stderr, "usage: %s\n", argv[0]);
 		return 1;
 	}
 	
-	analysis = moonfish_analysis(argv[0]);
 	moonfish_chess(&chess);
 	
 	for (;;)
@@ -141,11 +139,11 @@ int main(int argc, char **argv)
 			if (their_time < 0) their_time = 0;
 			
 			if (depth >= 0)
-				score = moonfish_best_move_depth(analysis, &move, depth);
+				score = moonfish_best_move_depth(&chess, &move, depth);
 			else if (time >= 0)
-				score = moonfish_best_move_time(analysis, &move, time);
+				score = moonfish_best_move_time(&chess, &move, time);
 			else
-				score = moonfish_best_move_clock(analysis, &move, our_time, their_time);
+				score = moonfish_best_move_clock(&chess, &move, our_time, their_time);
 			
 			if (depth < 0) depth = 4;
 			printf("info depth %d ", depth);
@@ -217,8 +215,6 @@ int main(int argc, char **argv)
 					chess = move.chess;
 				}
 			}
-			
-			moonfish_new(analysis, &chess);
 		}
 		else if (!strcmp(arg, "uci"))
 		{
@@ -240,8 +236,6 @@ int main(int argc, char **argv)
 		
 		fflush(stdout);
 	}
-	
-	free(analysis);
 	
 	return 0;
 }

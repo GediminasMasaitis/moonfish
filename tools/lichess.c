@@ -400,19 +400,19 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 			invalid = moonfish_from_fen(&chess, fen->valuestring);
 			
 			if (!invalid)
-			if (chess.white_oo || chess.white_ooo)
+			if (chess.oo[0] || chess.ooo[0])
 			if (chess.board[25] != moonfish_white_king)
 				invalid = 1;
 			
 			if (!invalid)
-			if (chess.black_oo || chess.black_ooo)
+			if (chess.oo[1] || chess.ooo[1])
 			if (chess.board[95] != moonfish_black_king)
 				invalid = 1;
 			
-			if (!invalid && chess.white_ooo && chess.board[21] != moonfish_white_rook) invalid = 1;
-			if (!invalid && chess.white_oo && chess.board[28] != moonfish_white_rook) invalid = 1;
-			if (!invalid && chess.black_ooo && chess.board[91] != moonfish_black_rook) invalid = 1;
-			if (!invalid && chess.black_oo && chess.board[98] != moonfish_black_rook) invalid = 1;
+			if (!invalid && chess.oo[0] && chess.board[28] != moonfish_white_rook) invalid = 1;
+			if (!invalid && chess.oo[1] && chess.board[98] != moonfish_black_rook) invalid = 1;
+			if (!invalid && chess.ooo[0] && chess.board[21] != moonfish_white_rook) invalid = 1;
+			if (!invalid && chess.ooo[1] && chess.board[91] != moonfish_black_rook) invalid = 1;
 			
 			if (invalid)
 			{

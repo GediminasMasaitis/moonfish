@@ -5,14 +5,29 @@
 
 set -e
 
-# for every C source file
+# for each C source file
 cat moonfish.h chess.c search.c mini.c |
+
+# replace 'unsigned char' with 'int'
+sed 's/\bunsigned char\b/int/g' |
+
+# remove 'signed' and 'unsigned'
+sed 's/\tsigned /\t/g' |
+sed 's/\tunsigned /\t/g' |
+
+# remove 'long'
+sed 's/\blong\b \?//g' |
+
+# remove top-level 'static', 'int' and 'void'
+sed 's/^static\b//g' |
+sed 's/^int\b//g' |
+sed 's/^void\b//g' |
+
+#remove redundant 'int'
+sed 's/\bstatic int\b/static/g' |
 
 # remove the '#' from system '#include'
 sed 's/^#\(include <\)/\1/g' |
-
-# remove top-level 'static'
-sed 's/^static\b//g' |
 
 # preprocess the file, add '#' back to 'include'
 # note: this materialises the whole file
@@ -68,13 +83,13 @@ awk '!x[$0]++' |
 tee moonfish.c |
 
 # and also compress it
-xz -9 -e > moonfish.c.xz
+xz -e9qFraw > moonfish.c.xz
 
-# also make it into a runnable program
+# finally, make it into an executable program
 cat - moonfish.c.xz > moonfish.sh << END
 #!/bin/sh
 t=\`mktemp\`
-tail -n +5 "\$0"|xz -d|cc -march=native -O3 -o \$t -xc - -pthread
+gcc -O3 -o \$t -xc <(tail -n+5 "\$0"|unxz -Fraw)
 (sleep 3;rm \$t)&exec \$t
 END
 chmod +x moonfish.sh
