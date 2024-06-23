@@ -152,7 +152,7 @@ The “battle” CLI may be used to have two UCI or UGI bots play against each o
 
 The bot specified first will play as white (or p1 for UGI) and the bot specified second will play as black (or p2 for UGI).
 
-The program will write a simplified PGN variant to stdout with the game as it happens. The moves will be in UCI/UGI format, rather than SAN.
+The program will write a simplified PGN variant to stdout with the game as it happens.
 
 The program will also annouce to stderr the start and end of the game.
 
@@ -162,11 +162,11 @@ If your bot’s command starts with a dash, you may precede it by `--`, like `./
 
 A FEN string may be passed in to the `battle` command, like `./battle --fen='...' [ stockfish ] [ lc0 ]`
 
-You may also pass in a time control, with time and increment both in milliseconds, like `./battle [ --time=6000+500 stockfish ] [ ./moonfish ]` Since each bot may have a different time control, this has to be specified within the backets for a specific bot. The default is 15 minutes with ten seconds of increment.
+You may also pass in a time control, with time and increment both in milliseconds, like `./battle [ --time=6000+500 stockfish ] [ ./moonfish ]` Since each bot may have a different time control, this has to be specified within the backets for a specific bot. The default is fifteen minutes with ten seconds of increment.
 
 You may also pass in `x` as the first character of the given time control to make it “fixed”, which means that it will be reset after every move. This can be used to set a fixed time per move, for example. For example, `./battle [ --time=1000+0 stockfish ] [ --time --time=x1000+0 ./moonfish ]` will set a countdown clock starting at one second for Stockfish, but allow one second for moonfish for every move.
 
-In order to use a UGI bot, you may also pass in `--protocol=ugi` to that bot, like `./battle [ --protocol=ugi some-bot ] [ stockfish ]`. If both bots are UGI, then the game is not assumed to be chess, and the bot playing as p1 will be queried for the status of the game.
+In order to use a UGI bot, you may also pass in `--protocol=ugi` to that bot, like `./battle [ --protocol=ugi some-bot ] [ stockfish ]`. If both bots are UGI, then the game is not assumed to be chess, and the bot playing as p1 will be queried for the status of the game. In that case, the PGN will contain UGI notation as output directly by the engines, rather than SAN notation.
 
 - - -
 

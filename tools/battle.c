@@ -237,14 +237,15 @@ static void moonfish_bot_arguments(char *argv0, struct moonfish_bot *bot, char *
 	else fprintf(bot->in, "ucinewgame\n");
 }
 
-static char *moonfish_bot_play(char *argv0, struct moonfish_battle *battle, struct moonfish_bot *bot)
+static void moonfish_bot_play(char *argv0, struct moonfish_battle *battle, struct moonfish_bot *bot)
 {
+	static char name[16];
+	
 	char *white, *black;
 	int i;
 	char *arg;
 	char *buffer;
 	struct moonfish_move move;
-	
 	struct timespec t0, t1;
 	
 	if (!bot->fixed_time && clock_gettime(CLOCK_MONOTONIC, &t0))
@@ -314,7 +315,14 @@ static char *moonfish_bot_play(char *argv0, struct moonfish_battle *battle, stru
 			exit(1);
 		}
 		
+		moonfish_to_san(&battle->chess, &move, name);
+		printf("%s ", name);
+		
 		battle->chess = move.chess;
+	}
+	else
+	{
+		printf("%s ", arg);
 	}
 	
 	if (!bot->fixed_time)
@@ -329,8 +337,6 @@ static char *moonfish_bot_play(char *argv0, struct moonfish_battle *battle, stru
 		bot->time -= (t1.tv_sec - t0.tv_sec) * 1000;
 		bot->time -= (t1.tv_nsec - t0.tv_nsec) / 1000000;
 	}
-	
-	return arg;
 }
 
 static int moonfish_battle_play(char *argv0, struct moonfish_battle *battle)
@@ -407,7 +413,7 @@ static int moonfish_battle_play(char *argv0, struct moonfish_battle *battle)
 	
 	if (white)
 	{
-		arg = moonfish_bot_play(argv0, battle, &battle->white);
+		moonfish_bot_play(argv0, battle, &battle->white);
 		if (battle->white.time < -125)
 		{
 			printf("0-1 {timeout}\n");
@@ -417,7 +423,7 @@ static int moonfish_battle_play(char *argv0, struct moonfish_battle *battle)
 	}
 	else
 	{
-		arg = moonfish_bot_play(argv0, battle, &battle->black);
+		moonfish_bot_play(argv0, battle, &battle->black);
 		if (battle->black.time < -125)
 		{
 			printf("1-0 {timeout}\n");
@@ -425,8 +431,6 @@ static int moonfish_battle_play(char *argv0, struct moonfish_battle *battle)
 		}
 		if (battle->black.time < 10) battle->black.time = 10;
 	}
-	
-	printf("%s ", arg);
 	
 	return 1;
 }
