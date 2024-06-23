@@ -894,6 +894,20 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	to_x = move->to % 10 - 1;
 	to_y = move->to / 10 - 2;
 	
+	if (chess->board[move->from] % 16 == moonfish_king && from_x == 4)
+	{
+		if (to_x == 2)
+		{
+			strcpy(name, "O-O-O");
+			return;
+		}
+		if (to_x == 6)
+		{
+			strcpy(name, "O-O");
+			return;
+		}
+	}
+	
 	if (chess->board[move->from] % 16 == moonfish_pawn)
 	{
 		if (from_x != to_x)
