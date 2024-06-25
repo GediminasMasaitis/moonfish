@@ -60,6 +60,8 @@ int main(int argc, char **argv)
 	int error;
 	pthread_t thread;
 	
+	moonfish_spawner(argv[0]);
+	
 	command = moonfish_args(args, format, argc, argv);
 	if (args[0].value == NULL) moonfish_usage(args, format, argv[0]);
 	
@@ -134,7 +136,7 @@ int main(int argc, char **argv)
 	
 	if (i == 0) fprintf(stderr, "%s: Empty book.\n", argv[0]);
 	
-	moonfish_spawn(argv[0], command, &in, &out, NULL);
+	moonfish_spawn(command, &in, &out, NULL);
 	
 	error = pthread_create(&thread, NULL, moonfish_book_start, out);
 	if (error != 0)

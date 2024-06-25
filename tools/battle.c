@@ -183,7 +183,7 @@ static void moonfish_bot_arguments(char *argv0, struct moonfish_bot *bot, char *
 	if (*command != NULL && !strcmp(*command, "--"))
 		command++;
 	
-	moonfish_spawn(argv0, command, &bot->in, &bot->out, NULL);
+	moonfish_spawn(command, &bot->in, &bot->out, NULL);
 	
 	if (bot->ugi) fprintf(bot->in, "ugi\n");
 	else fprintf(bot->in, "uci\n");
@@ -441,7 +441,9 @@ int main(int argc, char **argv)
 	
 	char *argv0;
 	
-	if (argc < 1) return 1;
+	(void) argc;
+	
+	moonfish_spawner(argv[0]);
 	
 	battle.fen = NULL;
 	

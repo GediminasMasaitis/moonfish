@@ -572,6 +572,8 @@ int main(int argc, char **argv)
 	char *value;
 	char **options;
 	
+	moonfish_spawner(argv[0]);
+	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);
 	if (command_count < 1) moonfish_usage(args, format, argv[0]);
@@ -646,7 +648,7 @@ int main(int argc, char **argv)
 	fancy->x = 0;
 	fancy->y = 0;
 	
-	moonfish_spawn(argv[0], command, &fancy->in, &fancy->out, NULL);
+	moonfish_spawn(command, &fancy->in, &fancy->out, NULL);
 	
 	fancy->i = 0;
 	fancy->count = 1;

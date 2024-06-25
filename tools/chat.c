@@ -174,7 +174,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	
 	moonfish_chess(&chess);
 	
-	moonfish_spawn(argv0, command, &in, &out, NULL);
+	moonfish_spawn(command, &in, &out, NULL);
 	fprintf(in, "uci\n");
 	moonfish_wait(out, "uciok");
 	
@@ -352,6 +352,8 @@ int main(int argc, char **argv)
 	};
 	
 	char **options, **command;
+	
+	moonfish_spawner(argv[0]);
 	
 	/* todo: validate nickname & channels*/
 	options = moonfish_args(args, format, argc, argv);

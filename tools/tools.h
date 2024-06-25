@@ -15,7 +15,9 @@ struct moonfish_arg
 	char *description;
 };
 
-void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out, char *directory);
+void moonfish_spawner(char *argv0);
+void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory);
+
 char *moonfish_next(FILE *file);
 char *moonfish_wait(FILE *file, char *name);
 char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, char **argv);

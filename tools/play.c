@@ -319,13 +319,15 @@ int main(int argc, char **argv)
 	char **command;
 	int command_count;
 	
+	moonfish_spawner(argv[0]);
+	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);
 	if (command_count < 1) moonfish_usage(args, format, argv[0]);
 	
 	name = names;
 	
-	moonfish_spawn(argv[0], command, &in, &out, NULL);
+	moonfish_spawn(command, &in, &out, NULL);
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{

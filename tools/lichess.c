@@ -274,7 +274,7 @@ static void *moonfish_handle_game(void *data)
 	
 	game = data;
 	
-	moonfish_spawn(game->argv0, game->argv, &in, &out, NULL);
+	moonfish_spawn(game->argv, &in, &out, NULL);
 	tls = moonfish_connect(game->argv0, game->host, game->port);
 	
 	snprintf(request, sizeof request, "GET /api/bot/game/stream/%s", game->id);
@@ -505,6 +505,8 @@ int main(int argc, char **argv)
 	int command_count;
 	struct tls *tls;
 	char *username;
+	
+	moonfish_spawner(argv[0]);
 	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);

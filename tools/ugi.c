@@ -44,7 +44,8 @@ void moonfish_convert_ugi(char *argv0, char **argv, char *convert_arg, char *pip
 	void *(*start1)(void *data);
 	void *(*start2)(void *data);
 	
-	moonfish_spawn(argv0, argv, &in, &out, NULL);
+	moonfish_spawner(argv0);
+	moonfish_spawn(argv, &in, &out, NULL);
 	
 	for (;;)
 	{

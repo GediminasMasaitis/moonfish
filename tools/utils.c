@@ -6,87 +6,417 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <pthread.h>
+#include <sys/un.h>
 
 #include "tools.h"
 
-static int moonfish_fork(char *argv0, char **argv, int *in_fd, int *out_fd, char *directory)
+static pid_t moonfish_spawner_pid;
+static char *moonfish_spawner_argv0;
+static int moonfish_spawner_fd;
+static char *moonfish_spawner_dir_name;
+static char *moonfish_spawner_socket_name;
+
+static void *moonfish_read_pipe(void *data)
 {
-	int p1[2], p2[2];
-	int pid;
-	
-	if (pipe(p1) < 0) return 1;
-	if (pipe(p2) < 0) return 1;
-	
-	pid = fork();
-	if (pid < 0) return 1;
-	
-	if (pid)
+	char ch;
+	int *fds;
+	fds = data;
+	while (read(fds[0], &ch, 1) > 0) { }
+	if (moonfish_spawner_socket_name != NULL)
 	{
-		*in_fd = p1[1];
-		*out_fd = p2[0];
-		close(p1[0]);
-		close(p2[1]);
-		return 0;
+		if (unlink(moonfish_spawner_socket_name) != 0)
+			perror(moonfish_spawner_argv0);
+	}
+	if (moonfish_spawner_dir_name != NULL)
+	{
+		if (rmdir(moonfish_spawner_dir_name) != 0)
+			perror(moonfish_spawner_argv0);
+	}
+	exit(0);
+}
+
+void moonfish_spawner(char *argv0)
+{
+	int fd;
+	FILE *in, *out;
+	pid_t pid;
+	int i, count, length;
+	char **argv;
+	char *directory;
+	struct sigaction action;
+	pthread_t thread;
+	int fds[2];
+	struct sockaddr_un address = {0};
+	
+	moonfish_spawner_argv0 = argv0;
+	
+	moonfish_spawner_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (moonfish_spawner_fd < 0)
+	{
+		perror(argv0);
+		exit(1);
 	}
 	
-	if (directory != NULL)
+	if (pipe(fds) != 0)
 	{
-		if (chdir(directory))
+		perror(argv0);
+		exit(1);
+	}
+	
+	moonfish_spawner_pid = fork();
+	if (moonfish_spawner_pid < 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (moonfish_spawner_pid != 0)
+		return;
+	
+	close(fds[1]);
+	
+	pthread_create(&thread, NULL, &moonfish_read_pipe, fds);
+	
+	action.sa_flags = SA_NOCLDWAIT;
+	action.sa_handler = SIG_DFL;
+	if (sigemptyset(&action.sa_mask))
+	{
+		perror(argv0);
+		exit(1);
+	}
+	if (sigaction(SIGCHLD, &action, NULL))
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	address.sun_family = AF_UNIX;
+	strcpy(address.sun_path, "/tmp/moon-XXXXXX");
+	
+	if (mkdtemp(address.sun_path) == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	moonfish_spawner_dir_name = strdup(address.sun_path);
+	if (moonfish_spawner_dir_name == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	strcat(address.sun_path, "/socket");
+	
+	moonfish_spawner_socket_name = strdup(address.sun_path);
+	if (moonfish_spawner_socket_name == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (bind(moonfish_spawner_fd, (void *) &address, sizeof address) != 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (listen(moonfish_spawner_fd, 8) < 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	for (;;)
+	{
+		fd = accept(moonfish_spawner_fd, NULL, NULL);
+		if (fd < 0)
+		{
+			perror(argv0);
+			exit(1);
+		}
+		
+		pid = fork();
+		if (pid < 0)
+		{
+			perror(argv0);
+			exit(1);
+		}
+		
+		if (pid == 0) break;
+		close(fd);
+	}
+	
+	close(fds[0]);
+	close(moonfish_spawner_fd);
+	
+	in = fdopen(fd, "r");
+	if (in == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	out = fdopen(fd, "w");
+	if (out == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (setvbuf(in, NULL, _IONBF, 0) != 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (setvbuf(out, NULL, _IONBF, 0) != 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	pid = getpid();
+	if (fwrite(&pid, sizeof pid, 1, out) != 1)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (fread(&length, sizeof length, 1, in) != 1)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (length < 0)
+	{
+		fprintf(stderr, "%s: invalid length\n", argv0);
+		exit(1);
+	}
+	
+	if (length > 0)
+	{
+		directory = malloc(length + 1);
+		if (directory == NULL)
+		{
+			perror(argv0);
+			exit(1);
+		}
+		
+		directory[length] = 0;
+		
+		if (fread(directory, length, 1, in) != 1)
+		{
+			perror(argv0);
+			exit(1);
+		}
+		
+		if (chdir(directory) != 0)
 		{
 			perror(argv0);
 			exit(1);
 		}
 	}
 	
-	dup2(p1[0], 0);
-	dup2(p2[1], 1);
-	dup2(p2[1], 2);
+	if (fread(&count, sizeof count, 1, in) != 1)
+	{
+		perror(argv0);
+		exit(1);
+	}
 	
-	close(p1[0]);
-	close(p1[1]);
-	close(p2[0]);
-	close(p2[1]);
+	if (count < 1)
+	{
+		fprintf(stderr, "%s: too few arguments\n", argv0);
+		exit(1);
+	}
+	
+	argv = malloc(sizeof *argv * (count + 1));
+	if (argv == NULL)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	argv[count] = NULL;
+	
+	for (i = 0 ; i < count ; i++)
+	{
+		if (fread(&length, sizeof length, 1, in) != 1)
+		{
+			perror(argv0);
+			exit(1);
+		}
+		
+		argv[i] = malloc(length + 1);
+		if (argv[i] == NULL)
+		{
+			perror(argv0);
+			exit(1);
+		}
+		argv[i][length] = 0;
+		
+		if (fread(argv[i], length, 1, in) != 1)
+		{
+			perror(argv0);
+			exit(1);
+		}
+	}
+	
+	if (dup2(fd, 0) < 0 || dup2(fd, 1) < 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	close(fd);
+	
+	fd = open("/dev/null", O_WRONLY);
+	if (fd < 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
+	if (dup2(fd, 2) < 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
 	
 	execvp(argv[0], argv);
 	fprintf(stderr, "%s: %s: %s\n", argv0, argv[0], strerror(errno));
 	exit(1);
 }
 
-void moonfish_spawn(char *argv0, char **argv, FILE **in, FILE **out, char *directory)
+void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory)
 {
-	int in_fd, out_fd;
+	pid_t pid;
+	int fd;
+	int i, count;
+	struct sockaddr_un address;
+	socklen_t length;
 	
-	if (moonfish_fork(argv0, argv, &in_fd, &out_fd, directory))
+	pid = waitpid(moonfish_spawner_pid, NULL, WNOHANG);
+	if (pid < 0)
 	{
-		perror(argv0);
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	if (pid != 0)
+	{
+		fprintf(stderr, "%s: spawner exited\n", moonfish_spawner_argv0);
 		exit(1);
 	}
 	
-	*in = fdopen(in_fd, "w");
+	length = sizeof address;
+	if (getsockname(moonfish_spawner_fd, (void *) &address, &length) != 0)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (fd < 0)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	if (connect(fd, (void *) &address, length) != 0)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	*in = fdopen(dup(fd), "w");
 	if (*in == NULL)
 	{
-		perror(argv0);
+		perror(moonfish_spawner_argv0);
 		exit(1);
 	}
 	
-	*out = fdopen(out_fd, "r");
+	*out = fdopen(dup(fd), "r");
 	if (*out == NULL)
 	{
-		perror(argv0);
+		perror(moonfish_spawner_argv0);
 		exit(1);
 	}
 	
-	errno = 0;
-	if (setvbuf(*in, NULL, _IOLBF, 0))
+	close(fd);
+	
+	if (setvbuf(*in, NULL, _IONBF, 0) != 0)
 	{
-		if (errno) perror(argv0);
+		perror(moonfish_spawner_argv0);
 		exit(1);
 	}
 	
-	errno = 0;
-	if (setvbuf(*out, NULL, _IOLBF, 0))
+	if (setvbuf(*out, NULL, _IONBF, 0) != 0)
 	{
-		if (errno) perror(argv0);
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	if (directory == NULL) directory = "";
+	count = strlen(directory);
+	if (fwrite(&count, sizeof count, 1, *in) != 1)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	if (fwrite(directory, count, 1, *in) != 1)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	count = 0;
+	while (argv[count] != NULL)
+		count++;
+	
+	if (fwrite(&count, sizeof count, 1, *in) != 1)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	for (i = 0 ; argv[i] != NULL ; i++)
+	{
+		count = strlen(argv[i]);
+		if (fwrite(&count, sizeof count, 1, *in) != 1)
+		{
+			perror(moonfish_spawner_argv0);
+			exit(1);
+		}
+		
+		if (fwrite(argv[i], count, 1, *in) != 1)
+		{
+			perror(moonfish_spawner_argv0);
+			exit(1);
+		}
+	}
+	
+	if (fread(&pid, sizeof pid, 1, *out) != 1)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	if (setvbuf(*in, NULL, _IOLBF, 0) != 0)
+	{
+		perror(moonfish_spawner_argv0);
+		exit(1);
+	}
+	
+	if (setvbuf(*out, NULL, _IOLBF, 0) != 0)
+	{
+		perror(moonfish_spawner_argv0);
 		exit(1);
 	}
 }
