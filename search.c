@@ -192,7 +192,7 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 			count = moonfish_moves(&analysis->chess, moves, (x + 1) + (y + 2) * 10);
 			for (i = 0 ; i < count ; i++)
 				if (!moonfish_validate(&moves[i].chess))
-					invalid_count--;
+					invalid_count++;
 			total += count - invalid_count;
 		}
 		
