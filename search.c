@@ -215,11 +215,19 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 			
 			result = pthread_create(&analysis->info[j].thread, NULL, &moonfish_start_search, analysis->info + j);
 #ifndef moonfish_mini
+#ifdef moonfish_c11_threads
+			if (result != thrd_success)
+			{
+				fprintf(stderr, "error creating thread\n");
+				exit(1);
+			}
+#else
 			if (result)
 			{
 				fprintf(stderr, "%s\n", strerror(result));
 				exit(1);
 			}
+#endif
 #endif
 			
 			j++;
@@ -232,11 +240,19 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	{
 		result = pthread_join(analysis->info[i].thread, NULL);
 #ifndef moonfish_mini
+#ifdef moonfish_c11_threads
+		if (result != thrd_success)
+		{
+			fprintf(stderr, "error joining thread\n");
+			exit(1);
+		}
+#else
 		if (result)
 		{
 			fprintf(stderr, "%s\n", strerror(result));
 			exit(1);
 		}
+#endif
 #endif
 		
 		if (analysis->info[i].score > analysis->score)
