@@ -104,9 +104,8 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *ch
 	
 	if (depth < 0)
 	{
-		score = chess->score;
+		score = moonfish_score(chess);
 		if (!chess->white) score *= -1;
-		
 		if (depth < -3) return score;
 		if (score >= beta) return beta;
 		if (score > alpha) alpha = score;

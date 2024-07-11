@@ -238,7 +238,7 @@ static void moonfish_scoresheet(struct moonfish_fancy *fancy)
 	}
 }
 
-static void moonfish_score(struct moonfish_fancy *fancy)
+static void moonfish_fancy_score(struct moonfish_fancy *fancy)
 {
 	struct moonfish_ply *ply;
 	int score;
@@ -275,7 +275,7 @@ static void moonfish_fancy(struct moonfish_fancy *fancy)
 	}
 	
 	printf("\x1B[%d;23H", fancy->oy);
-	moonfish_score(fancy);
+	moonfish_fancy_score(fancy);
 	
 	printf("\x1B[%dH", fancy->oy + 1);
 	moonfish_scoresheet(fancy);

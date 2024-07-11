@@ -46,7 +46,7 @@ static double moonfish_next_line(char *argv0, char *line, FILE *file)
 		exit(1);
 	}
 	
-	return score;
+	return score * 100;
 }
 
 static double moonfish_gradient(double *gradient, double score0, char *fen)
@@ -58,15 +58,15 @@ static double moonfish_gradient(double *gradient, double score0, char *fen)
 	
 	moonfish_chess(&chess);
 	moonfish_from_fen(&chess, fen);
-	score = chess.score;
+	score = moonfish_score(&chess);
 	error = score - score0;
 	
 	for (i = 0 ; i < moonfish_size ; i++)
 	{
 		prev = moonfish_values[i];
-		moonfish_values[i] += 1.0 / 256 / 256;
+		moonfish_values[i] += 1.0 / 256 / 256 / 8;
 		moonfish_from_fen(&chess, fen);
-		gradient[i] += (chess.score - score) * 256 * 256 * error;
+		gradient[i] += (moonfish_score(&chess) - score) * 256 * 256 * error;
 		moonfish_values[i] = prev;
 	}
 	
@@ -132,7 +132,8 @@ int main(int argc, char **argv)
 	
 	for (;;)
 	{
-		if (iteration++ > 0x1000) return 0;
+		iteration++;
+		if (iteration > 0x1000) return 0;
 		
 		error = moonfish_step(argv[0], file, gradient);
 		

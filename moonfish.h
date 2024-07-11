@@ -13,11 +13,11 @@
 /* whereas the second hex digit of the integer represents the piece's type (within its color) */
 /* this allows the piece type to be extracted with "p % 16" */
 /* and likewise for its color to be extracted with "p / 16" */
-/* (a special value (0xFF) is used for squares without pieces) */
+/* (a special value (0x00) is used for squares without pieces) */
 
 /* the board is represented coceptually as a 10-wide, 12-tall array */
 /* the actual board itself is represented within the 8 x 8 area centered on this array */
-/* (a special value (0x00) is used for pieces outside of the board) */
+/* (a special value (0xFF) is used for pieces outside of the board) */
 
 /* the array itself is flattened into a 1D array with 120 elements */
 /* so the index into the array may be obtained from coordinatse using the following formula: */
@@ -32,18 +32,18 @@
 /* e.g. "x = 8 ; y = 8" represents "h8", and "index = 89" */
 
 /* diagram (for starting position) */
-/* i = 00..07 : 0x[00 00 00 00 00 00 00 00] */
-/* i = 08..15 : 0x[00 00 00 00 00 00 00 00] */
-/* i = 16..23 : 0x[00 14 12 15 16 12 14 00] */
-/* i = 24..31 : 0x[00 11 11 11 11 11 11 00] */
-/* i = 32..39 : 0x[00 FF FF FF FF FF FF 00] */
-/* i = 40..47 : 0x[00 FF FF FF FF FF FF 00] */
-/* i = 48..55 : 0x[00 FF FF FF FF FF FF 00] */
-/* i = 56..63 : 0x[00 FF FF FF FF FF FF 00] */
-/* i = 64..71 : 0x[00 21 21 21 21 21 21 00] */
-/* i = 72..79 : 0x[00 24 22 25 26 22 24 00] */
-/* i = 80..87 : 0x[00 00 00 00 00 00 00 00] */
-/* i = 88.119 : 0x[00 00 00 00 00 00 00 00] */
+/* i = 00..07 : 0x[FF FF FF FF FF FF FF FF] */
+/* i = 08..15 : 0x[FF FF FF FF FF FF FF FF] */
+/* i = 16..23 : 0x[FF 14 12 15 16 12 14 FF] */
+/* i = 24..31 : 0x[FF 11 11 11 11 11 11 FF] */
+/* i = 32..39 : 0x[FF 00 00 00 00 00 00 FF] */
+/* i = 40..47 : 0x[FF 00 00 00 00 00 00 FF] */
+/* i = 48..55 : 0x[FF 00 00 00 00 00 00 FF] */
+/* i = 56..63 : 0x[FF 00 00 00 00 00 00 FF] */
+/* i = 64..71 : 0x[FF 21 21 21 21 21 21 FF] */
+/* i = 72..79 : 0x[FF 24 22 25 26 22 24 FF] */
+/* i = 80..87 : 0x[FF FF FF FF FF FF FF FF] */
+/* i = 88.119 : 0x[FF FF FF FF FF FF FF FF] */
 /* (squares with 00 are outside of the board, squares with FF are empty) */
 
 /* note: white pieces are shown on the top, because they squares closest to white have a lower index */
@@ -77,8 +77,8 @@
 #define moonfish_king 6
 
 /* special values within the board representation */
-#define moonfish_outside 0
-#define moonfish_empty 0xFF
+#define moonfish_empty 0
+#define moonfish_outside 0xFF
 
 /* constants for search */
 /* depth: the maximum depth considerable feasibly reachable (in practice, it's much lower!) */
@@ -87,7 +87,7 @@
 #define moonfish_omega 5000000
 
 /* size of the PST */
-#define moonfish_size 192
+#define moonfish_size 270
 
 /* for tuning the PST */
 #ifdef moonfish_learn
@@ -101,9 +101,6 @@ struct moonfish_chess
 {
 	/* 10 x 12 array board representation */
 	unsigned char board[120];
-	
-	/* PST score for the position */
-	moonfish_t score;
 	
 	/* booleans representing castling rights */
 	unsigned char oo[2], ooo[2];
@@ -130,7 +127,7 @@ struct moonfish_move
 
 #ifndef moonfish_mini
 
-/* PST */
+/* the PST */
 extern moonfish_t moonfish_values[];
 
 /* initialises the position and sets up the initial position */
@@ -158,6 +155,9 @@ int moonfish_best_move_clock(struct moonfish_chess *chess, struct moonfish_move 
 /* tries to find the best move on the given position with a given depth */
 /* similar to "moonfish_best_move_time" and "moonfish_best_move_clock" */
 int moonfish_best_move_depth(struct moonfish_chess *chess, struct moonfish_move *move, int depth);
+
+/* returns the depth-zero score for the given position */
+moonfish_t moonfish_score(struct moonfish_chess *chess);
 
 /* if a score is too large (i.e. "score >= moonfish_omega"), it will instead represent a "checkmate in X" evaluation */
 /* this function will obtain such "X" from the given score in that case */
