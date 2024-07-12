@@ -159,10 +159,6 @@ int moonfish_best_move_depth(struct moonfish_chess *chess, struct moonfish_move 
 /* returns the depth-zero score for the given position */
 moonfish_t moonfish_score(struct moonfish_chess *chess);
 
-/* if a score is too large (i.e. "score >= moonfish_omega"), it will instead represent a "checkmate in X" evaluation */
-/* this function will obtain such "X" from the given score in that case */
-int moonfish_countdown(int score);
-
 /* creates a move from UCI notation */
 /* the move is stored in "move" */
 /* on success, the parser will return 0, on failure, it will return 1 (and the move is unusable) */

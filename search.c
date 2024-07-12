@@ -123,7 +123,7 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *ch
 	
 	for (i = 0 ; i < count ; i++)
 		if (chess->board[moves[i].to] % 16 == moonfish_king)
-			return moonfish_omega * (moonfish_depth - depth);
+			return moonfish_omega * (moonfish_depth + depth);
 	
 	for (i = 0 ; i < count ; i++)
 	{
@@ -143,18 +143,6 @@ static int moonfish_search(struct moonfish_info *info, struct moonfish_chess *ch
 	
 	return alpha;
 }
-
-#ifndef moonfish_mini
-
-int moonfish_countdown(int score)
-{
-	score /= moonfish_omega;
-	if (score < 0) score -= moonfish_depth + 1;
-	else score += moonfish_depth;
-	return score / 2;
-}
-
-#endif
 
 static moonfish_result_t moonfish_start_search(void *data)
 {

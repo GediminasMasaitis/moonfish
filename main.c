@@ -145,13 +145,8 @@ int main(int argc, char **argv)
 			else
 				score = moonfish_best_move_clock(&chess, &move, our_time, their_time);
 			
-			if (depth < 0) depth = 4;
-			printf("info depth %d ", depth);
-			
-			if (score >= moonfish_omega || score <= -moonfish_omega)
-				printf("score mate %d\n", moonfish_countdown(score));
-			else
-				printf("score cp %ld\n", score);
+			if (depth < 0) depth = 1;
+			printf("info depth %d score cp %ld\n", depth, score / 100);
 			
 			moonfish_to_uci(&chess, &move, name);
 			printf("bestmove %s\n", name);
