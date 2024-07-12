@@ -89,7 +89,7 @@ xz -e9qFraw > moonfish.c.xz
 cat - moonfish.c.xz > moonfish.sh << END
 #!/bin/sh
 t=\`mktemp\`
-gcc -O3 -o \$t -xc <(tail -n+5 "\$0"|unxz -Fraw)
+${CC:-cc} -O3 -o \$t -xc <(tail -n+5 "\$0"|unxz -Fraw)
 (sleep 3;rm \$t)&exec \$t
 END
 chmod +x moonfish.sh
