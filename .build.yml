@@ -34,7 +34,7 @@ tasks:
       
       if test "$GIT_REF" = refs/heads/main
       then root=
-      else root="${GIT_REF#refs/heads/}"
+      else root="${GIT_REF#refs/*/}"
       fi
       
       cd moonfish
