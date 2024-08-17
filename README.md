@@ -9,7 +9,7 @@ moonfish
 [![Lichess rapid rating](https://lichess-shield.vercel.app/api?username=munfish&format=rapid)](https://lichess.org/@/munfish/perf/rapid)
 [![Lichess blitz rating](https://lichess-shield.vercel.app/api?username=munfish&format=blitz)](https://lichess.org/@/munfish/perf/blitz)
 
-**moonfish** is a simple chess bot written in C 89 (ANSI C).
+**moonfish** is a simple chess bot written in C89.
 
 You may [play moonfish on Lichess]! You don’t need a Lichess account, just make sure to choose “real time” and select a fast enough time control.
 
@@ -20,17 +20,18 @@ table of contents
 
 - [features](#features) and [limitations](#limitations)
 - [download](#download)
-- [compiling from source](#compiling-from-source) (for UNIX and clones)
+- compiling from source
+  - [compiling on UNIX](#compiling-from-source) (and UNIX clones)
+  - [compiling on Plan 9](#compiling-on-9front) (specifically 9front)
+  - [compiling on Windows](#compiling-on-windows)
+  - [compiling on other systems](#porting-moonfish)
 - using moonfish’s tools
   - [using “play” and “analyse”](#using-play-and-analyse)
   - [using “book”](#using-book) (for adding simple opening book support to bots without it by wrapping them)
   - [using “battle” and “ribbon”](#using-battle-and-ribbon) (for setting up tournaments between bots)
   - [using “ugi-uci” and “uci-ugi”](#using-ugi-uci-and-uci-ugi) (for using UCI bots in UGI programs and vice-versa)
   - [using “chat”](#using-chat) and [using “lichess”](#using-lichess) (for integrating with IRC and Lichess)
-- compiling on other systems
-  - [compiling on Plan 9](#compiling-on-plan-9)
-  - [compiling on Windows](#compiling-on-windows)
-  - [porting to other systems](#porting-moonfish)
+- [helping improve moonfish!](#contributing-to-moonfish)
 - [license](#license)
 
 features
@@ -46,10 +47,9 @@ features
 limitations
 ---
 
-These are things that might be fixed eventually.
+These are things that might be resolved eventually.
 
 - the TUIs do not let you underpromote
-- no transposition table
 - no support for `go infinite`, `go mate`, or `go nodes`
 - no FEN validation (may lead to potential exploits)
 
@@ -58,10 +58,24 @@ download
 
 Pre‐compiled executables for Linux of moonfish (and some of its tools) may be found at <https://moonfish.neocities.org> (Windows binaries are also provided.)
 
+contributing to moonfish
+---
+
+Contributions to moonfish are always welcome! Whether you just have thoughts to share, or you want to improve its source code, any kind of help is vastly appreciated!
+
+Contributions (complaints, ideas, thoughts, patches, etc.) may be submitted via email to <zamfofex@twdb.moe> or shared in its IRC channel ([#moonfish] on [Libera.Chat]).
+
+- Note: The IRC channel is also bridged to Discord. (Please ask on IRC for a Discord invite.)
+- Note: There is also a [#moonfish-miscellany] channel for general off‐topic conversations.
+
+[Libera.Chat]: <https://libera.chat>
+[#moonfish]: <https://web.libera.chat/#moonfish>
+[#moonfish-miscellany]: <https://web.libera.chat/#moonfish-miscellany>
+
 compiling from source
 ---
 
-Building on UNIX (and clones) should be easy. Make sure you have GNU Make and a C compiler like GCC, then run the following command.
+Compiling on UNIX (and clones) should be easy. Make sure you have GNU Make and a C compiler like GCC, then run the following command.
 
 ~~~
 make moonfish
@@ -252,9 +266,7 @@ moonfish’s IRC integration, called “chat” may be used to play with a UCI b
 ./chat -N irc.example.net -C '#my-channel,#other-channel' -M chess-bot stockfish
 ~~~
 
-It is only possible to connect to networks using TLS. The default nickname is “moonfish”, and it will connect by default to #moonfish on [Libera Chat].
-
-[Libera Chat]: <https://libera.chat>
+It is only possible to connect to networks using TLS. The default nickname is “moonfish”, and it will connect by default to #moonfish on [Libera.Chat].
 
 using “lichess”
 ---
@@ -275,16 +287,15 @@ lichess_token=XXX ./lichess stockfish
 lichess_token=XXX ./lichess ./moonfish
 ~~~
 
-compiling on Plan 9
+compiling on 9front
 ---
 
-Note: [NPE] is required.
+After installing [NPE], each file may be compiled and linked as expected. (Note: A `mkfile` isn’t provided.)
 
 [NPE]: <https://git.sr.ht/~ft/npe>
 
-After installing NPE, each file may be compiled and linked as expected. (Note: A `mkfile` isn’t provided.)
-
 ~~~
+# (example for x86-64)
 6c -I/sys/include/npe chess.c search.c main.c
 6l -o moonfish chess.6 search.6 main.6
 moonfish
@@ -304,14 +315,14 @@ Note that [MinGW] compilation is also supported.
 porting moonfish
 ---
 
-The only pieces of functionality the moonfish depends on that are not specified entirely in C89 are pthreads (POSIX threads) and `clock_gettime`. POSIX threads are not required, and may be substituted by C11 threads or even disabled altogether with compile-time macros. (See [“compiling from source”](#compile-from-source)) `clock_gettime` is required and cannot be replaced, however.
+The only pieces of functionality the moonfish depends on that are not specified entirely in C89 are pthreads (POSIX threads) and `clock_gettime`. POSIX threads are not required, and may be substituted by C11 threads or even disabled altogether with compile-time macros. (See [“compiling from source”](#compile-from-source)) However, `clock_gettime` is required and cannot be replaced with macros.
 
-Porting moonfish to a different platform should be a matter of simply providing a “mostly C89-compliant” environment alongside `clock_gettime` and pthreads. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on Plan 9](#compiling-on-plan-9), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
+Porting moonfish to a different platform should be a matter of simply providing a “mostly C89‐compliant” environment alongside `clock_gettime` and pthreads. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on 9front](#compiling-on-9front), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
 
 license
 ---
 
-[AGPL] ([v3 or later][GPLv3+]) © zamfofex 2023, 2024
+[AGPL] ([v3 or later]) © zamfofex 2023, 2024
 
 [AGPL]: <https://gnu.org/licenses/agpl-3.0>
-[GPLv3+]: <https://gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>
+[v3 or later]: <https://gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>

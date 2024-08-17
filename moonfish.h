@@ -4,7 +4,7 @@
 #ifndef MOONFISH
 #define MOONFISH
 
-/* moonfish is a very simple chess bot written in C 89 (ANSI C) */
+/* moonfish is a very simple chess bot written in C89 (ANSI C) */
 
 /* in moonfish, pieces are each represented as a single 8-bit integer (char) */
 /* (note: only two hex digits fit in an 8-bit number) */
@@ -80,12 +80,6 @@
 #define moonfish_empty 0
 #define moonfish_outside 0xFF
 
-/* constants for search */
-/* depth: the maximum depth considerable feasibly reachable (in practice, it's much lower!) */
-/* omega: high value (used as integral infinity) */
-#define moonfish_depth 50
-#define moonfish_omega 5000000
-
 /* size of the PST */
 #define moonfish_size 270
 
@@ -149,7 +143,7 @@ int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, un
 /* likewise, the score returned is from the perspective of the player whose turn it is */
 int moonfish_best_move_time(struct moonfish_chess *chess, struct moonfish_move *move, long int time);
 
-/* same as above, but tries to optimises the time spent searching for the given time left on each player's clock */
+/* same as above, but tries to optimise the time spent searching for the given time left on each player's clock */
 int moonfish_best_move_clock(struct moonfish_chess *chess, struct moonfish_move *move, long int our_time, long int their_time);
 
 /* tries to find the best move on the given position with a given depth */
@@ -203,9 +197,11 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
 
 /* returns whether the game ended due to either checkmate or stalemate */
+/* note: 0 means false (i.e. not finished) */
 int moonfish_finished(struct moonfish_chess *chess);
 
 /* returns whether the game ended due to respectively checkmate or stalemate */
+/* note: 0 means false */
 int moonfish_checkmate(struct moonfish_chess *chess);
 int moonfish_stalemate(struct moonfish_chess *chess);
 
