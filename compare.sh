@@ -3,40 +3,59 @@
 # moonfish is licensed under the AGPL (v3 or later)
 # copyright 2024 zamfofex
 
-set -e
+set -ex
+set -o shwordsplit || :
 
-if [[ "x$1" = x ]]
-then
-	echo 'missing revision'
-	exit 1
-fi
+# note: this script has been tested to work with Bash and Zsh
+# (to use Zsh, invoke it explicitly: 'zsh compare.sh')
+
+# note: use this script only from the root/project directory
+
+make=gmake
+which "$make" &> /dev/null || make=make
 
 rm -f moonfish
-rm -rf compare
-mkdir compare
+mkdir -p compare
+[[ -f compare/openings.fen ]] || wget -O- https://moonfish.neocities.org/pohl.fen.xz | xz -d > compare/openings.fen
 
-make moonfish
-mv moonfish compare
+dirty=
+[[ "x$(git status --porcelain)" = x ]] || dirty=-dirty
 
-git checkout "$1"
+rev1="$(git rev-parse --short HEAD)"
+"$make" moonfish
+mv -f moonfish compare/moonfish-"$rev1$dirty"
 
-make moonfish
-rev="$(git rev-parse --short HEAD)"
-mv moonfish compare/"moonfish-$rev"
+git stash
+git switch "${1:-main}"
 
-git checkout -
+rev2="$(git rev-parse --short HEAD)"
+"$make" moonfish
+mv -f moonfish compare/moonfish-"$rev2"
+
+[[ "$rev1" = "$rev2" ]] || git switch -
+[[ "x$dirty" = x ]] || git stash pop
 
 cd compare
 
-wget -O- https://moonfish.neocities.org/pohl.pgn.xz | xz -d > openings.pgn
+cli=c-chess-cli
+cli_args="-pgn games.pgn"
+format=
+protocol=
 
-cutechess-cli \
-	-engine {name,cmd}=moonfish \
-	-engine {name,cmd}=moonfish-"$rev" \
-	-openings file=openings.pgn order=random \
-	-each proto=uci tc=inf/12+0.125 \
-	-games 2 -rounds 64 -repeat 2 -maxmoves 256 \
+if ! which "$cli" &> /dev/null
+then
+	cli=cutechess-cli
+	cli_args='-pgnout games.pgn'
+	format=format=epd
+	protocol=proto=uci
+fi
+
+"$cli" \
+	-engine {name=,cmd=./}moonfish-"$rev1$dirty" \
+	-engine {name=,cmd=./}moonfish-"$rev2" \
+	-each $protocol tc=inf/4+0.125 \
+	-openings $format file=openings.fen order=random \
+	-games 2 -rounds 64 \
 	-sprt elo0=0 elo1=12 alpha=0.05 beta=0.05 \
-	-ratinginterval 12 \
 	-concurrency 1 \
-	-pgnout "games.pgn"
+	$cli_args
