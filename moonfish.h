@@ -80,9 +80,6 @@
 #define moonfish_empty 0
 #define moonfish_outside 0xFF
 
-/* size of the PST */
-#define moonfish_size 270
-
 /* for tuning the PST */
 #ifdef moonfish_learn
 #define moonfish_t double

@@ -4,9 +4,11 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "../moonfish.h"
-#include "tools.h"
+
+#define moonfish_count 192
 
 static double moonfish_next_line(char *argv0, char *line, FILE *file)
 {
@@ -46,7 +48,7 @@ static double moonfish_next_line(char *argv0, char *line, FILE *file)
 		exit(1);
 	}
 	
-	return score * 100;
+	return score;
 }
 
 static double moonfish_gradient(double *gradient, double score0, char *fen)
@@ -61,7 +63,7 @@ static double moonfish_gradient(double *gradient, double score0, char *fen)
 	score = moonfish_score(&chess);
 	error = score - score0;
 	
-	for (i = 0 ; i < moonfish_size ; i++)
+	for (i = 0 ; i < moonfish_count ; i++)
 	{
 		prev = moonfish_values[i];
 		moonfish_values[i] += 1.0 / 256 / 256 / 8;
@@ -84,7 +86,7 @@ static double moonfish_step(char *argv0, FILE *file, double *gradient)
 	
 	error = 0;
 	
-	for (i = 0 ; i < moonfish_size ; i++) gradient[i] = 0;
+	for (i = 0 ; i < moonfish_count ; i++) gradient[i] = 0;
 	
 	for (i = 0 ; i < 2048 ; i++)
 	{
@@ -92,7 +94,7 @@ static double moonfish_step(char *argv0, FILE *file, double *gradient)
 		error += moonfish_gradient(gradient, score, line);
 	}
 	
-	for (i = 0 ; i < moonfish_size ; i++)
+	for (i = 0 ; i < moonfish_count ; i++)
 		moonfish_values[i] -= gradient[i] / 2048;
 	
 	return error;
@@ -100,7 +102,7 @@ static double moonfish_step(char *argv0, FILE *file, double *gradient)
 
 int main(int argc, char **argv)
 {
-	static double gradient[moonfish_size];
+	static double gradient[moonfish_count];
 	
 	FILE *file;
 	int i;
@@ -138,7 +140,7 @@ int main(int argc, char **argv)
 		error = moonfish_step(argv[0], file, gradient);
 		
 		printf("\n");
-		for (i = 0 ; i < moonfish_size ; i++)
+		for (i = 0 ; i < moonfish_count ; i++)
 			printf("%.0f,", moonfish_values[i]);
 		printf("\n");
 		

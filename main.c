@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 						perror(argv[0]);
 						return 1;
 					}
-					if (*end != 0 || depth < 0 || depth > 100)
+					if (*end != 0 || depth < 0 || depth > 1000)
 					{
 						fprintf(stderr, "%s: malformed depth in 'go' command\n", argv[0]);
 						return 1;
@@ -133,6 +133,10 @@ int main(int argc, char **argv)
 						return 1;
 					}
 				}
+				else
+				{
+					fprintf(stderr, "%s: warning: unexpected '%s' in 'go' command\n", argv[0], arg);
+				}
 			}
 			
 			if (our_time < 0) our_time = 0;
@@ -146,7 +150,7 @@ int main(int argc, char **argv)
 				score = moonfish_best_move_clock(&chess, &move, our_time, their_time);
 			
 			if (depth < 0) depth = 1;
-			printf("info depth %d score cp %ld\n", depth, score / 100);
+			printf("info depth %d score cp %ld\n", depth, score);
 			
 			moonfish_to_uci(&chess, &move, name);
 			printf("bestmove %s\n", name);

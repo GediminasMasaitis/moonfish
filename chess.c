@@ -3,62 +3,6 @@
 
 #include "moonfish.h"
 
-moonfish_t moonfish_values[moonfish_size] = {10018,6197,13742,20265,18885,-342,0,6774,8234,19746,19826,8133,7748,0,14909,19962,16209,-626,3200,11794,0,20831,17808,2331,9960,11154,16101,0,16443,-321,9922,9553,11914,15629,0,-889,13093,2080,1464,6178,889,0,11428,7046,14154,17650,17730,2406,10440,7005,13087,19265,19949,410,7084,7102,38,19215,21044,845,9384,7266,13726,20727,19654,-81,9528,7427,11709,20251,1861,9603,9701,7048,11465,20080,9603,0,0,0,0,0,23861,19671,20199,18789,13275,7766,7405,7237,7018,-1804,-2692,-2458,3890,-4358,-4924,-4265,3114,-4929,-5637,-6308,3834,-3087,-5210,-7140,0,0,0,0,11102,8573,8899,10834,14265,11479,3003,4139,13080,3599,-8431,-7074,14841,3244,-8967,-8168,13439,1982,-10393,-10556,10011,-458,-12847,-13100,15511,10850,-1595,-1143,9901,15251,8821,9572,26448,15718,17220,17953,16633,-6319,-6154,-5215,21217,-5336,-3635,-3049,20050,-4507,-4287,-2630,19910,-5376,-4347,-4017,19474,-5900,-5030,-4681,18801,-5651,-6395,-7239,29091,17184,16394,16484,36920,16419,16372,17421,17661,-2571,-1461,-1335,16435,-2556,-2056,-2014,14483,-4074,-3829,-3995,11706,-6133,-6216,-6371,9694,-8191,-8385,-8176,7358,-10570,-9813,-9690,27362,9776,11255,11747,71012,35511,38170,40036,37937,-16976,-13070,-11601,38573,-14295,-12982,-10860,39968,-16951,-14245,-14049,38376,-17331,-18035,-18791,36345,-19106,-18880,-19951,33663,-21879,-21634,-21735,68560,31904,32329,33224,169,3435,3850,3038,1695,8128,5002,4953,691,4616,3554,2015,-2061,186,779,-471,-5789,-2687,-1912,-1942,-5593,-3130,-2840,-3162,-1159,-144,-1939,-3987,-377,1153,-3549,-2521};
-
-moonfish_t moonfish_score(struct moonfish_chess *chess)
-{
-	static int deltas[][5] =
-	{
-		{0}, {9, 11, 0},
-		{21, 19, 12, 8, 0},
-		{11, 9, 0},
-		{10, 1, 0},
-		{10, 1, 11, 9, 0},
-		{10, 1, 11, 9, 0},
-	};
-	
-	int x, y;
-	int x1, y1;
-	int from;
-	unsigned char type, color, other;
-	int i, j;
-	moonfish_t score, value;
-	
-	score = 0;
-	
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
-	{
-		from = (x + 1) + (y + 2) * 10;
-		type = chess->board[from] % 16;
-		color = chess->board[from] / 16;
-		
-		if (chess->board[from] != moonfish_empty)
-		{
-			x1 = x;
-			y1 = y;
-			if (x1 > 3) x1 = 7 - x1;
-			if (color == 1) y1 = 7 - y1;
-			score -= moonfish_values[78 + x1 + y1 * 4 + (type - 1) * 32] * (color * 2 - 3);
-		}
-		
-		for (j = 0 ; j < 2 ; j++)
-		for (i = 0 ; deltas[type][i] ; i++)
-		{
-			if (type == moonfish_pawn && j != color - 1) continue;
-			other = chess->board[from + deltas[type][i] * (j * 2 - 1)];
-			if (other == moonfish_outside) continue;
-			if (other / 16 != color) other %= 16;
-			else other = other % 16 + 6;
-			value = moonfish_values[other * 6 + type - 1];
-			if (color == 2) value *= -1;
-			score += value;
-		}
-	}
-	
-	return score;
-}
-
 static void moonfish_force_promotion(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to, unsigned char promotion)
 {
 	(*moves)->from = from;
@@ -418,13 +362,10 @@ int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, uns
 	
 	for (i = 0 ; i < count ; i++)
 	{
-		if (moves[i].to == to)
+		if (moves[i].to == to && moonfish_validate(&moves[i].chess))
 		{
-			if (moonfish_validate(&moves[i].chess))
-			{
-				*found = moves[i];
-				return 0;
-			}
+			*found = moves[i];
+			return 0;
 		}
 	}
 	
@@ -471,6 +412,7 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 			continue;
 		}
 		
+		/* note: assumes ASCII */
 		if (ch >= 'A' && ch <= 'Z')
 			ch -= 'A' - 'a',
 			color = 0x10;
