@@ -14,18 +14,18 @@ packages:
   - wasi-sdk
   - clang
   - lld
-  - llvm
+  - binaryen
 tasks:
   - build: |
       cd moonfish
       make LDFLAGS=-static
       make LDFLAGS=-static CC=x86_64-w64-mingw32-gcc moonfish.exe
-      make LDFLAGS='-static -Wl,--max-memory=1073741824' CC='clang --target=wasm32-wasi-threads --sysroot=/usr/share/wasi-sysroot' moonfish.wasm
+      make LDFLAGS=-static CC='clang --target=wasm32-wasi' CPPFLAGS='-Dmoonfish_no_threads' moonfish.wasm
       ./minify.sh
   - strip: |
       cd moonfish
       strip --strip-all moonfish play lichess analyse battle ribbon chat book
-      llvm-strip --strip-all moonfish.wasm
+      wasm-opt -O4 -o moonfish.wasm moonfish.wasm
   - deploy: |
       set +x
       if test "x$GIT_REF" = x || ! test -f neocities-token.txt

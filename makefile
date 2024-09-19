@@ -9,16 +9,20 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
 tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
+wasm_cc := $(cc) -D_POSIX_C_SOURCE=199309L
 
 tools_src := moonfish.h tools/tools.h tools/utils.c chess.c
 ugi_src := $(tools_src) tools/ugi.h tools/ugi.c tools/ugi-uci.c
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall check
 
 all: moonfish play lichess analyse battle ribbon chat uci-ugi ugi-uci book
 
-moonfish moonfish.exe moonfish.wasm: moonfish.h chess.c search.c main.c
+moonfish moonfish.exe: moonfish.h chess.c search.c main.c
 	$(moonfish_cc) -o $@ $(filter %.c,$^)
+
+moonfish.wasm: moonfish.h chess.c search.c main.c
+	$(wasm_cc) -o $@ $(filter %.c,$^)
 
 %: $(tools_src) tools/%.c
 	$(tools_cc) -o $@ $(filter %.c,$^)
@@ -35,8 +39,11 @@ ugi-uci: $(ugi_src)
 uci-ugi: $(ugi_src)
 	$(tools_cc) -o $@ $(filter %.c,$^)
 
-learn: $(tools_src) tools/learn.c
+learn: $(tools_src) search.c tools/learn.c
 	$(tools_cc) -Dmoonfish_learn -o $@ $(filter %.c,$^)
+
+check: perft
+	./check.sh
 
 clean:
 	git clean -fdx

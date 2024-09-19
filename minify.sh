@@ -5,6 +5,9 @@
 
 set -e
 
+sh="${shell:-"${SHELL:-bash}"}"
+cc="${HOST_CC:-gcc}"
+
 # for each C source file
 cat moonfish.h chess.c search.c mini.c |
 
@@ -23,7 +26,7 @@ sed 's/^static\b//g' |
 sed 's/^int\b//g' |
 sed 's/^void\b//g' |
 
-#remove redundant 'int'
+# remove redundant 'int'
 sed 's/\bstatic int\b/static/g' |
 
 # remove the '#' from system '#include'
@@ -31,7 +34,7 @@ sed 's/^#\(include <\)/\1/g' |
 
 # preprocess the file, add '#' back to 'include'
 # note: this materialises the whole file
-gcc -E -Dinclude='#include' -Dmoonfish_mini - |
+"$cc" -E -Dinclude='#include' -Dmoonfish_mini - |
 
 # remove lines starting with '# '
 sed '/^# /d' |
@@ -54,7 +57,7 @@ sed 's/\('"'"'\(\\.\|.\)*'"'"'\)/\n\1\n/g' |
 sed '/^[^"'"'"'#]/s/[a-z0-9_]\+/\n\0\n/gi' |
 
 # rename identifiers to be shorter
-./rename.sh |
+"$sh" rename.sh |
 
 # replace all white space with tabs (except inside string literals)
 # note: this makes the next 'sed' materialise the whole file
