@@ -178,7 +178,7 @@ static moonfish_result_t moonfish_start_search(void *data)
 	
 	thread->score = -moonfish_search(
 		thread, &thread->move.chess,
-		-4 * moonfish_omega, 4 * moonfish_omega,
+		-moonfish_omega, moonfish_omega,
 		thread->analysis->depth, moonfish_clock(), thread->analysis->time
 	);
 	
@@ -240,7 +240,7 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 		}
 	}
 	
-	analysis->score = -6 * moonfish_omega;
+	analysis->score = -2 * moonfish_omega;
 	
 	for (i = 0 ; i < j ; i++)
 	{

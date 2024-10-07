@@ -2,7 +2,6 @@
 /* copyright 2023, 2024 zamfofex */
 
 #include <string.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <termios.h>
