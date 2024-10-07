@@ -23,4 +23,6 @@ char *moonfish_wait(FILE *file, char *name);
 char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, char **argv);
 void moonfish_usage(struct moonfish_arg *args, char *rest_format, char *argv0);
 
+int moonfish_int(char *arg, int *result);
+
 #endif

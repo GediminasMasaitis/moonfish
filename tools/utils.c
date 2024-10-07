@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <sys/un.h>
+#include <limits.h>
 
 #include "tools.h"
 
@@ -479,6 +480,19 @@ char *moonfish_wait(FILE *file, char *name)
 		if (!strcmp(line, name))
 			return strtok_r(NULL, "\r\n\t ", &buffer);
 	}
+}
+
+int moonfish_int(char *arg, int *result)
+{
+	char *end;
+	long int long_result;
+	errno = 0;
+	long_result = strtol(arg, &end, 10);
+	if (errno != 0 || *end != 0) return 1;
+	if (long_result < INT_MIN) return 1;
+	if (long_result > INT_MAX) return 1;
+	*result = long_result;
+	return 0;
 }
 
 static void moonfish_usage_to(struct moonfish_arg *args, char *rest_format, char *argv0, FILE *out)
