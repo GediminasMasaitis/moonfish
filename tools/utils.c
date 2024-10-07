@@ -50,8 +50,10 @@ void moonfish_spawner(char *argv0)
 	char *directory;
 	struct sigaction action;
 	pthread_t thread;
-	int fds[2];
+	int fds[2], fds2[2];
 	struct sockaddr_un address = {0};
+	char ch;
+	ssize_t size;
 	
 	moonfish_spawner_argv0 = argv0;
 	
@@ -68,6 +70,12 @@ void moonfish_spawner(char *argv0)
 		exit(1);
 	}
 	
+	if (pipe(fds2) != 0)
+	{
+		perror(argv0);
+		exit(1);
+	}
+	
 	moonfish_spawner_pid = fork();
 	if (moonfish_spawner_pid < 0)
 	{
@@ -76,8 +84,23 @@ void moonfish_spawner(char *argv0)
 	}
 	
 	if (moonfish_spawner_pid != 0)
+	{
+		close(fds2[1]);
+		for (;;)
+		{
+			size = read(fds2[0], &ch, 1);
+			if (size > 0) break;
+			if (size < 0)
+			{
+				perror(argv0);
+				exit(1);
+			}
+		}
+		close(fds2[0]);
 		return;
+	}
 	
+	close(fds2[0]);
 	close(fds[1]);
 	
 	pthread_create(&thread, NULL, &moonfish_read_pipe, fds);
@@ -131,6 +154,18 @@ void moonfish_spawner(char *argv0)
 		perror(argv0);
 		exit(1);
 	}
+	
+	for (;;)
+	{
+		size = write(fds2[1], &ch, 1);
+		if (size > 0) break;
+		if (size < 0)
+		{
+			perror(argv0);
+			exit(1);
+		}
+	}
+	close(fds2[1]);
 	
 	for (;;)
 	{
@@ -370,7 +405,7 @@ void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory)
 		exit(1);
 	}
 	
-	if (fwrite(directory, count, 1, *in) != 1)
+	if (count > 0 && fwrite(directory, count, 1, *in) != 1)
 	{
 		perror(moonfish_spawner_argv0);
 		exit(1);
