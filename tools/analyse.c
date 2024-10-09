@@ -58,15 +58,15 @@ static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 	if (piece == moonfish_empty)
 	{
 		printf("  ");
-		return;	
+		return;
 	}
 	
-	if (piece >> 4 == 1)
+	if (piece / 16 == 1)
 		printf("\x1B[38;5;253m");
 	else
 		printf("\x1B[38;5;240m");
 	
-	switch (piece & 0xF)
+	switch (piece % 16)
 	{
 	case 1:
 		printf("\xE2\x99\x9F ");
@@ -140,22 +140,30 @@ static void moonfish_evaluation(struct moonfish_fancy *fancy)
 	draw = 16 - white - black;
 	
 	while (black > 1)
-		printf("\x1B[48;5;240m \x1B[0m\x1B[B\x08"),
+	{
+		printf("\x1B[48;5;240m \x1B[0m\x1B[B\x08");
 		black -= 2;
+	}
 	
 	if (black)
 	{
 		if (draw)
-			printf("\x1B[38;5;67m\x1B[48;5;240m\xE2\x96\x84\x1B[0m\x1B[B\x08"),
+		{
+			printf("\x1B[38;5;67m\x1B[48;5;240m\xE2\x96\x84\x1B[0m\x1B[B\x08");
 			draw--;
+		}
 		else
-			printf("\x1B[38;5;253m\x1B[48;5;240m\xE2\x96\x84\x1B[0m\x1B[B\x08"),
+		{
+			printf("\x1B[38;5;253m\x1B[48;5;240m\xE2\x96\x84\x1B[0m\x1B[B\x08");
 			white--;
+		}
 	}
 	
 	while (draw > 1)
-		printf("\x1B[48;5;67m \x1B[0m\x1B[B\x08"),
+	{
+		printf("\x1B[48;5;67m \x1B[0m\x1B[B\x08");
 		draw -= 2;
+	}
 	
 	if (draw)
 	{
@@ -210,7 +218,7 @@ static void moonfish_scoresheet_move(struct moonfish_fancy *fancy, int i)
 	else if (i > 0)
 	{
 		score = ply->score + fancy->plies[i - 1].score;
-		if (fancy->plies[i - 1].checkmate || score > 200) printf("\x1B[38;5;124m?? ");
+		if (fancy->plies[i - 1].checkmate != 0 || score > 200) printf("\x1B[38;5;124m?? ");
 		else if (score > 100) printf("\x1B[38;5;173m?  ");
 		else printf("   ");
 	}
@@ -660,7 +668,49 @@ int main(int argc, char **argv)
 		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
 	}
 	
-	/* set up terminal for displaying the user interface */
+	/* initialise data structures */
+	
+	fancy = malloc(sizeof *fancy);
+	if (fancy == NULL)
+	{
+		perror(argv[0]);
+		return 1;
+	}
+	
+	fancy->argv0 = argv[0];
+	fancy->mutex = &mutex;
+	fancy->offset = 0;
+	fancy->pv[0] = 0;
+	fancy->idle = 1;
+	fancy->stop = 0;
+	
+	fancy->x = 0;
+	fancy->y = 0;
+	
+	fancy->i = 0;
+	fancy->count = 1;
+	
+	strcpy(fancy->plies[0].san, "...");
+	
+	fancy->plies[0].white = 0;
+	fancy->plies[0].black = 0;
+	fancy->plies[0].draw = 0;
+	fancy->plies[0].checkmate = 0;
+	fancy->plies[0].depth = 0;
+	fancy->plies[0].score = 0;
+	
+	moonfish_chess(&fancy->plies[0].chess);
+	if (args[0].value == NULL)
+	{
+		fancy->fen = NULL;
+	}
+	else
+	{
+		fancy->fen = args[0].value;
+		moonfish_from_fen(&fancy->plies[0].chess, fancy->fen);
+	}
+	
+	/* configure the terminal for displaying the user interface */
 	
 	if (tcgetattr(0, &moonfish_termios))
 	{
@@ -711,51 +761,9 @@ int main(int argc, char **argv)
 	printf("\x1B[?1000h");
 	fflush(stdout);
 	
-	/* initialise data structures */
-	
-	fancy = malloc(sizeof *fancy);
-	if (fancy == NULL)
-	{
-		perror(argv[0]);
-		return 1;
-	}
-	
-	fancy->argv0 = argv[0];
-	fancy->mutex = &mutex;
-	fancy->offset = 0;
-	fancy->pv[0] = 0;
-	fancy->idle = 1;
-	fancy->stop = 0;
-	
-	fancy->x = 0;
-	fancy->y = 0;
+	/* begin setting up UCI bot */
 	
 	moonfish_spawn(command, &fancy->in, &fancy->out, NULL);
-	
-	fancy->i = 0;
-	fancy->count = 1;
-	
-	strcpy(fancy->plies[0].san, "...");
-	
-	fancy->plies[0].white = 0;
-	fancy->plies[0].black = 0;
-	fancy->plies[0].draw = 0;
-	fancy->plies[0].checkmate = 0;
-	fancy->plies[0].depth = 0;
-	fancy->plies[0].score = 0;
-	
-	moonfish_chess(&fancy->plies[0].chess);
-	if (args[0].value == NULL)
-	{
-		fancy->fen = NULL;
-	}
-	else
-	{
-		fancy->fen = args[0].value;
-		moonfish_from_fen(&fancy->plies[0].chess, fancy->fen);
-	}
-	
-	/* begin setting up UCI bot */
 	
 	fprintf(fancy->in, "uci\n");
 	moonfish_wait(fancy->out, "uciok");
@@ -943,7 +951,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 		
-		/* only handle cases where there a square selected henceforth */
+		/* only handle cases where a square is selected henceforth */
 		if (fancy->x == 0)
 		{
 			pthread_mutex_unlock(fancy->mutex);
