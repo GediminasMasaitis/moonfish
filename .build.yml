@@ -24,10 +24,11 @@ tasks:
       shell=bash ./minify.sh
   - strip: |
       cd moonfish
-      strip --strip-all moonfish play lichess analyse battle ribbon chat book
+      strip --strip-all moonfish play lichess analyse chat
       wasm-opt -O4 -o moonfish.wasm moonfish.wasm
   - deploy: |
       set +x
+      
       if test "x$GIT_REF" = x || ! test -f neocities-token.txt
       then exit 0
       fi
@@ -43,21 +44,8 @@ tasks:
         -F "$root"/play=@play \
         -F "$root"/lichess=@lichess \
         -F "$root"/analyse=@analyse \
-        -F "$root"/battle=@battle \
-        -F "$root"/ribbon=@ribbon \
         -F "$root"/chat=@chat \
         -F "$root"/moonfish.sh=@moonfish.sh \
         -F "$root"/moonfish.exe=@moonfish.exe \
         -F "$root"/moonfish.wasm=@moonfish.wasm \
-        -F "$root"/book=@book \
-        -F "$root"/book.txt=@book.txt \
         https://neocities.org/api/upload
-artifacts:
-  - moonfish/moonfish
-  - moonfish/moonfish.sh
-  - moonfish/moonfish.exe
-  - moonfish/moonfish.wasm
-  - moonfish/play
-  - moonfish/lichess
-  - moonfish/analyse
-  - moonfish/book

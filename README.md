@@ -28,8 +28,6 @@ table of contents
 - using moonfish’s tools
   - [using “play” and “analyse”](#using-play-and-analyse)
   - [using “book”](#using-book) (for adding simple opening book support to bots without it by wrapping them)
-  - [using “battle” and “ribbon”](#using-battle-and-ribbon) (for setting up tournaments between bots)
-  - [using “ugi-uci” and “uci-ugi”](#using-ugi-uci-and-uci-ugi) (for using UCI bots in UGI programs and vice-versa)
   - [using “chat”](#using-chat) and [using “lichess”](#using-lichess) (for integrating with IRC and Lichess)
 - [helping improve moonfish!](#contributing-to-moonfish)
 - [license](#license)
@@ -41,7 +39,6 @@ features
 - alpha/beta pruning search
 - cute custom UCI TUIs
 - custom Lichess integration
-- custom UGI/UCI translators
 - custom IRC integration
 
 limitations
@@ -98,7 +95,7 @@ using “play” and “analyse”
 make play analyse
 ~~~
 
-“play” and “analyse” are TUI that allows you to play against and analyse with UCI bots respectively.
+“play” and “analyse” are TUIs that allows you to play against and analyse with UCI bots respectively.
 
 After compiling and running them, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
 
@@ -130,124 +127,6 @@ To analyse a game with a UCI bot, use `./analyse` followed optionally by the UCI
 # (analyse a game using Leela, showing win/draw/loss evaluation)
 ./analyse lc0 --show-wdl
 ~~~
-
-using "book"
----
-
-~~~
-make book
-~~~
-
-Opening book support for moonfish is handled with the “book” utility. You specify a opening book file name to it as well as the command for a UCI bot, and it will intercept that bot’s communication with the GUI to make it play certain openings.
-
-The format for opening book files is very simple: One opening per line with move names in either SAN or UCI format separated by spaces. (Move numbers are no allowed.) Empty lines are ignores, `#` is used for comments. Check out the `book.txt` file for an example.
-
-Invalid opening book files will be rejected early.
-
-~~~
-# (have moonfish play openings from the given file)
-./book --file=book.txt ./moonfish
-~~~
-
-using “battle” and “ribbon”
----
-
-~~~
-make battle ribbon
-~~~
-
-The CLI tools, called “battle” and “ribbon” can be used to (respectively) play a single game between two bots and to play a tournament between any given number of bots.
-
-The “battle” CLI may be used to have two UCI or UGI bots play against each other. Each bot has to be specified between brackets (these ones: `[` and `]`).
-
-~~~
-./battle [ stockfish ] [ lc0 --preload ] > game.pgn
-~~~
-
-The bot specified first will play as white (or p1 for UGI) and the bot specified second will play as black (or p2 for UGI).
-
-The program will write a simplified PGN variant to stdout with the game as it happens.
-
-The program will also annouce to stderr the start and end of the game.
-
-If your bot’s command requires a `]` to be used as an argument, you may use double brackets instead, like `./battle [[ unusual ] --foo ]] [ stockfish ]`. You may use as many brackets as necessary, you just have to match them when closing.
-
-If your bot’s command starts with a dash, you may precede it by `--`, like `./battle [ -- -unusual ] [ stockfish ]`
-
-A FEN string may be passed in to the `battle` command, like `./battle --fen='...' [ stockfish ] [ lc0 ]`
-
-You may also pass in a time control, with time and increment both in milliseconds, like `./battle [ --time=6000+500 stockfish ] [ ./moonfish ]` Since each bot may have a different time control, this has to be specified within the backets for a specific bot. The default is fifteen minutes with ten seconds of increment.
-
-You may also pass in `x` as the first character of the given time control to make it “fixed”, which means that it will be reset after every move. This can be used to set a fixed time per move, for example. For example, `./battle [ --time=1000+0 stockfish ] [ --time --time=x1000+0 ./moonfish ]` will set a countdown clock starting at one second for Stockfish, but allow one second for moonfish for every move.
-
-In order to use a UGI bot, you may also pass in `--protocol=ugi` to that bot, like `./battle [ --protocol=ugi some-bot ] [ stockfish ]`. If both bots are UGI, then the game is not assumed to be chess, and the bot playing as p1 will be queried for the status of the game. In that case, the PGN will contain UGI notation as output directly by the engines, rather than SAN notation.
-
-- - -
-
-“ribbon” is a CLI for setting up a round‐robin tournament between multiple bots with the help of the “battle” program mentioned above and a makefile (currently requiring GNU Make).
-
-It will output a makefile to stdout, which may be used by GNU Make to start the tournament between the given bots.
-
-You may use the `-j` option of GNU Make to configure the number of concurrent games to play. Likewise, you may stop a given tournament with `ctrl-c` and continue it by simply running Make again.
-
-You may modify the makefile to prevent certain games from continuing to be played.
-
-Each bot’s command should be passed in as a single argument to `./ribbon`, including potential `--time=...` and `--protocol=...` options to be interpreted by “battle”.
-
-The file name of an opening book may be passed in, and the file should contain one FEN per line. Empty lines and comments starting with `#` are allowed.
-
-In addition, as a matter of convenience, you may specify `--time=...` to “ribbon” itself, which will be passed in verbatim to “battle”.
-
-~~~
-# prepare a tournament between Stockfish, Leela and moonfish:
-./ribbon stockfish lc0 ./moonfish > makefile
-
-# same as above, but with an argument passed in to Leela:
-./ribbon stockfish 'lc0 --preload' ./moonfish > makefile
-
-# same, but with the time control made explicit:
-./ribbon --time=18000+1000 stockfish 'lc0 --preload' ./moonfish > makefile
-
-# same, but with a different time control for Stockfish:
-# (mind the '--' separating "ribbon" options from the bot options for "battle")
-./ribbon --time=18000+1000 -- '--time=6000+0 stockfish' 'lc0 --preload' ./moonfish > makefile
-
-# start the tournament, with at most two games being played at any given time:
-make -j2
-
-# concatenate the resulting game PGNs into a single file.
-cat *.pgn > result.pgn
-~~~
-
-In addition, you may specify the “battle” command to “ribbon”, which must be done if “battle” is not installed on your system as `moonfish-battle`, like `./ribbon --battle=./battle stockfish lc0`
-
-~~~
-# prepare a tournament using the locally-built "battle":
-./ribbon --battle=./battle stockfish lc0 ./moonfish > makefile
-
-# set up a timeout of thirty seconds for each game:
-./ribbon --time=1000+0 --battle='timeout 30 moonfish-battle' stockfish lc0 ./moonfish > makefile
-
-# same as above, but with locally-built "battle":
-./ribbon --time=1000+0 --battle='timeout 30 ./battle' stockfish lc0 ./moonfish > makefile
-
-# pick up the tournament again on every failure (possibly due to timeout):
-while ! make
-do : ; done
-~~~
-
-using “ugi-uci“ and “uci-ugi”
----
-
-~~~
-make ugi-uci uci-ugi
-~~~
-
-`ugi-uci` may be used to let a UGI GUI communicate with a UCI bot, and conversely, `uci-ugi` may be used to let a UCI GUI communicate with a UGI bot.
-
-Simply pass the command of the bot as arguments to either of these tools, and it’ll translate it to be used by the respective GUI.
-
-Note that if the GUI sends a `uci`/`gui` command to the bot that is the same as its protocol, no translation will happen, and the commands will be passed in verbatim between them.
 
 using “chat”
 ---
