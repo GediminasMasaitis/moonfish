@@ -9,13 +9,10 @@
 !/.build.yml
 !/check.sh
 !/moonfish.vcxproj
-!/minify.sh
-!/rename.sh
 !/moonfish.h
 !/chess.c
 !/search.c
 !/main.c
-!/mini.c
 !/tools
 !/tools/tools.h
 !/tools/utils.c

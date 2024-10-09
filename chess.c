@@ -1,6 +1,8 @@
 /* moonfish is licensed under the AGPL (v3 or later) */
 /* copyright 2023, 2024 zamfofex */
 
+#include <string.h>
+
 #include "moonfish.h"
 
 static void moonfish_force_promotion(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to, unsigned char promotion)
@@ -276,12 +278,10 @@ int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, 
 	int i, count;
 	struct moonfish_move moves[32];
 	
-#ifndef moonfish_mini
 	if (name[0] < 'a' || name[0] > 'h') return 1;
 	if (name[1] < '1' || name[1] > '8') return 1;
 	if (name[2] < 'a' || name[2] > 'h') return 1;
 	if (name[3] < '1' || name[3] > '8') return 1;
-#endif
 	
 	x0 = name[0] - 'a';
 	y0 = name[1] - '1';
@@ -348,10 +348,6 @@ void moonfish_to_uci(struct moonfish_chess *chess, struct moonfish_move *move, c
 		name[5] = 0;
 	}
 }
-
-#ifndef moonfish_mini
-
-#include <string.h>
 
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, unsigned char from, unsigned char to)
 {
@@ -835,5 +831,3 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	
 	*name = 0;
 }
-
-#endif

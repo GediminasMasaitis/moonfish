@@ -116,8 +116,6 @@ struct moonfish_move
 	unsigned char from, to;
 };
 
-#ifndef moonfish_mini
-
 /* the PST */
 extern moonfish_t moonfish_values[];
 
@@ -201,7 +199,5 @@ int moonfish_finished(struct moonfish_chess *chess);
 /* note: 0 means false */
 int moonfish_checkmate(struct moonfish_chess *chess);
 int moonfish_stalemate(struct moonfish_chess *chess);
-
-#endif
 
 #endif

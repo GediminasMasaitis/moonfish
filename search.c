@@ -81,15 +81,11 @@ static long int moonfish_clock(void)
 {
 	struct timespec ts;
 	
-#ifdef moonfish_mini
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-#else
 	if (clock_gettime(CLOCK_MONOTONIC, &ts))
 	{
 		perror(NULL);
 		exit(1);
 	}
-#endif
 	
 	return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
@@ -187,7 +183,6 @@ static moonfish_result_t moonfish_start_search(void *data)
 
 static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfish_move *best_move)
 {
-	int result;
 	int x, y;
 	struct moonfish_move moves[32];
 	int i, j, count;
@@ -227,14 +222,11 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 			analysis->threads[j].analysis = analysis;
 			analysis->threads[j].move = moves[i];
 			
-			result = thrd_create(&analysis->threads[j].thread, &moonfish_start_search, analysis->threads + j);
-#ifndef moonfish_mini
-			if (result != thrd_success)
+			if (thrd_create(&analysis->threads[j].thread, &moonfish_start_search, analysis->threads + j) != thrd_success)
 			{
 				fprintf(stderr, "error creating thread\n");
 				exit(1);
 			}
-#endif
 			
 			j++;
 		}
@@ -244,14 +236,11 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 	
 	for (i = 0 ; i < j ; i++)
 	{
-		result = thrd_join(analysis->threads[i].thread, NULL);
-#ifndef moonfish_mini
-		if (result != thrd_success)
+		if (thrd_join(analysis->threads[i].thread, NULL) != thrd_success)
 		{
 			fprintf(stderr, "error joining thread\n");
 			exit(1);
 		}
-#endif
 		
 		if (analysis->threads[i].score > analysis->score)
 		{
@@ -260,8 +249,6 @@ static void moonfish_iteration(struct moonfish_analysis *analysis, struct moonfi
 		}
 	}
 }
-
-#ifndef moonfish_mini
 
 int moonfish_best_move_depth(struct moonfish_chess *chess, struct moonfish_move *best_move, int depth)
 {
@@ -273,8 +260,6 @@ int moonfish_best_move_depth(struct moonfish_chess *chess, struct moonfish_move 
 	moonfish_iteration(&analysis, best_move);
 	return analysis.score;
 }
-
-#endif
 
 int moonfish_best_move_time(struct moonfish_chess *chess, struct moonfish_move *best_move, long int time)
 {
