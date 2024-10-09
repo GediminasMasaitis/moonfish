@@ -319,6 +319,7 @@ static void *moonfish_start(void *data)
 	char *buffer;
 	unsigned int i, length;
 	int changed;
+	int pv;
 	
 	fancy = data;
 	
@@ -353,6 +354,8 @@ static void *moonfish_start(void *data)
 		ply = fancy->plies[fancy->i];
 		ply.depth = 0;
 		
+		pv = 0;
+		
 		for (;;)
 		{
 			arg = strtok_r(NULL, "\r\n\t ", &buffer);
@@ -376,10 +379,24 @@ static void *moonfish_start(void *data)
 				continue;
 			}
 			
+			if (!strcmp(arg, "multipv"))
+			{
+				arg = strtok_r(NULL, "\r\n\t ", &buffer);
+				if (arg == NULL || moonfish_int(arg, &pv) != 0 || pv <= 0)
+				{
+					fprintf(stderr, "%s: malformed 'multipv' in 'info' command\n", fancy->argv0);
+					exit(1);
+				}
+				
+				continue;
+			}
+			
 			if (!strcmp(arg, "pv"))
 			{
 				changed = 1;
 				fancy->idle = 0;
+				
+				if (pv < 1) pv = 1;
 				
 				i = 0;
 				while (i < sizeof fancy->pv - 1)
@@ -391,7 +408,16 @@ static void *moonfish_start(void *data)
 						fprintf(stderr, "%s: invalid move: %s\n", fancy->argv0, arg);
 						exit(1);
 					}
-					if (i == 0) strcpy(ply.best, arg);
+					if (i == 0 && pv == 1)
+					{
+						strcpy(ply.best, arg);
+					}
+					if (pv > 1)
+					{
+						ply.chess = move.chess;
+						i = 1;
+						continue;
+					}
 					moonfish_to_san(&ply.chess, &move, san);
 					length = strlen(san);
 					if (i + length > sizeof fancy->pv - 2) break;
@@ -635,8 +661,6 @@ int main(int argc, char **argv)
 	char **options;
 	int i;
 	
-	moonfish_spawner(argv[0]);
-	
 	/* handle command line arguments */
 	
 	command = moonfish_args(args, format, argc, argv);
@@ -647,21 +671,18 @@ int main(int argc, char **argv)
 	for (;;)
 	{
 		value = strchr(*command, '=');
-		if (value == NULL)
-		{
-			if (!strcmp(*command, "--"))
-			{
-				command_count--;
-				command++;
-				
-				if (command_count <= 0) moonfish_usage(args, format, argv[0]);
-			}
-			
-			break;
-		}
+		if (value == NULL) break;
 		
 		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(args, format, argv[0]);
 		
+		command_count--;
+		command++;
+		
+		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+	}
+	
+	if (!strcmp(*command, "--"))
+	{
 		command_count--;
 		command++;
 		
@@ -698,6 +719,7 @@ int main(int argc, char **argv)
 	fancy->plies[0].checkmate = 0;
 	fancy->plies[0].depth = 0;
 	fancy->plies[0].score = 0;
+	fancy->plies[0].best[0] = 0;
 	
 	moonfish_chess(&fancy->plies[0].chess);
 	if (args[0].value == NULL)
@@ -791,8 +813,15 @@ int main(int argc, char **argv)
 	
 	/* main UI loop */
 	
-	for (ch0 = 0 ; ch0 != EOF ; ch0 = getchar())
+	pthread_mutex_lock(fancy->mutex);
+	for (;;)
 	{
+		pthread_mutex_unlock(fancy->mutex);
+		ch0 = getchar();
+		pthread_mutex_lock(fancy->mutex);
+		
+		if (ch0 == EOF) break;
+		
 		if (ch0 != 0x1B) continue;
 		ch0 = getchar();
 		if (ch0 == EOF) break;
@@ -805,11 +834,9 @@ int main(int argc, char **argv)
 		if (ch0 == 'A')
 		{
 			if (fancy->i == 0) continue;
-			pthread_mutex_lock(fancy->mutex);
 			fancy->i = 0;
 			moonfish_scroll(fancy);
 			moonfish_go(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -817,11 +844,9 @@ int main(int argc, char **argv)
 		if (ch0 == 'B')
 		{
 			if (fancy->i == fancy->count - 1) continue;
-			pthread_mutex_lock(fancy->mutex);
 			fancy->i = fancy->count - 1;
 			moonfish_scroll(fancy);
 			moonfish_go(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -829,11 +854,9 @@ int main(int argc, char **argv)
 		if (ch0 == 'C')
 		{
 			if (fancy->i == fancy->count - 1) continue;
-			pthread_mutex_lock(fancy->mutex);
 			fancy->i++;
 			moonfish_scroll(fancy);
 			moonfish_go(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -841,11 +864,9 @@ int main(int argc, char **argv)
 		if (ch0 == 'D')
 		{
 			if (fancy->i == 0) continue;
-			pthread_mutex_lock(fancy->mutex);
 			fancy->i--;
 			moonfish_scroll(fancy);
 			moonfish_go(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -870,42 +891,35 @@ int main(int argc, char **argv)
 		/* handle scroll up */
 		if (ch0 == 0x60)
 		{
-			pthread_mutex_lock(fancy->mutex);
 			if (fancy->offset > 0)
 			{
 				fancy->offset--;
 				moonfish_fancy(fancy);
 			}
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
 		/* handle scroll down */
 		if (ch0 == 0x61)
 		{
-			pthread_mutex_lock(fancy->mutex);
 			if (fancy->offset < fancy->count / 2 - 6)
 			{
 				fancy->offset++;
 				moonfish_fancy(fancy);
 			}
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
 		/* "(+)" button clicked */
 		if (ch0 == 0x20 && y1 == 1 && x1 >= 21 && x1 <= 23)
 		{
-			pthread_mutex_lock(fancy->mutex);
 			moonfish_bump(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
 		/* move name clicked (on scoresheet) */
 		if (ch0 == 0x20 && y1 >= 2 && y1 <= 7 && x1 >= 21 && x1 <= 40)
 		{
-			pthread_mutex_lock(fancy->mutex);
 			i = (fancy->offset + y1) * 2 - 4;
 			if (fancy->plies[0].chess.white) i++;
 			if (x1 > 30) i++;
@@ -914,14 +928,12 @@ int main(int argc, char **argv)
 				fancy->i = i;
 				moonfish_go(fancy);
 			}
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
 		/* "best move" button clicked */
 		if (ch0 == 0x20 && y1 == 8 && x1 >= 21 && x1 <= 40)
 		{
-			pthread_mutex_lock(fancy->mutex);
 			if (fancy->plies[fancy->i].best[0] != 0)
 			{
 				if (moonfish_from_uci(&fancy->plies[fancy->i].chess, &move, fancy->plies[fancy->i].best))
@@ -931,7 +943,6 @@ int main(int argc, char **argv)
 				}
 				moonfish_play(fancy, &move);
 			}
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -939,31 +950,23 @@ int main(int argc, char **argv)
 		if (x1 < 2 || x1 > 17 || y1 < 1 || y1 > 8) continue;
 		x1 /= 2;
 		
-		pthread_mutex_lock(fancy->mutex);
-		
 		/* mouse down with no square selected: select the square under the mouse */
 		if (ch0 == 0x20 && fancy->x == 0)
 		{
 			fancy->x = x1;
 			fancy->y = y1;
 			moonfish_fancy(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
 		/* only handle cases where a square is selected henceforth */
-		if (fancy->x == 0)
-		{
-			pthread_mutex_unlock(fancy->mutex);
-			continue;
-		}
+		if (fancy->x == 0) continue;
 		
 		/* handle mouse down: if the clicked square is the selected square, deselect it */
 		if (ch0 == 0x20 && x1 == fancy->x && y1 == fancy->y)
 		{
 			fancy->x = 0;
 			moonfish_fancy(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -972,7 +975,6 @@ int main(int argc, char **argv)
 		if (moonfish_move_from(&fancy->plies[fancy->i].chess, &move, fancy->x, fancy->y, x1, y1) == 0)
 		{
 			moonfish_play(fancy, &move);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
 		
@@ -982,11 +984,8 @@ int main(int argc, char **argv)
 			fancy->x = x1;
 			fancy->y = y1;
 			moonfish_fancy(fancy);
-			pthread_mutex_unlock(fancy->mutex);
 			continue;
 		}
-		
-		pthread_mutex_unlock(fancy->mutex);
 	}
 	
 	return 0;

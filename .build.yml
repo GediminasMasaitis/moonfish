@@ -2,29 +2,25 @@
 # copyright 2023, 2024 zamfofex
 
 image: alpine/latest
+
 secrets:
   - 72a028fc-f8df-43d3-a315-305d80720e45
+
 packages:
   - build-base
   - libressl-dev
-  - xz
-  - mingw-w64-gcc
   - curl
   - cjson-dev
-  - wasi-sdk
-  - clang
-  - lld
-  - binaryen
+
 tasks:
   - build: |
       cd moonfish
       make LDFLAGS=-static
-      make LDFLAGS=-static CC=x86_64-w64-mingw32-gcc moonfish.exe
-      make LDFLAGS=-static CC='clang --target=wasm32-wasi' CPPFLAGS='-Dmoonfish_no_threads' moonfish.wasm
+  
   - strip: |
       cd moonfish
       strip --strip-all moonfish play lichess analyse chat
-      wasm-opt -O4 -o moonfish.wasm moonfish.wasm
+  
   - deploy: |
       set +x
       
@@ -44,6 +40,4 @@ tasks:
         -F "$root"/lichess=@lichess \
         -F "$root"/analyse=@analyse \
         -F "$root"/chat=@chat \
-        -F "$root"/moonfish.exe=@moonfish.exe \
-        -F "$root"/moonfish.wasm=@moonfish.wasm \
         https://neocities.org/api/upload

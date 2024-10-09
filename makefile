@@ -4,39 +4,26 @@
 CFLAGS ?= -ansi -O3 -Wall -Wextra -Wpedantic
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
+RM ?= rm -f
 
 cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-moonfish_cc := $(cc) -pthread -D_POSIX_C_SOURCE=199309L
-tools_cc := $(cc) -pthread -D_POSIX_C_SOURCE=200809L
-wasm_cc := $(cc) -D_POSIX_C_SOURCE=199309L
-
-tools_src := moonfish.h tools/tools.h tools/utils.c chess.c
-
-.PHONY: all clean install uninstall check
+.PHONY: all clean install uninstall
 
 all: moonfish play lichess analyse chat
 
-moonfish moonfish.exe: moonfish.h chess.c search.c main.c
-	$(moonfish_cc) -o $@ $(filter %.c,$^)
+moonfish: moonfish.h chess.c search.c main.c
+	$(cc) $(filter %.c,$^) -o $@ -pthread -D_POSIX_C_SOURCE=199309L
 
-moonfish.wasm: moonfish.h chess.c search.c main.c
-	$(wasm_cc) -o $@ $(filter %.c,$^)
+%: moonfish.h tools/tools.h tools/utils.c chess.c tools/%.c
+	$(cc) $(filter %.c,$^) -o $@ $(cflags) -D_POSIX_C_SOURCE=200809L
 
-%: $(tools_src) tools/%.c
-	$(tools_cc) -o $@ $(filter %.c,$^)
-
-lichess: $(tools_src) tools/lichess.c tools/https.c
-	$(tools_cc) -o $@ $(filter %.c,$^) -ltls -lssl -lcrypto -lcjson
-
-chat: $(tools_src) tools/chat.c tools/https.c
-	$(tools_cc) -o $@ $(filter %.c,$^) -ltls -lssl -lcrypto
-
-learn: $(tools_src) search.c tools/learn.c
-	$(tools_cc) -Dmoonfish_learn -o $@ $(filter %.c,$^)
-
-check: perft
-	./check.sh
+play analyse: cflags := -pthread
+lichess chat: tools/https.c
+lichess: cflags := -ltls -lssl -lcrypto -lcjson
+chat: cflags := -ltls -lssl -lcrypto
+learn: search.c
+learn: cflags := -Dmoonfish_no_threads -Dmoonfish_learn
 
 clean:
 	git clean -fdx

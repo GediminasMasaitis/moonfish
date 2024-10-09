@@ -3,7 +3,6 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
@@ -318,8 +317,6 @@ int main(int argc, char **argv)
 	int error;
 	char **command;
 	int command_count;
-	
-	moonfish_spawner(argv[0]);
 	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);

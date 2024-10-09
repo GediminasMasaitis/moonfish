@@ -7,7 +7,6 @@
 !/README.md
 !/makefile
 !/.build.yml
-!/check.sh
 !/moonfish.vcxproj
 !/moonfish.h
 !/chess.c

@@ -341,7 +341,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 
 int main(int argc, char **argv)
 {
-	static char *format = "<UCI-options> <cmd> <args>...";
+	static char *format = "<UCI-options> [--] <cmd> <args>...";
 	static struct moonfish_arg args[] =
 	{
 		{"N", "host", "<name>", "irc.libera.chat", "network host name (default: 'irc.libera.chat')"},
@@ -353,9 +353,7 @@ int main(int argc, char **argv)
 	
 	char **options, **command;
 	
-	moonfish_spawner(argv[0]);
-	
-	/* todo: validate nickname & channels*/
+	/* todo: validate nickname & channels */
 	options = moonfish_args(args, format, argc, argv);
 	
 	command = options;
@@ -366,7 +364,9 @@ int main(int argc, char **argv)
 		command++;
 	}
 	
+	if (!strcmp(*command, "--")) command++;
+	
 	moonfish_chat(argv[0], command, options, args[0].value, args[1].value, args[2].value, args[3].value);
-	fprintf(stderr, "%s: Unreachable\n", argv[0]);
+	fprintf(stderr, "%s: unreachable\n", argv[0]);
 	return 1;
 }
