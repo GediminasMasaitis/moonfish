@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <termios.h>
 #include <signal.h>
+#include <pwd.h>
 
 #include "../moonfish.h"
 #include "tools.h"
@@ -317,6 +318,7 @@ int main(int argc, char **argv)
 	int error;
 	char **command;
 	int command_count;
+	struct passwd *passwd;
 	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);
@@ -397,9 +399,11 @@ int main(int argc, char **argv)
 	fancy->x = 0;
 	fancy->y = 0;
 	
+	passwd = getpwuid(geteuid());
+	if (passwd == NULL) fancy->our_name = "you";
+	else fancy->our_name = passwd->pw_name;
+	
 	fancy->their_name = command[0];
-	fancy->our_name = getlogin();
-	if (fancy->our_name == NULL) fancy->our_name = "you";
 	
 	if (sscanf(args[1].value, "%d+%d", &fancy->our_time, &fancy->increment) != 2)
 	{
