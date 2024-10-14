@@ -19,6 +19,7 @@ moonfish: moonfish.h chess.c search.c main.c
 	$(cc) $(filter %.c,$^) -o $@ $(cflags) -D_POSIX_C_SOURCE=200809L
 
 play analyse: cflags := -pthread
+analyse: tools/pgn.c
 lichess chat: tools/https.c
 lichess: cflags := -ltls -lssl -lcrypto -lcjson
 chat: cflags := -ltls -lssl -lcrypto

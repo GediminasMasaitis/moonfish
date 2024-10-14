@@ -570,6 +570,8 @@ static void moonfish_analyse(struct moonfish_fancy *fancy)
 {
 	int i;
 	
+	if (fancy->in == NULL) return;
+	
 	fancy->taken = 0;
 	if (fancy->idle == 0) fancy->stop = 1;
 	
@@ -644,6 +646,7 @@ int main(int argc, char **argv)
 	static struct moonfish_arg args[] =
 	{
 		{"F", "fen", "<FEN>", NULL, "the position to analyse"},
+		{"G", "pgn", "<file-name>", NULL, "PGN game to load"},
 		{NULL, NULL, NULL, NULL, NULL},
 	};
 	
@@ -660,6 +663,7 @@ int main(int argc, char **argv)
 	char *value;
 	char **options;
 	int i;
+	FILE *file;
 	
 	/* handle command line arguments */
 	
@@ -667,6 +671,8 @@ int main(int argc, char **argv)
 	command_count = argc - (command - argv);
 	if (command_count < 1) moonfish_usage(args, format, argv[0]);
 	options = command;
+	
+	if (args[0].value != NULL && args[1].value != NULL) moonfish_usage(args, format, argv[0]);
 	
 	for (;;)
 	{
@@ -704,6 +710,9 @@ int main(int argc, char **argv)
 	fancy->pv[0] = 0;
 	fancy->idle = 1;
 	fancy->stop = 0;
+	fancy->fen = NULL;
+	fancy->in = NULL;
+	fancy->out = NULL;
 	
 	fancy->x = 0;
 	fancy->y = 0;
@@ -722,14 +731,39 @@ int main(int argc, char **argv)
 	fancy->plies[0].best[0] = 0;
 	
 	moonfish_chess(&fancy->plies[0].chess);
-	if (args[0].value == NULL)
-	{
-		fancy->fen = NULL;
-	}
-	else
+	
+	if (args[0].value != NULL)
 	{
 		fancy->fen = args[0].value;
-		moonfish_from_fen(&fancy->plies[0].chess, fancy->fen);
+		if (moonfish_from_fen(&fancy->plies[0].chess, fancy->fen) != 0)
+		{
+			fprintf(stderr, "%s: invalid FEN\n", argv[0]);
+		}
+	}
+	
+	if (args[1].value != NULL)
+	{
+		file = fopen(args[1].value, "r");
+		if (file == NULL)
+		{
+			perror(argv[0]);
+			return 1;
+		}
+		
+		for (;;)
+		{
+			if (moonfish_pgn(file, &fancy->plies[fancy->i].chess, &move, fancy->i == 0 ? 1 : 0) != 0) break;
+			moonfish_play(fancy, &move);
+		}
+		
+		fancy->fen = malloc(128);
+		if (fancy->fen == NULL)
+		{
+			perror(argv[0]);
+			return 1;
+		}
+		
+		moonfish_to_fen(&fancy->plies[0].chess, fancy->fen);
 	}
 	
 	/* configure the terminal for displaying the user interface */
