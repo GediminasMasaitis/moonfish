@@ -139,6 +139,10 @@ static int moonfish_search(struct moonfish_thread *thread, struct moonfish_chess
 		if (score < alpha - 100) return alpha;
 		if (score > alpha) alpha = score;
 	}
+	else if (thread->analysis->time >= 0 && time < 5)
+	{
+		depth = 0;
+	}
 	
 	for (y = 0 ; y < 8 ; y++)
 	for (x = 0 ; x < 8 ; x++)
