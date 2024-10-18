@@ -549,7 +549,7 @@ static void moonfish_exit(void)
 {
 	if (moonfish_engine != NULL) fprintf(moonfish_engine, "quit\n");
 	tcsetattr(0, TCSANOW, &moonfish_termios);
-	printf("\n\x1B[?1000l");
+	printf("\n\x1B[?1000l\x1B[?25h");
 	fflush(stdout);
 }
 
@@ -915,7 +915,7 @@ int main(int argc, char **argv)
 	
 	if (scanf("[%d;%dR", &fancy->oy, &fancy->ox) != 2) return 1;
 	
-	printf("\x1B[?1000h");
+	printf("\x1B[?1000h\x1B[?25l");
 	fflush(stdout);
 	
 	/* begin setting up UCI bot */
