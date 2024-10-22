@@ -19,15 +19,16 @@ static long int moonfish_perft(struct moonfish_chess *chess, int depth)
 	
 	perft = 0;
 	
-	for (y = 0 ; y < 8 ; y++)
-	for (x = 0 ; x < 8 ; x++)
-	{
-		count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-		for (i = 0 ; i < count ; i++)
-			if (moonfish_validate(&moves[i].chess))
-				perft += moonfish_perft(&moves[i].chess, depth - 1);
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+			for (i = 0 ; i < count ; i++) {
+				if (moonfish_validate(&moves[i].chess)) {
+					perft += moonfish_perft(&moves[i].chess, depth - 1);
+				}
+			}
+		}
 	}
-	
 	return perft;
 }
 
@@ -44,17 +45,14 @@ int main(int argc, char **argv)
 	long int depth;
 	struct moonfish_chess chess;
 	
-	if (moonfish_args(args, NULL, argc, argv) - argv != argc)
-		moonfish_usage(args, NULL, argv[0]);
+	if (moonfish_args(args, NULL, argc, argv) - argv != argc) moonfish_usage(args, NULL, argv[0]);
 	
 	errno = 0;
 	depth = strtol(args[1].value, &end, 10);
-	if (errno != 0 || *end != 0 || depth < 0 || depth >= 24)
-		moonfish_usage(args, NULL, argv[0]);
+	if (errno || *end != 0 || depth < 0 || depth >= 24) moonfish_usage(args, NULL, argv[0]);
 	
 	moonfish_chess(&chess);
-	if (args[0].value != NULL && moonfish_from_fen(&chess, args[0].value))
-		moonfish_usage(args, NULL, argv[0]);
+	if (args[0].value != NULL && moonfish_from_fen(&chess, args[0].value)) moonfish_usage(args, NULL, argv[0]);
 	
 	printf("perft %ld: %ld\n", depth, moonfish_perft(&chess, depth));
 	

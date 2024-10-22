@@ -52,6 +52,8 @@
 
 /* the board is not just an 8 x 8 array because of an optisation that can be performed when generating moves */
 
+/* ~ ~ ~ ~ ~ */
+
 /* white pieces */
 #define moonfish_white_pawn 0x11
 #define moonfish_white_knight 0x12
@@ -88,8 +90,8 @@
 #endif
 
 /* represents a chess position */
-struct moonfish_chess
-{
+struct moonfish_chess {
+	
 	/* 10 x 12 array board representation */
 	unsigned char board[120];
 	
@@ -107,8 +109,8 @@ struct moonfish_chess
 };
 
 /* represents a move that can be made on a given position */
-struct moonfish_move
-{
+struct moonfish_move {
+	
 	/* the position after the move is played */
 	struct moonfish_chess chess;
 	

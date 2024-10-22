@@ -14,13 +14,12 @@ int moonfish_read(char *argv0, struct tls *tls, void *data0, size_t length)
 	
 	data = data0;
 	
-	while (length > 0)
-	{
+	while (length > 0) {
+		
 		result = tls_read(tls, data, length);
 		if (result == 0) return 1;
 		if (result == TLS_WANT_POLLIN || result == TLS_WANT_POLLOUT) continue;
-		if (result == -1)
-		{
+		if (result == -1) {
 			fprintf(stderr, "%s: %s\n", argv0, tls_error(tls));
 			exit(1);
 		}
@@ -39,13 +38,12 @@ int moonfish_write(char *argv0, struct tls *tls, void *data0, size_t length)
 	
 	data = data0;
 	
-	while (length > 0)
-	{
+	while (length > 0) {
+		
 		result = tls_write(tls, data, length);
 		if (result == 0) return 1;
 		if (result == TLS_WANT_POLLIN || result == TLS_WANT_POLLOUT) continue;
-		if (result == -1)
-		{
+		if (result == -1) {
 			fprintf(stderr, "%s: %s\n", argv0, tls_error(tls));
 			exit(1);
 		}
@@ -70,27 +68,23 @@ char *moonfish_read_line(char *argv0, struct tls *tls)
 	line = NULL;
 	length = 0;
 	
-	for (;;)
-	{
+	for (;;) {
+		
 		line = realloc(line, length + 1);
-		if (line == NULL)
-		{
+		if (line == NULL) {
 			perror(argv0);
 			exit(1);
 		}
 		
-		if (moonfish_read(argv0, tls, line + length, 1))
-		{
-			if (length == 0)
-			{
+		if (moonfish_read(argv0, tls, line + length, 1)) {
+			if (length == 0) {
 				free(line);
 				return NULL;
 			}
 			line[length] = 0;
 			return line;
 		}
-		if (line[length] == '\n')
-		{
+		if (line[length] == '\n') {
 			line[length] = 0;
 			return line;
 		}
@@ -105,8 +99,7 @@ void moonfish_request(char *argv0, struct tls *tls, char *host, char *request, c
 	moonfish_write_text(argv0, tls, request);
 	moonfish_write_text(argv0, tls, " HTTP/1.0\r\n");
 	
-	if (token != NULL)
-	{
+	if (token != NULL) {
 		moonfish_write_text(argv0, tls, "Authorization: Bearer ");
 		moonfish_write_text(argv0, tls, token);
 		moonfish_write_text(argv0, tls, "\r\n");
@@ -118,8 +111,8 @@ void moonfish_request(char *argv0, struct tls *tls, char *host, char *request, c
 	moonfish_write_text(argv0, tls, host);
 	moonfish_write_text(argv0, tls, "\r\n");
 	
-	if (type != NULL)
-	{
+	if (type != NULL) {
+		
 		moonfish_write_text(argv0, tls, "Content-Type: ");
 		moonfish_write_text(argv0, tls, type);
 		moonfish_write_text(argv0, tls, "\r\n");
@@ -143,16 +136,13 @@ int moonfish_response(char *argv0, struct tls *tls)
 	
 	line = moonfish_read_line(argv0, tls);
 	
-	if (strncmp(line, success0, sizeof success0 - 1))
-	if (strncmp(line, success1, sizeof success1 - 1))
+	if (strncmp(line, success0, sizeof success0 - 1) && strncmp(line, success1, sizeof success1 - 1)) {
 		return 1;
-	
-	for (;;)
-	{
+	}
+	for (;;) {
 		free(line);
 		line = moonfish_read_line(argv0, tls);
-		if (*line == 0)
-		{
+		if (*line == 0) {
 			free(line);
 			break;
 		}
@@ -166,14 +156,12 @@ struct tls *moonfish_connect(char *argv0, char *host, char *port)
 	struct tls *tls;
 	
 	tls = tls_client();
-	if (tls == NULL)
-	{
+	if (tls == NULL) {
 		fprintf(stderr, "%s: Could not create libtls client\n", argv0);
 		exit(1);
 	}
 	
-	if (tls_connect(tls, host, port))
-	{
+	if (tls_connect(tls, host, port)) {
 		fprintf(stderr, "%s: %s\n", argv0, tls_error(tls));
 		exit(1);
 	}
@@ -183,8 +171,7 @@ struct tls *moonfish_connect(char *argv0, char *host, char *port)
 
 void moonfish_close(char *argv0, struct tls *tls)
 {
-	if (tls_close(tls) != 0)
-	{
+	if (tls_close(tls)) {
 		fprintf(stderr, "%s: %s\n", argv0, tls_error(tls));
 		exit(1);
 	}

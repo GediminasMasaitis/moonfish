@@ -6,8 +6,7 @@
 
 #include <stdio.h>
 
-struct moonfish_arg
-{
+struct moonfish_arg {
 	char *letter;
 	char *name;
 	char *format;
@@ -27,6 +26,6 @@ void moonfish_usage(struct moonfish_arg *args, char *rest_format, char *argv0);
 
 int moonfish_int(char *arg, int *result);
 
-int moonfish_pgn(FILE *file, struct moonfish_chess *chess, struct moonfish_move *move, int allow_attr);
+int moonfish_pgn(FILE *file, struct moonfish_chess *chess, struct moonfish_move *move, int allow_tag);
 
 #endif

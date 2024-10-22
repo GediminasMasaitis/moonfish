@@ -15,26 +15,22 @@ static void moonfish_fork(char **argv, int *in_fd, int *out_fd, char *directory)
 	int pid;
 	long int count, i;
 	
-	if (pipe(p1) < 0)
-	{
+	if (pipe(p1) < 0) {
 		perror("pipe");
 		exit(1);
 	}
-	if (pipe(p2) < 0)
-	{
+	if (pipe(p2) < 0) {
 		perror("pipe");
 		exit(1);
 	}
 	
 	pid = fork();
-	if (pid < 0)
-	{
+	if (pid < 0) {
 		perror("fork");
 		exit(1);
 	}
 	
-	if (pid != 0)
-	{
+	if (pid != 0) {
 		*in_fd = p1[1];
 		*out_fd = p2[0];
 		close(p1[0]);
@@ -42,14 +38,12 @@ static void moonfish_fork(char **argv, int *in_fd, int *out_fd, char *directory)
 		return;
 	}
 	
-	if (directory != NULL && chdir(directory) != 0)
-	{
+	if (directory != NULL && chdir(directory)) {
 		perror("chdir");
 		exit(1);
 	}
 	
-	if (dup2(p1[0], 0) != 0 || dup2(p2[1], 1) != 1 || dup2(p2[1], 2) != 2)
-	{
+	if (dup2(p1[0], 0) != 0 || dup2(p2[1], 1) != 1 || dup2(p2[1], 2) != 2) {
 		perror("dup2");
 		exit(1);
 	}
@@ -69,29 +63,25 @@ void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory)
 	moonfish_fork(argv, &in_fd, &out_fd, directory);
 	
 	*in = fdopen(in_fd, "w");
-	if (*in == NULL)
-	{
+	if (*in == NULL) {
 		perror("fdopen");
 		exit(1);
 	}
 	
 	*out = fdopen(out_fd, "r");
-	if (*out == NULL)
-	{
+	if (*out == NULL) {
 		perror("fdopen");
 		exit(1);
 	}
 	
 	errno = 0;
-	if (setvbuf(*in, NULL, _IOLBF, 0))
-	{
+	if (setvbuf(*in, NULL, _IOLBF, 0)) {
 		if (errno != 0) perror("setvbuf");
 		exit(1);
 	}
 	
 	errno = 0;
-	if (setvbuf(*out, NULL, _IOLBF, 0))
-	{
+	if (setvbuf(*out, NULL, _IOLBF, 0)) {
 		if (errno != 0) perror("setvbuf");
 		exit(1);
 	}
@@ -108,8 +98,8 @@ char *moonfish_wait(FILE *file, char *name)
 {
 	char *line, *arg, *buffer;
 	
-	for (;;)
-	{
+	for (;;) {
+		
 		line = moonfish_next(file);
 		if (line == NULL) exit(1);
 		
@@ -126,7 +116,7 @@ int moonfish_int(char *arg, int *result)
 	
 	errno = 0;
 	long_result = strtol(arg, &end, 10);
-	if (errno != 0 || *end != 0) return 1;
+	if (errno || *end != 0) return 1;
 	if (long_result < INT_MIN) return 1;
 	if (long_result > INT_MAX) return 1;
 	*result = long_result;
@@ -143,19 +133,17 @@ static void moonfish_usage_to(struct moonfish_arg *args, char *rest_format, char
 	col1 = 0;
 	col2 = 0;
 	
-	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
-	{
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++) {
+		
 		n = 0;
-		if (args[i].letter != NULL)
-		{
+		if (args[i].letter != NULL) {
 			n += 1 + strlen(args[i].letter);
 			if (args[i].format != NULL) n += strlen(args[i].format);
 		}
 		if (n > col1) col1 = n;
 		
 		n = 0;
-		if (args[i].name != NULL)
-		{
+		if (args[i].name != NULL) {
 			n += 2 + strlen(args[i].name);
 			if (args[i].format != NULL) n += 1 + strlen(args[i].format);
 		}
@@ -169,17 +157,15 @@ static void moonfish_usage_to(struct moonfish_arg *args, char *rest_format, char
 	
 	if (args[0].letter == NULL && args[0].name == NULL) return;
 	
-	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
-	{
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++) {
+		
 		fprintf(out, "   ");
 		
 		n = 0;
-		if (args[i].letter != NULL)
-		{
+		if (args[i].letter != NULL) {
 			n += 1 + strlen(args[i].letter);
 			fprintf(out, "-%s", args[i].letter);
-			if (args[i].format != NULL)
-			{
+			if (args[i].format != NULL) {
 				n += strlen(args[i].format);
 				fprintf(out, "\x1B[36m%s\x1B[0m", args[i].format);
 			}
@@ -188,28 +174,24 @@ static void moonfish_usage_to(struct moonfish_arg *args, char *rest_format, char
 		if (args[i].letter != NULL && args[i].name != NULL) fprintf(out, ", ");
 		else fprintf(out, "  ");
 		
-		while (n < col1)
-		{
+		while (n < col1) {
 			fprintf(out, " ");
 			n++;
 		}
 		
 		n = 0;
-		if (args[i].name != NULL)
-		{
+		if (args[i].name != NULL) {
 			n += 2 + strlen(args[i].name);
 			fprintf(out, "--%s", args[i].name);
-			if (args[i].format != NULL)
-			{
+			if (args[i].format != NULL) {
 				n += 1 + strlen(args[i].format);
 				fprintf(out, "=\x1B[36m%s\x1B[0m", args[i].format);
 			}
 		}
 		
-		if (args[i].description != NULL)
-		{
-			while (n < col2)
-			{
+		if (args[i].description != NULL) {
+			
+			while (n < col2) {
 				fprintf(out, " ");
 				n++;
 			}
@@ -227,31 +209,28 @@ static int moonfish_letter_arg(struct moonfish_arg *args, char *arg, int *argc, 
 	char *name;
 	size_t length;
 	
-	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
-	{
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++) {
+		
 		name = args[i].letter;
 		if (name == NULL) continue;
 		length = strlen(name);
 		if (strncmp(arg, name, length)) continue;
 		
-		if (args[i].format == NULL)
-		{
+		if (args[i].format == NULL) {
 			arg += length;
-			if (arg[0] == 0)
-			{
+			if (arg[0] == 0) {
 				args[i].value = "";
 				return 0;
 			}
 			continue;
 		}
-		else
-		{
+		else {
+			
 			args[i].value = arg + length;
 			
 			if (arg[length] == '=') args[i].value = arg + length + 1;
 			
-			if (arg[length] == 0)
-			{
+			if (arg[length] == 0) {
 				if (*argc <= 0) return 1;
 				(*argc)--;
 				(*argv)++;
@@ -271,34 +250,29 @@ static int moonfish_name_arg(struct moonfish_arg *args, char *arg, int *argc, ch
 	char *name;
 	size_t length;
 	
-	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++)
-	{
+	for (i = 0 ; args[i].letter != NULL || args[i].name != NULL ; i++) {
+		
 		name = args[i].name;
 		if (name == NULL) continue;
 		length = strlen(name);
 		if (strncmp(arg, name, length)) continue;
 		
-		if (args[i].format == NULL)
-		{
-			if (arg[length] == 0)
-			{
+		if (args[i].format == NULL) {
+			if (arg[length] == 0) {
 				args[i].value = "";
 				return 0;
 			}
 			return 1;
 		}
-		else
-		{
-			if (arg[length] == 0)
-			{
+		else {
+			if (arg[length] == 0) {
 				if (*argc <= 0) return 1;
 				(*argc)--;
 				(*argv)++;
 				args[i].value = (*argv)[0];
 				return 0;
 			}
-			if (arg[length] == '=')
-			{
+			if (arg[length] == '=') {
 				args[i].value = arg + length + 1;
 				return 0;
 			}
@@ -315,8 +289,8 @@ char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, cha
 	if (argc <= 0) return argv;
 	argv0 = argv[0];
 	
-	for (;;)
-	{
+	for (;;) {
+		
 		argc--;
 		argv++;
 		if (argc <= 0) return argv;
@@ -326,8 +300,7 @@ char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, cha
 		if (!strcmp(arg, "-")) return argv;
 		if (!strcmp(arg, "--") && rest_format != NULL) return argv + 1;
 		
-		if (!strcmp(arg, "--help") || !strcmp(arg, "-h") || !strcmp(arg, "-H"))
-		{
+		if (!strcmp(arg, "--help") || !strcmp(arg, "-h") || !strcmp(arg, "-H")) {
 			moonfish_usage_to(args, rest_format, argv0, stdout);
 			exit(0);
 		}
@@ -335,14 +308,13 @@ char **moonfish_args(struct moonfish_arg *args, char *rest_format, int argc, cha
 		if (arg[0] != '-') return argv;
 		arg++;
 		
-		if (arg[0] == '-')
-		{
+		if (arg[0] == '-') {
 			arg++;
-			if (moonfish_name_arg(args, arg, &argc, &argv) != 0) moonfish_usage(args, rest_format, argv0);
+			if (moonfish_name_arg(args, arg, &argc, &argv)) moonfish_usage(args, rest_format, argv0);
 			continue;
 		}
 		
-		if (moonfish_letter_arg(args, arg, &argc, &argv) != 0) moonfish_usage(args, rest_format, argv0);
+		if (moonfish_letter_arg(args, arg, &argc, &argv)) moonfish_usage(args, rest_format, argv0);
 	}
 }
 

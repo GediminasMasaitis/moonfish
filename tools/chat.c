@@ -17,27 +17,23 @@ static void moonfish_parse_chat(char *argv0, char *line, char ***command, int *c
 	
 	while (*line == ' ') line++;
 	if (*line == 0) return;
-	if (*line == '@')
-	{
+	if (*line == '@') {
 		line++;
 		while (*line != ' ' && *line != 0) line++;
 		while (*line == ' ') line++;
 	}
-	if (*line == ':')
-	{
+	if (*line == ':') {
 		line++;
 		while (*line != ' ' && *line != 0) line++;
 		while (*line == ' ') line++;
 	}
 	
-	while (*line != 0)
-	{
+	while (*line != 0) {
+		
 		*command = realloc(*command, sizeof **command * (*count + 1));
-		if (*line == ':')
-		{
+		if (*line == ':') {
 			(*command)[*count] = strdup(line + 1);
-			if ((*command)[*count] == NULL)
-			{
+			if ((*command)[*count] == NULL) {
 				perror(argv0);
 				exit(1);
 			}
@@ -49,8 +45,7 @@ static void moonfish_parse_chat(char *argv0, char *line, char ***command, int *c
 		while (line[length] != ' ' && line[length] != 0) length++;
 		(*command)[*count] = strndup(line, length);
 		line += length;
-		if ((*command)[*count] == NULL)
-		{
+		if ((*command)[*count] == NULL) {
 			perror(argv0);
 			exit(1);
 		}
@@ -77,11 +72,10 @@ static void moonfish_read_chat(char *argv0, struct tls *tls, char *username, cha
 	int count;
 	int i;
 	
-	for (;;)
-	{
+	for (;;) {
+		
 		line = moonfish_read_line(argv0, tls);
-		if (line == NULL)
-		{
+		if (line == NULL) {
 			fprintf(stderr, "%s: IRC connection closed unexpectedly\n", argv0);
 			exit(1);
 		}
@@ -91,14 +85,13 @@ static void moonfish_read_chat(char *argv0, struct tls *tls, char *username, cha
 		
 		if (count == 0) continue;
 		
-		if (!strcmp(command[0], "433"))
-		{
+		if (!strcmp(command[0], "433")) {
+			
 			moonfish_free_chat(command, count);
 			
 			under_count++;
 			
-			if (under_count > 16)
-			{
+			if (under_count > 16) {
 				fprintf(stderr, "%s: Tried too many nicknames\n", argv0);
 				exit(1);
 			}
@@ -111,10 +104,9 @@ static void moonfish_read_chat(char *argv0, struct tls *tls, char *username, cha
 			continue;
 		}
 		
-		if (!strcmp(command[0], "PING"))
-		{
-			if (count < 2)
-			{
+		if (!strcmp(command[0], "PING")) {
+			
+			if (count < 2) {
 				moonfish_free_chat(command, count);
 				moonfish_write_text(argv0, tls, "PONG\r\n");
 				continue;
@@ -127,24 +119,21 @@ static void moonfish_read_chat(char *argv0, struct tls *tls, char *username, cha
 			continue;
 		}
 		
-		if (!strcmp(command[0], "PRIVMSG"))
-		{
-			if (count < 3)
-			{
+		if (!strcmp(command[0], "PRIVMSG")) {
+			
+			if (count < 3) {
 				fprintf(stderr, "%s: Invalid IRC message\n", argv0);
 				exit(1);
 			}
 			
 			*channel = strdup(command[1]);
-			if (*channel == NULL)
-			{
+			if (*channel == NULL) {
 				perror(argv0);
 				exit(1);
 			}
 			
 			*message = strdup(command[2]);
-			if (*message == NULL)
-			{
+			if (*message == NULL) {
 				perror(argv0);
 				exit(1);
 			}
@@ -178,8 +167,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	fprintf(in, "uci\n");
 	moonfish_wait(out, "uciok");
 	
-	for (;;)
-	{
+	for (;;) {
 		value = strchr(*options, '=');
 		if (value == NULL) break;
 		fprintf(in, "setoption name %.*s value %s\n", (int) (value - *options), *options, value + 1);
@@ -195,8 +183,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	
 	/* todo: validate password */
 	password = getenv("moonfish_chat_password");
-	if (password != NULL && *password != 0)
-	{
+	if (password != NULL && *password != 0) {
 		moonfish_write_text(argv0, tls, "PASS ");
 		moonfish_write_text(argv0, tls, password);
 		moonfish_write_text(argv0, tls, "\r\n");
@@ -215,8 +202,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	moonfish_write_text(argv0, tls, "\r\n");
 	
 	names = strdup("");
-	if (names == NULL)
-	{
+	if (names == NULL) {
 		perror(argv0);
 		exit(1);
 	}
@@ -224,15 +210,15 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 	channel = NULL;
 	message = NULL;
 	
-	for (;;)
-	{
+	for (;;) {
+		
 		if (channel != NULL) free(channel);
 		if (message != NULL) free(message);
 		
 		moonfish_read_chat(argv0, tls, username, &channel, &message);
 		
-		if (!strcmp(message, "!chess reset"))
-		{
+		if (!strcmp(message, "!chess reset")) {
+			
 			moonfish_chess(&chess);
 			fprintf(in, "ucinewgame\n");
 			
@@ -243,21 +229,20 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 			continue;
 		}
 		
-		if (moonfish_from_san(&chess, &move, message))
-			continue;
+		if (moonfish_from_san(&chess, &move, message)) continue;
 		
 		moonfish_to_uci(&chess, &move, name);
 		chess = move.chess;
 		
-		if (moonfish_finished(&chess))
-		{
+		if (moonfish_finished(&chess)) {
+			
 			moonfish_to_fen(&chess, fen);
 			moonfish_chess(&chess);
 			fprintf(in, "ucinewgame\n");
 			
-			for (i = 0 ; fen[i] != 0 ; i++)
+			for (i = 0 ; fen[i] != 0 ; i++) {
 				if (fen[i] == ' ') fen[i] = '_';
-			
+			}
 			moonfish_write_text(argv0, tls, "PRIVMSG ");
 			moonfish_write_text(argv0, tls, channel);
 			moonfish_write_text(argv0, tls, " :https://lichess.org/export/fen.gif?fen=");
@@ -272,8 +257,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		}
 		
 		names = realloc(names, strlen(names) + strlen(name) + 2);
-		if (names == NULL)
-		{
+		if (names == NULL) {
 			perror(argv0);
 			exit(1);
 		}
@@ -293,8 +277,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		
 		name0 = moonfish_wait(out, "bestmove");
 		names = realloc(names, strlen(names) + strlen(name0) + 2);
-		if (names == NULL)
-		{
+		if (names == NULL) {
 			perror(argv0);
 			exit(1);
 		}
@@ -302,8 +285,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		strcat(names, " ");
 		strcat(names, name0);
 		
-		if (moonfish_from_uci(&chess, &move, name0))
-		{
+		if (moonfish_from_uci(&chess, &move, name0)) {
 			fprintf(stderr, "%s: invalid move '%s' by the bot\n", argv0, name0);
 			exit(1);
 		}
@@ -312,9 +294,9 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		chess = move.chess;
 		moonfish_to_fen(&chess, fen);
 		
-		for (i = 0 ; fen[i] != 0 ; i++)
+		for (i = 0 ; fen[i] != 0 ; i++) {
 			if (fen[i] == ' ') fen[i] = '_';
-		
+		}
 		moonfish_write_text(argv0, tls, "PRIVMSG ");
 		moonfish_write_text(argv0, tls, channel);
 		moonfish_write_text(argv0, tls, " :");
@@ -327,8 +309,8 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 		moonfish_write_text(argv0, tls, fen);
 		moonfish_write_text(argv0, tls, "\r\n");
 		
-		if (moonfish_finished(&chess))
-		{
+		if (moonfish_finished(&chess)) {
+			
 			moonfish_chess(&chess);
 			fprintf(in, "ucinewgame\n");
 			
@@ -357,8 +339,7 @@ int main(int argc, char **argv)
 	options = moonfish_args(args, format, argc, argv);
 	
 	command = options;
-	for (;;)
-	{
+	for (;;) {
 		if (*command == NULL) moonfish_usage(args, format, argv[0]);
 		if (strchr(*command, '=') == NULL) break;
 		command++;
