@@ -34,27 +34,26 @@ static long int moonfish_perft(struct moonfish_chess *chess, int depth)
 
 int main(int argc, char **argv)
 {
+	static char *format = "<depth>";
 	static struct moonfish_arg args[] =
 	{
 		{"F", "fen", "<FEN>", NULL, "starting position for the game"},
-		{"N", "depth", "<plies>", "2", "the number of plies to search (default: '2')"},
 		{NULL, NULL, NULL, NULL, NULL},
 	};
 	
-	char *end;
-	long int depth;
+	int depth;
 	struct moonfish_chess chess;
+	char **args2;
 	
-	if (moonfish_args(args, NULL, argc, argv) - argv != argc) moonfish_usage(args, NULL, argv[0]);
+	args2 = moonfish_args(args, format, argc, argv);
+	if (args2 - argv != argc - 1) moonfish_usage(args, format, argv[0]);
 	
-	errno = 0;
-	depth = strtol(args[1].value, &end, 10);
-	if (errno || *end != 0 || depth < 0 || depth >= 24) moonfish_usage(args, NULL, argv[0]);
+	if (moonfish_int(args2[0], &depth) || depth < 0) moonfish_usage(args, format, argv[0]);
 	
 	moonfish_chess(&chess);
-	if (args[0].value != NULL && moonfish_from_fen(&chess, args[0].value)) moonfish_usage(args, NULL, argv[0]);
+	if (args[0].value != NULL && moonfish_from_fen(&chess, args[0].value)) moonfish_usage(args, format, argv[0]);
 	
-	printf("perft %ld: %ld\n", depth, moonfish_perft(&chess, depth));
+	printf("perft %d: %ld\n", depth, moonfish_perft(&chess, depth));
 	
 	return 0;
 }
