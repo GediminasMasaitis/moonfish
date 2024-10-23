@@ -290,7 +290,7 @@ static void moonfish_chat(char *argv0, char **command, char **options, char *hos
 			exit(1);
 		}
 		
-		moonfish_to_san(&chess, &move, name);
+		moonfish_to_san(&chess, &move, name, 0);
 		chess = move.chess;
 		moonfish_to_fen(&chess, fen);
 		

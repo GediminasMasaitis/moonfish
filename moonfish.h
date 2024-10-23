@@ -183,8 +183,13 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen);
 /* SAN parsing is very loose, so it will accept many forms, including UCI */
 /* on success, the parser will return 0, on failure, it will return 1 (and the move is unusable) */
 /* parsing is somewhat robust, so you can trust it won't succeed with an invalid move */
+/* the "check" parameter determines which check/checkmate annotations will be added: */
+/* '0' means both */
+/* '1' means check only */
+/* '2' means checkmate only */
+/* '3' means neither */
 int moonfish_from_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
-void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name);
+void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name, int check);
 
 /* checks whether there is a valid move with the given from/to square indices */
 /* then, if so, generates the move and stores it in the given move pointer */

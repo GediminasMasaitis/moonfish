@@ -165,7 +165,7 @@ static void moonfish_evaluation(struct moonfish_fancy *fancy)
 
 static void moonfish_scoresheet_move(struct moonfish_fancy *fancy, int i)
 {
-	struct moonfish_ply *ply;
+	struct moonfish_ply *ply, *prev;
 	int score;
 	int length;
 	
@@ -214,10 +214,11 @@ static void moonfish_scoresheet_move(struct moonfish_fancy *fancy, int i)
 		return;
 	}
 	
-	if (ply[-1].ephemeral) score = ply->score + ply[-1].score;
-	else score = ply->score + ply[-1].main->score;
+	prev = ply - 1;
+	if (!ply->ephemeral && prev->ephemeral) prev = prev->main;
+	score = ply->score + prev->score;
 	
-	if (ply[-1].main->checkmate != 0 || score > 200) {
+	if (prev->checkmate != 0 || score > 200) {
 		printf("\x1B[38;5;124m?? ");
 	}
 	else {
@@ -411,7 +412,7 @@ static void *moonfish_start(void *data)
 						i = 1;
 						continue;
 					}
-					moonfish_to_san(&ply.chess, &move, san);
+					moonfish_to_san(&ply.chess, &move, san, 0);
 					length = strlen(san);
 					if (i + length > sizeof fancy->pv - 2) break;
 					ply.chess = move.chess;
@@ -686,7 +687,7 @@ static void moonfish_play(struct moonfish_fancy *fancy, struct moonfish_move *mo
 	
 	strcpy(fancy->plies[fancy->i].name, name);
 	if (move == NULL) return;
-	moonfish_to_san(&fancy->plies[fancy->i].chess, move, fancy->plies[fancy->i].san);
+	moonfish_to_san(&fancy->plies[fancy->i].chess, move, fancy->plies[fancy->i].san, 1);
 	
 	ply->chess = move->chess;
 	

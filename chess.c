@@ -730,7 +730,7 @@ void moonfish_to_fen(struct moonfish_chess *chess, char *fen)
 	*fen = 0;
 }
 
-void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
+void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, char *name, int check)
 {
 	static char names[] = "NBRQK";
 	
@@ -816,6 +816,15 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	
 	*name++ = to_x + 'a';
 	*name++ = to_y + '1';
+	
+	if (moonfish_checkmate(&move->chess)) {
+		if (~check & 1) *name++ = '#';
+	}
+	else {
+		if (moonfish_check(&move->chess)) {
+			if (~check & 2) *name++ = '+';
+		}
+	}
 	
 	*name = 0;
 }
