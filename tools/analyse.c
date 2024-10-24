@@ -37,8 +37,8 @@ struct moonfish_fancy {
 	int offset;
 	char pv[32];
 	int time, taken;
-	int idle, stop;
 	int ephemeral;
+	int stop_count;
 };
 
 static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
@@ -250,7 +250,7 @@ static void moonfish_fancy_score(struct moonfish_fancy *fancy)
 	struct moonfish_ply *ply;
 	int score;
 	
-	if (!fancy->idle) printf("\x1B[38;5;103m");
+	if (fancy->stop_count != 0) printf("\x1B[38;5;103m");
 	else printf("\x1B[38;5;111m");
 	printf("(+)\x1B[0m ");
 	
@@ -278,7 +278,7 @@ static void moonfish_fancy_score(struct moonfish_fancy *fancy)
 	}
 	
 	printf(" (depth %d)", ply->depth);
-	if (!fancy->idle) printf(" in %d.%ds of %ds", fancy->taken / 1000, fancy->taken % 1000 / 100, fancy->time / 1000);
+	if (fancy->stop_count != 0) printf(" in %d.%ds of %ds", fancy->taken / 1000, fancy->taken % 1000 / 100, fancy->time / 1000);
 	else printf(" in %ds", fancy->time / 1000);
 	printf("\x1B[0K");
 }
@@ -344,13 +344,13 @@ static void *moonfish_start(void *data)
 		if (arg == NULL) continue;
 		
 		if (!strcmp(arg, "bestmove")) {
-			if (!fancy->stop) fancy->idle = 1;
-			fancy->stop = 0;
+			fancy->stop_count--;
+			if (fancy->stop_count < 0) fancy->stop_count = 0;
 			changed = 1;
 			continue;
 		}
 		
-		if (fancy->stop) continue;
+		if (fancy->stop_count != 1) continue;
 		if (strcmp(arg, "info")) continue;
 		
 		ply = fancy->plies[fancy->i];
@@ -556,8 +556,7 @@ static void moonfish_analyse(struct moonfish_fancy *fancy)
 	if (fancy->in == NULL) return;
 	
 	fancy->taken = 0;
-	if (fancy->idle == 0) fancy->stop = 1;
-	fancy->idle = 0;
+	fancy->stop_count++;
 	
 	fprintf(fancy->in, "stop\n");
 	
@@ -768,12 +767,11 @@ int main(int argc, char **argv)
 	fancy->mutex = &mutex;
 	fancy->offset = 0;
 	fancy->pv[0] = 0;
-	fancy->idle = 1;
-	fancy->stop = 0;
 	fancy->fen = NULL;
 	fancy->in = NULL;
 	fancy->out = NULL;
 	fancy->ephemeral = 0;
+	fancy->stop_count = 0;
 	
 	fancy->x = 0;
 	fancy->y = 0;
