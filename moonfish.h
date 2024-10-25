@@ -82,13 +82,6 @@
 #define moonfish_empty 0
 #define moonfish_outside 0xFF
 
-/* for tuning the PST */
-#ifdef moonfish_learn
-#define moonfish_t double
-#else
-#define moonfish_t long int
-#endif
-
 /* represents a chess position */
 struct moonfish_chess {
 	
@@ -118,8 +111,14 @@ struct moonfish_move {
 	unsigned char from, to;
 };
 
+/* represents options for the search */
+struct moonfish_options {
+	long int max_time;
+	long int our_time;
+};
+
 /* the PST */
-extern moonfish_t moonfish_values[];
+extern double moonfish_values[];
 
 /* initialises the position and sets up the initial position */
 /* note: this must be called *first* even if you want to use "moonfish_from_fen" */
@@ -134,21 +133,14 @@ void moonfish_chess(struct moonfish_chess *chess);
 /* this will return the number of moves generated */
 int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
 
-/* tries to find the best move in the given position in at most the given time */
-/* the move is stored in the "move" pointer, and the score for the position is returned */
+/* tries to find the best move in the given position with the given options */
+/* the move is stored in the "move" pointer */
 /* the move found is the best for the player whose turn it is on the given position */
-/* likewise, the score returned is from the perspective of the player whose turn it is */
-int moonfish_best_move_time(struct moonfish_chess *chess, struct moonfish_move *move, long int time);
-
-/* same as above, but tries to optimise the time spent searching for the given time left on each player's clock */
-int moonfish_best_move_clock(struct moonfish_chess *chess, struct moonfish_move *move, long int our_time, long int their_time);
-
-/* tries to find the best move on the given position with a given depth */
-/* similar to "moonfish_best_move_time" and "moonfish_best_move_clock" */
-int moonfish_best_move_depth(struct moonfish_chess *chess, struct moonfish_move *move, int depth);
+/* this will return the number of positions that were looked into */
+long int moonfish_best_move(struct moonfish_chess *chess, struct moonfish_move *move, struct moonfish_options *options);
 
 /* returns the depth-zero score for the given position */
-moonfish_t moonfish_score(struct moonfish_chess *chess);
+double moonfish_score(struct moonfish_chess *chess);
 
 /* creates a move from UCI notation */
 /* the move is stored in "move" */

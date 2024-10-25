@@ -13,10 +13,10 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 all: moonfish play lichess analyse chat
 
 moonfish: moonfish.h chess.c search.c main.c
-	$(cc) $(filter %.c,$^) -o $@ -pthread -D_POSIX_C_SOURCE=199309L
+	$(cc) $(filter %.c,$^) -D_POSIX_C_SOURCE=199309L -o $@ -lm
 
 %: moonfish.h tools/tools.h tools/utils.c chess.c tools/%.c
-	$(cc) $(filter %.c,$^) -o $@ $(cflags) -D_POSIX_C_SOURCE=200809L
+	$(cc) $(filter %.c,$^) -D_POSIX_C_SOURCE=200809L -o $@ $(cflags)
 
 play analyse: cflags := -pthread
 analyse: tools/pgn.c
@@ -24,7 +24,7 @@ lichess chat: tools/https.c
 lichess: cflags := -ltls -lssl -lcrypto -lcjson
 chat: cflags := -ltls -lssl -lcrypto
 learn: search.c
-learn: cflags := -Dmoonfish_no_threads -Dmoonfish_learn
+learn: cflags := -Dmoonfish_learn -lm
 
 clean:
 	git clean -fdx

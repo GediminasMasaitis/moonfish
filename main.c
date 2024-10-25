@@ -15,12 +15,11 @@ int main(int argc, char **argv)
 	char *arg, *arg0;
 	struct moonfish_move move;
 	char name[6];
-	long int our_time, their_time, *xtime;
-	long int score;
-	int depth;
+	long int our_time, their_time, *xtime, time;
 	struct moonfish_chess chess;
 	char *end;
-	long int time;
+	long int count;
+	struct moonfish_options options;
 	
 	if (argc > 1) {
 		fprintf(stderr, "usage: %s\n", argv[0]);
@@ -49,7 +48,6 @@ int main(int argc, char **argv)
 			
 			our_time = -1;
 			their_time = -1;
-			depth = -1;
 			time = -1;
 			
 			for (;;) {
@@ -82,27 +80,6 @@ int main(int argc, char **argv)
 					}
 				}
 				
-				if (!strcmp(arg0, "depth")) {
-					
-					arg = strtok(NULL, "\r\n\t ");
-					
-					if (arg == NULL) {
-						fprintf(stderr, "%s: malformed 'go depth' command\n", argv[0]);
-						return 1;
-					}
-					
-					errno = 0;
-					depth = strtol(arg, &end, 10);
-					if (errno) {
-						perror(argv[0]);
-						return 1;
-					}
-					if (*end != 0 || depth < 0 || depth > 1000) {
-						fprintf(stderr, "%s: malformed depth in 'go' command\n", argv[0]);
-						return 1;
-					}
-				}
-				
 				if (!strcmp(arg0, "movetime")) {
 					
 					arg = strtok(NULL, "\r\n\t ");
@@ -114,30 +91,22 @@ int main(int argc, char **argv)
 					
 					errno = 0;
 					time = strtol(arg, &end, 10);
-					if (errno) {
-						perror(argv[0]);
-						return 1;
-					}
-					if (*end != 0 || time < 0) {
+					if (errno || *end != 0 || time < 0) {
 						fprintf(stderr, "%s: malformed move time in 'go' command\n", argv[0]);
 						return 1;
 					}
 				}
 			}
 			
-			if (our_time < 0) our_time = 0;
-			if (their_time < 0) their_time = 0;
-			
-			if (depth >= 0) {
-				score = moonfish_best_move_depth(&chess, &move, depth);
-			}
-			else {
-				if (time >= 0) score = moonfish_best_move_time(&chess, &move, time);
-				else score = moonfish_best_move_clock(&chess, &move, our_time, their_time);
+			if (our_time < 0 && time < 0) {
+				fprintf(stderr, "%s: warning: missing constraints in 'go' command\n", argv[0]);
 			}
 			
-			if (depth < 0) depth = 1;
-			printf("info depth %d score cp %ld\n", depth, score);
+			options.max_time = time;
+			options.our_time = our_time;
+			count = moonfish_best_move(&chess, &move, &options);
+			
+			printf("info nodes %ld\n", count);
 			
 			moonfish_to_uci(&chess, &move, name);
 			printf("bestmove %s\n", name);
@@ -150,7 +119,7 @@ int main(int argc, char **argv)
 			
 			arg = strtok(NULL, "\r\n\t ");
 			if (arg == NULL) {
-				fprintf(stderr, "incomplete 'position' command\n");
+				fprintf(stderr, "%s: incomplete 'position' command\n", argv[0]);
 				return 1;
 			}
 			
@@ -158,7 +127,7 @@ int main(int argc, char **argv)
 				
 				arg = strtok(NULL, "\r\n");
 				if (arg == NULL) {
-					fprintf(stderr, "incomplete 'position fen' command\n");
+					fprintf(stderr, "%s: incomplete 'position fen' command\n", argv[0]);
 					return 1;
 				}
 				moonfish_from_fen(&chess, arg);
@@ -179,7 +148,7 @@ int main(int argc, char **argv)
 					moonfish_chess(&chess);
 				}
 				else {
-					fprintf(stderr, "malformed 'position' command\n");
+					fprintf(stderr, "%s: malformed 'position' command\n", argv[0]);
 					return 1;
 				}
 			}
@@ -197,6 +166,7 @@ int main(int argc, char **argv)
 			
 			continue;
 		}
+		
 		if (!strcmp(arg, "uci")) {
 			printf("id name moonfish\n");
 			printf("id author zamfofex\n");

@@ -27,7 +27,6 @@ table of contents
   - [compiling on other systems](#porting-moonfish)
 - using moonfish’s tools
   - [using “play” and “analyse”](#using-play-and-analyse)
-  - [using “book”](#using-book) (for adding simple opening book support to bots without it by wrapping them)
   - [using “chat”](#using-chat) and [using “lichess”](#using-lichess) (for integrating with IRC and Lichess)
 - [helping improve moonfish!](#contributing-to-moonfish)
 - [license](#license)
@@ -36,7 +35,7 @@ features
 ---
 
 - simple evaluation based on PSTs
-- alpha/beta pruning search
+- MCTS (Monte Carlo tree search)
 - cute custom UCI TUIs
 - custom Lichess integration
 - custom IRC integration
@@ -47,7 +46,7 @@ limitations
 These are things that might be resolved eventually.
 
 - the TUIs do not let you underpromote
-- no support for `go infinite`, `go mate`, or `go nodes`
+- no support for `go depth`, `go infinite`, `go mate`, or `go nodes`
 - no FEN validation (may lead to potential exploits)
 
 download
@@ -81,12 +80,8 @@ make moonfish
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
 ~~~
-cc -ansi -O3 -pthread -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c
+cc -ansi -O3 -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c -lm
 ~~~
-
-Note: If your C implementation doesn’t support pthreads, but supports C11 threads, you may pass in `-Dmoonfish_c11_threads`.
-
-Note: If your C implementation doesn’t support threads at all, you may pass in `-Dmoonfish_no_threads`.
 
 using “play” and “analyse”
 ---
@@ -183,20 +178,19 @@ moonfish
 compiling on Windows
 ---
 
-Clone the repository, then open `moonfish.vcxproj` with Visual Studio. Support for [C11 `<threads.h>`][C11 threads in VS] is required. Only the UCI bot will be compiled, not its tools. (You may use a GUI like [cutechess] to try it.)
+Clone the repository, then open `moonfish.vcxproj` with Visual Studio. Only the UCI bot will be compiled, not its tools. (You may use a GUI like [cutechess] to try it.)
 
 Note that [MinGW] compilation is also supported.
 
 [cutechess]: <https://github.com/cutechess/cutechess>
-[C11 threads in VS]: <https://devblogs.microsoft.com/cppblog/c11-threads-in-visual-studio-2022-version-17-8-preview-2/>
 [MinGW]: <https://mingw-w64.org>
 
 porting moonfish
 ---
 
-The only pieces of functionality the moonfish depends on that are not specified entirely in C89 are pthreads (POSIX threads) and `clock_gettime`. POSIX threads are not required, and may be substituted by C11 threads or even disabled altogether with compile-time macros. (See [“compiling from source”](#compile-from-source)) However, `clock_gettime` is required and cannot be replaced with macros.
+The only piece of functionality the moonfish depends on that is not specified entirely in C89 is `clock_gettime`.
 
-Porting moonfish to a different platform should be a matter of simply providing a “mostly C89‐compliant” environment alongside `clock_gettime` and pthreads. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on 9front](#compiling-on-9front), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
+Porting moonfish to a different platform should be a matter of simply providing a “mostly C89‐compliant” environment alongside `clock_gettime`. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on 9front](#compiling-on-9front), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
 
 license
 ---
