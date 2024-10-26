@@ -29,7 +29,7 @@
 /* whereas the pieces closest to black have a higher index */
 /* this makes so that the board is flipped when displayed naively! (be careful) */
 
-/* the board is not just an 8 x 8 array because of an optisation that can be performed when generating moves */
+/* the board is not just an 8 x 8 array because of an optisation that is performed when generating moves */
 
 /* ~ ~ ~ ~ ~ */
 
@@ -80,7 +80,7 @@ struct moonfish_chess {
 	unsigned char white;
 };
 
-/* represents a move that can be made on a given position */
+/* represents a move that may be made on a given position */
 struct moonfish_move {
 	
 	/* the position after the move is played */
@@ -164,7 +164,7 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 
 /* checks whether there is a valid move with the given from/to square indices */
 /* then, if so, generates the move and stores it in the given move pointer */
-/* if the move is valid, this will return 0, and the pointer will point to a move that can be used */
+/* if the move is valid, this will return 0, and the pointer will point to a move that may be used */
 /* on failure (i.e. invalid move), this will return 1, and the move the pointer points to will not be usable */
 /* note: this will ignore underpromotions (always promotes to queen when a pawn reaches the last rank) */
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
