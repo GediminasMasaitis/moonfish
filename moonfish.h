@@ -20,33 +20,12 @@
 /* (a special value (0xFF) is used for pieces outside of the board) */
 
 /* the array itself is flattened into a 1D array with 120 elements */
-/* so the index into the array may be obtained from coordinatse using the following formula: */
-/* index = (x + 1) + (y + 2) * 8 */
+/* so the index into the array may be obtained from coordinates using the following formula: */
+/* index = (x + 1) + (y + 2) * 10 */
 /* where "x" (file) and "y" (rank) are integers in the range 0..7 (inclusive) */
 
-/* "x = 0" represents the "a" file, "x = 8" represents the "h" file */
-/* "y = 0" represents the 1st rank, "y = 8" represents the 8th rank (from white's perspective) */
-/* e.g. "x = 0 ; y = 0" represents "a1", and "index = 17" */
-/* e.g. "x = 3 ; y = 5" represents "d6", and "index = 60" */
-/* e.g. "x = 5 ; y = 3" represents "f4", and "index = 46" */
-/* e.g. "x = 8 ; y = 8" represents "h8", and "index = 89" */
-
-/* diagram (for starting position) */
-/* i = 00..07 : 0x[FF FF FF FF FF FF FF FF] */
-/* i = 08..15 : 0x[FF FF FF FF FF FF FF FF] */
-/* i = 16..23 : 0x[FF 14 12 15 16 12 14 FF] */
-/* i = 24..31 : 0x[FF 11 11 11 11 11 11 FF] */
-/* i = 32..39 : 0x[FF 00 00 00 00 00 00 FF] */
-/* i = 40..47 : 0x[FF 00 00 00 00 00 00 FF] */
-/* i = 48..55 : 0x[FF 00 00 00 00 00 00 FF] */
-/* i = 56..63 : 0x[FF 00 00 00 00 00 00 FF] */
-/* i = 64..71 : 0x[FF 21 21 21 21 21 21 FF] */
-/* i = 72..79 : 0x[FF 24 22 25 26 22 24 FF] */
-/* i = 80..87 : 0x[FF FF FF FF FF FF FF FF] */
-/* i = 88.119 : 0x[FF FF FF FF FF FF FF FF] */
-/* (squares with 00 are outside of the board, squares with FF are empty) */
-
-/* note: white pieces are shown on the top, because they squares closest to white have a lower index */
+/* note: in the initial position, the white pieces are closer to the start of the array */
+/* because the squares closest to white have a lower index */
 /* whereas the pieces closest to black have a higher index */
 /* this makes so that the board is flipped when displayed naively! (be careful) */
 
