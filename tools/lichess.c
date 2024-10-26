@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
+#include <sys/wait.h>
 
 #include <cjson/cJSON.h>
 
@@ -456,6 +457,15 @@ static char *moonfish_username(char *argv0, char *host, char *port, char *token)
 	return username;
 }
 
+static void moonfish_signal(int signal)
+{
+	(void) signal;
+	
+	for (;;) {
+		if (waitpid(-1, NULL, WNOHANG) <= 0) break;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	static char *format = "<cmd> <args>...";
@@ -472,6 +482,7 @@ int main(int argc, char **argv)
 	int command_count;
 	struct tls *tls;
 	char *username;
+	struct sigaction action;
 	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);
@@ -490,7 +501,14 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) return 1;
+	action.sa_handler = &moonfish_signal;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = 0;
+	
+	if (sigaction(SIGCHLD, &action, NULL)) {
+		perror(argv[0]);
+		return 1;
+	}
 	
 	tls = moonfish_connect(argv[0], args[0].value, args[1].value);
 	moonfish_request(argv[0], tls, args[0].value, "GET /api/stream/event", token, NULL, 0);
