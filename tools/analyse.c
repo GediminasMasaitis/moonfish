@@ -29,7 +29,6 @@ struct moonfish_fancy {
 	struct moonfish_ply plies[256];
 	int i, count;
 	pthread_mutex_t *mutex;
-	char *argv0;
 	int x, y;
 	FILE *in, *out;
 	char *fen;
@@ -372,7 +371,7 @@ static void *moonfish_start(void *data)
 				
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &ply.depth) || ply.depth < 0) {
-					fprintf(stderr, "%s: malformed 'depth' in 'info' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'depth' in 'info' command\n");
 					exit(1);
 				}
 				
@@ -383,7 +382,7 @@ static void *moonfish_start(void *data)
 				
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &pv) || pv <= 0) {
-					fprintf(stderr, "%s: malformed 'multipv' in 'info' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'multipv' in 'info' command\n");
 					exit(1);
 				}
 				
@@ -401,7 +400,7 @@ static void *moonfish_start(void *data)
 					arg = strtok_r(NULL, "\r\n\t ", &buffer);
 					if (arg == NULL) break;
 					if (moonfish_from_uci(&ply.chess, &move, arg)) {
-						fprintf(stderr, "%s: invalid move: %s\n", fancy->argv0, arg);
+						fprintf(stderr, "invalid move: '%s'\n", arg);
 						exit(1);
 					}
 					if (i == 0 && pv == 1) {
@@ -431,17 +430,17 @@ static void *moonfish_start(void *data)
 				
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &ply.white) || ply.white < 0) {
-					fprintf(stderr, "%s: malformed 'wdl' win in 'info' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'wdl' win in 'info' command\n");
 					exit(1);
 				}
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &ply.draw) || ply.draw < 0) {
-					fprintf(stderr, "%s: malformed 'wdl' draw in 'info' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'wdl' draw in 'info' command\n");
 					exit(1);
 				}
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &ply.black) || ply.black < 0) {
-					fprintf(stderr, "%s: malformed 'wdl' loss in 'info' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'wdl' loss in 'info' command\n");
 					exit(1);
 				}
 				
@@ -462,7 +461,7 @@ static void *moonfish_start(void *data)
 				
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &fancy->taken) || fancy->taken < 0) {
-					fprintf(stderr, "%s: malformed 'time' in 'info' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'time' in 'info' command\n");
 					exit(1);
 				}
 				
@@ -479,7 +478,7 @@ static void *moonfish_start(void *data)
 				
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &score)) {
-					fprintf(stderr, "%s: malformed 'cp' in 'info score' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'cp' in 'info score' command\n");
 					exit(1);
 				}
 				
@@ -505,7 +504,7 @@ static void *moonfish_start(void *data)
 				
 				arg = strtok_r(NULL, "\r\n\t ", &buffer);
 				if (arg == NULL || moonfish_int(arg, &score)) {
-					fprintf(stderr, "%s: malformed 'mate' in 'info score' command\n", fancy->argv0);
+					fprintf(stderr, "malformed 'mate' in 'info score' command\n");
 					exit(1);
 				}
 				
@@ -759,11 +758,10 @@ int main(int argc, char **argv)
 	
 	fancy = malloc(sizeof *fancy);
 	if (fancy == NULL) {
-		perror(argv[0]);
+		perror("malloc");
 		return 1;
 	}
 	
-	fancy->argv0 = argv[0];
 	fancy->mutex = &mutex;
 	fancy->offset = 0;
 	fancy->pv[0] = 0;
@@ -798,7 +796,7 @@ int main(int argc, char **argv)
 	if (args[0].value != NULL) {
 		fancy->fen = args[0].value;
 		if (moonfish_from_fen(&fancy->plies[0].chess, fancy->fen)) {
-			fprintf(stderr, "%s: invalid FEN\n", argv[0]);
+			moonfish_usage(args, format, argv[0]);
 		}
 	}
 	
@@ -806,7 +804,7 @@ int main(int argc, char **argv)
 		
 		file = fopen(args[1].value, "r");
 		if (file == NULL) {
-			perror(argv[0]);
+			perror("fopen");
 			return 1;
 		}
 		
@@ -825,7 +823,7 @@ int main(int argc, char **argv)
 		
 		fancy->fen = malloc(128);
 		if (fancy->fen == NULL) {
-			perror(argv[0]);
+			perror("malloc");
 			return 1;
 		}
 		
@@ -836,7 +834,7 @@ int main(int argc, char **argv)
 	/* configure the terminal for displaying the user interface */
 	
 	if (tcgetattr(0, &moonfish_termios)) {
-		perror(argv[0]);
+		perror("tcgetattr");
 		return 1;
 	}
 	
@@ -850,7 +848,7 @@ int main(int argc, char **argv)
 	action.sa_flags = 0;
 	
 	if (sigaction(SIGTERM, &action, NULL) || sigaction(SIGINT, &action, NULL) || sigaction(SIGQUIT, &action, NULL)) {
-		perror(argv[0]);
+		perror("sigaction");
 		return 1;
 	}
 	
@@ -858,7 +856,7 @@ int main(int argc, char **argv)
 	termios.c_lflag &= ~(ECHO | ICANON);
 	
 	if (tcsetattr(0, TCSANOW, &termios)) {
-		perror(argv[0]);
+		perror("tcsetattr");
 		return 1;
 	}
 	
@@ -901,7 +899,7 @@ int main(int argc, char **argv)
 	
 	error = pthread_create(&thread, NULL, &moonfish_start, fancy);
 	if (error) {
-		fprintf(stderr, "%s: %s\n", fancy->argv0, strerror(error));
+		fprintf(stderr, "pthread_create: %s\n", strerror(error));
 		return 1;
 	}
 	
@@ -1027,7 +1025,7 @@ int main(int argc, char **argv)
 		if (ch0 == 0x20 && y1 == 8 && x1 >= 21 && x1 <= 40) {
 			if (fancy->plies[fancy->i].best[0] != 0) {
 				if (moonfish_from_uci(&fancy->plies[fancy->i].chess, &move, fancy->plies[fancy->i].best)) {
-					fprintf(stderr, "%s: invalid best move: %s\n", fancy->argv0, fancy->plies[fancy->i].best);
+					fprintf(stderr, "invalid best move: %s\n", fancy->plies[fancy->i].best);
 					return 1;
 				}
 				moonfish_play(fancy, &move);

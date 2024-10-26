@@ -2,7 +2,6 @@
 /* copyright 2024 zamfofex */
 
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 
 #include "../moonfish.h"

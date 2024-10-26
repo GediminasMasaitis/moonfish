@@ -10,37 +10,36 @@
 
 #define moonfish_count 192
 
-static double moonfish_next_line(char *argv0, char *line, FILE *file)
+static double moonfish_next_line(char *line, FILE *file)
 {
 	char *arg, *end;
 	double score;
 	
-	errno = 0;
 	if (fgets(line, 2048, file) == NULL) {
 		
-		if (errno) {
-			perror(argv0);
+		if (!feof(stdin)) {
+			perror("fgets");
 			exit(1);
 		}
 		
 		errno = 0;
 		rewind(file);
 		if (errno) {
-			perror(argv0);
+			perror("rewind");
 			exit(1);
 		}
 	}
 	
 	arg = strrchr(line, ' ');
 	if (arg == NULL) {
-		fprintf(stderr, "%s: improper FEN line\n", argv0);
+		fprintf(stderr, "malformed FEN line\n");
 		exit(1);
 	}
 	
 	errno = 0;
 	score = strtod(arg + 1, &end);
 	if (errno || (*end != 0 && *end != '\n') || score > 10000 || score < -10000) {
-		fprintf(stderr, "%s: unexpected score\n", argv0);
+		fprintf(stderr, "unexpected score\n");
 		exit(1);
 	}
 	
@@ -71,7 +70,7 @@ static double moonfish_gradient(double *gradient, double score0, char *fen)
 	return error;
 }
 
-static double moonfish_step(char *argv0, FILE *file, double *gradient)
+static double moonfish_step(FILE *file, double *gradient)
 {
 	static char line[2048];
 	
@@ -84,7 +83,7 @@ static double moonfish_step(char *argv0, FILE *file, double *gradient)
 	for (i = 0 ; i < moonfish_count ; i++) gradient[i] = 0;
 	
 	for (i = 0 ; i < 2048 ; i++) {
-		score = moonfish_next_line(argv0, line, file);
+		score = moonfish_next_line(line, file);
 		error += moonfish_gradient(gradient, score, line);
 	}
 	
@@ -109,14 +108,7 @@ int main(int argc, char **argv)
 	
 	file = fopen(argv[1], "r");
 	if (file == NULL) {
-		perror(argv[0]);
-		return 1;
-	}
-	
-	errno = 0;
-	rewind(file);
-	if (errno) {
-		perror(argv[0]);
+		perror("fopen");
 		return 1;
 	}
 	
@@ -127,7 +119,7 @@ int main(int argc, char **argv)
 		iteration++;
 		if (iteration > 0x1000) return 0;
 		
-		error = moonfish_step(argv[0], file, gradient);
+		error = moonfish_step(file, gradient);
 		
 		printf("\n");
 		for (i = 0 ; i < moonfish_count ; i++) printf("%.0f,", moonfish_values[i]);

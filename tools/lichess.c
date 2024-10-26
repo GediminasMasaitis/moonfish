@@ -14,7 +14,6 @@
 #include "https.h"
 
 struct moonfish_game {
-	char *argv0;
 	char *host;
 	char *port;
 	char *token;
@@ -24,9 +23,9 @@ struct moonfish_game {
 	char fen[512];
 };
 
-static void moonfish_json_error(char *argv0)
+static void moonfish_json_error(void)
 {
-	fprintf(stderr, "%s: malformed JSON\n", argv0);
+	fprintf(stderr, "malformed JSON\n");
 	exit(1);
 }
 
@@ -74,7 +73,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 			root = NULL;
 		}
 		
-		line = moonfish_read_line(game->argv0, tls);
+		line = moonfish_read_line(tls);
 		if (line == NULL) break;
 		
 		pthread_mutex_lock(&moonfish_mutex);
@@ -86,13 +85,13 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		
 		end = NULL;
 		root = cJSON_ParseWithOpts(line, &end, 1);
-		if (end != line + strlen(line)) moonfish_json_error(game->argv0);
+		if (end != line + strlen(line)) moonfish_json_error();
 		free(line);
 		
-		if (!cJSON_IsObject(root)) moonfish_json_error(game->argv0);
+		if (!cJSON_IsObject(root)) moonfish_json_error();
 		
 		type = cJSON_GetObjectItem(root, "type");
-		if (!cJSON_IsString(type)) moonfish_json_error(game->argv0);
+		if (!cJSON_IsString(type)) moonfish_json_error();
 		
 		state = NULL;
 		
@@ -101,21 +100,21 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		if (!strcmp(type->valuestring, "gameFull")) {
 			
 			state = cJSON_GetObjectItem(root, "state");
-			if (!cJSON_IsObject(state)) moonfish_json_error(game->argv0);
+			if (!cJSON_IsObject(state)) moonfish_json_error();
 			
 			white = 0;
 			
 			white_player = cJSON_GetObjectItem(root, "white");
-			if (!cJSON_IsObject(white_player)) moonfish_json_error(game->argv0);
+			if (!cJSON_IsObject(white_player)) moonfish_json_error();
 			
 			id = cJSON_GetObjectItem(white_player, "id");
 			if (id != NULL && !cJSON_IsNull(id)) {
-				if (!cJSON_IsString(id)) moonfish_json_error(game->argv0);
+				if (!cJSON_IsString(id)) moonfish_json_error();
 				if (!strcmp(id->valuestring, game->username)) white = 1;
 			}
 			
 			fen = cJSON_GetObjectItem(root, "initialFen");
-			if (!cJSON_IsString(fen)) moonfish_json_error(game->argv0);
+			if (!cJSON_IsString(fen)) moonfish_json_error();
 			
 			if (strcmp(fen->valuestring, "startpos")) {
 				strcpy(game->fen, "fen ");
@@ -130,12 +129,12 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		if (state == NULL) continue;
 		
 		if (white == -1) {
-			fprintf(stderr, "%s: 'gameState' event received prior to 'gameFull' event\n", game->argv0);
+			fprintf(stderr, "received 'gameState' event prior to 'gameFull' event\n");
 			exit(1);
 		}
 		
 		moves = cJSON_GetObjectItem(state, "moves");
-		if (!cJSON_IsString(moves)) moonfish_json_error(game->argv0);
+		if (!cJSON_IsString(moves)) moonfish_json_error();
 		
 		count = 0;
 		if (moves->valuestring[0] != 0) {
@@ -156,10 +155,10 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		winc = cJSON_GetObjectItem(state, "winc");
 		binc = cJSON_GetObjectItem(state, "binc");
 		
-		if (!cJSON_IsNumber(wtime)) moonfish_json_error(game->argv0);
-		if (!cJSON_IsNumber(btime)) moonfish_json_error(game->argv0);
-		if (!cJSON_IsNumber(winc)) moonfish_json_error(game->argv0);
-		if (!cJSON_IsNumber(binc)) moonfish_json_error(game->argv0);
+		if (!cJSON_IsNumber(wtime)) moonfish_json_error();
+		if (!cJSON_IsNumber(btime)) moonfish_json_error();
+		if (!cJSON_IsNumber(winc)) moonfish_json_error();
+		if (!cJSON_IsNumber(binc)) moonfish_json_error();
 		
 		fprintf(in, "isready\n");
 		moonfish_wait(out, "readyok");
@@ -178,7 +177,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 				for (;;) {
 					
 					if (moonfish_from_uci(&chess, &move, name)) {
-						fprintf(stderr, "%s: invalid move '%s' from the bot\n", game->argv0, name);
+						fprintf(stderr, "malformed move '%s' from the bot\n", name);
 						exit(1);
 					}
 					
@@ -207,7 +206,7 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		
 		name = moonfish_wait(out, "bestmove");
 		if (name == NULL) {
-			fprintf(stderr, "%s: could not find 'bestmove' command\n", game->argv0);
+			fprintf(stderr, "could not find 'bestmove' command\n");
 			exit(1);
 		}
 		
@@ -223,17 +222,17 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 			}
 			
 			if (moonfish_from_uci(&chess, &move, name)) {
-				fprintf(stderr, "%s: invalid move '%s' from the bot\n", game->argv0, name);
+				fprintf(stderr, "malformed move '%s' from the bot\n", name);
 				exit(1);
 			}
 		}
 		
 		snprintf(request, sizeof request, "POST /api/bot/game/%s/move/%s", game->id, name);
-		if (moonfish_basic_request(game->argv0, game->host, game->port, game->token, request, NULL, NULL)) {
-			fprintf(stderr, "%s: could not make move '%s' in game '%s'\n", game->argv0, name, game->id);
+		if (moonfish_basic_request(game->host, game->port, game->token, request, NULL, NULL)) {
+			fprintf(stderr, "could not make move '%s' in game '%s'\n", name, game->id);
 			snprintf(request, sizeof request, "POST /api/bot/game/%s/resign", game->id);
-			if (moonfish_basic_request(game->argv0, game->host, game->port, game->token, request, NULL, NULL)) {
-				fprintf(stderr, "%s: could not resign game '%s'\n", game->argv0, game->id);
+			if (moonfish_basic_request(game->host, game->port, game->token, request, NULL, NULL)) {
+				fprintf(stderr, "could not resign game '%s'\n", game->id);
 			}
 			break;
 		}
@@ -258,25 +257,25 @@ static void *moonfish_handle_game(void *data)
 	game = data;
 	
 	moonfish_spawn(game->argv, &in, &out, NULL);
-	tls = moonfish_connect(game->argv0, game->host, game->port);
+	tls = moonfish_connect(game->host, game->port);
 	
 	snprintf(request, sizeof request, "GET /api/bot/game/stream/%s", game->id);
 	
-	moonfish_request(game->argv0, tls, game->host, request, game->token, NULL, 0);
+	moonfish_request(tls, game->host, request, game->token, NULL, 0);
 	
-	if (moonfish_response(game->argv0, tls)) {
-		fprintf(stderr, "%s: could not request game event stream\n", game->argv0);
+	if (moonfish_response(tls)) {
+		fprintf(stderr, "could not request game event stream\n");
 		exit(1);
 	}
 	
 	moonfish_handle_game_events(tls, game, in, out);
 	
-	moonfish_close(game->argv0, tls);
+	moonfish_close(tls);
 	free(game);
 	return NULL;
 }
 
-static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, char *port, char *token, char **argv, char *username)
+static void moonfish_handle_events(struct tls *tls, char *host, char *port, char *token, char **argv, char *username)
 {
 	char request[2048];
 	char *line;
@@ -297,9 +296,9 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 			root = NULL;
 		}
 		
-		line = moonfish_read_line(argv0, tls);
+		line = moonfish_read_line(tls);
 		if (line == NULL) {
-			fprintf(stderr, "%s: connection with Lichess closed\n", argv0);
+			fprintf(stderr, "connection with Lichess closed\n");
 			exit(1);
 		}
 		
@@ -310,34 +309,33 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 		
 		end = NULL;
 		root = cJSON_ParseWithOpts(line, &end, 1);
-		if (end != line + strlen(line)) moonfish_json_error(argv0);
+		if (end != line + strlen(line)) moonfish_json_error();
 		free(line);
 		
-		if (!cJSON_IsObject(root)) moonfish_json_error(argv0);
+		if (!cJSON_IsObject(root)) moonfish_json_error();
 		
 		type = cJSON_GetObjectItem(root, "type");
-		if (!cJSON_IsString(type)) moonfish_json_error(argv0);
+		if (!cJSON_IsString(type)) moonfish_json_error();
 		
 		if (!strcmp(type->valuestring, "gameStart")) {
 			
 			challenge = cJSON_GetObjectItem(root, "game");
-			if (!cJSON_IsObject(challenge)) moonfish_json_error(argv0);
+			if (!cJSON_IsObject(challenge)) moonfish_json_error();
 			
 			id = cJSON_GetObjectItem(challenge, "id");
-			if (!cJSON_IsString(id)) moonfish_json_error(argv0);
+			if (!cJSON_IsString(id)) moonfish_json_error();
 			
 			game = malloc(sizeof *game);
 			if (game == NULL) {
-				fprintf(stderr, "%s: could not allocate game\n", argv0);
+				perror("malloc");
 				exit(1);
 			}
 			
 			if (strlen(id->valuestring) > sizeof game->id - 1) {
-				fprintf(stderr, "%s: game ID '%s' too long\n", argv0, id->valuestring);
+				fprintf(stderr, "game ID '%s' too long\n", id->valuestring);
 				exit(1);
 			}
 			
-			game->argv0 = argv0;
 			game->host = host;
 			game->port = port;
 			game->token = token;
@@ -347,7 +345,7 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 			
 			error = pthread_create(&thread, NULL, &moonfish_handle_game, game);
 			if (error) {
-				fprintf(stderr, "%s: %s\n", argv0, strerror(error));
+				fprintf(stderr, "pthread_create: %s\n", strerror(error));
 				exit(1);
 			}
 			
@@ -357,21 +355,21 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 		if (strcmp(type->valuestring, "challenge")) continue;
 		
 		challenge = cJSON_GetObjectItem(root, "challenge");
-		if (!cJSON_IsObject(challenge)) moonfish_json_error(argv0);
+		if (!cJSON_IsObject(challenge)) moonfish_json_error();
 		
 		id = cJSON_GetObjectItem(challenge, "id");
-		if (!cJSON_IsString(id)) moonfish_json_error(argv0);
+		if (!cJSON_IsString(id)) moonfish_json_error();
 		
 		variant = cJSON_GetObjectItem(challenge, "variant");
-		if (!cJSON_IsObject(variant)) moonfish_json_error(argv0);
+		if (!cJSON_IsObject(variant)) moonfish_json_error();
 		
 		variant = cJSON_GetObjectItem(variant, "key");
-		if (!cJSON_IsString(variant)) moonfish_json_error(argv0);
+		if (!cJSON_IsString(variant)) moonfish_json_error();
 		
 		if (!strcmp(variant->valuestring, "fromPosition")) {
 			
 			fen = cJSON_GetObjectItem(challenge, "initialFen");
-			if (!cJSON_IsString(fen)) moonfish_json_error(argv0);
+			if (!cJSON_IsString(fen)) moonfish_json_error();
 			
 			invalid = moonfish_from_fen(&chess, fen->valuestring);
 			
@@ -384,8 +382,8 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 			
 			if (invalid) {
 				snprintf(request, sizeof request, "POST /api/challenge/%s/decline", id->valuestring);
-				if (moonfish_basic_request(argv0, host, port, token, request, NULL, "reason=standard")) {
-					fprintf(stderr, "%s: could not decline challenge '%s' (chess 960 FEN)\n", argv0, id->valuestring);
+				if (moonfish_basic_request(host, port, token, request, NULL, "reason=standard")) {
+					fprintf(stderr, "could not decline challenge '%s' (chess 960 FEN)\n", id->valuestring);
 				}
 				continue;
 			}
@@ -393,31 +391,31 @@ static void moonfish_handle_events(struct tls *tls, char *argv0, char *host, cha
 		
 		if (strcmp(variant->valuestring, "standard")) {
 			snprintf(request, sizeof request, "POST /api/challenge/%s/decline", id->valuestring);
-			if (moonfish_basic_request(argv0, host, port, token, request, NULL, "reason=standard")) {
-				fprintf(stderr, "%s: could not decline challenge '%s' (variant)\n", argv0, id->valuestring);
+			if (moonfish_basic_request(host, port, token, request, NULL, "reason=standard")) {
+				fprintf(stderr, "could not decline challenge '%s' (variant)\n", id->valuestring);
 			}
 			continue;
 		}
 		
 		speed = cJSON_GetObjectItem(challenge, "speed");
-		if (!cJSON_IsString(speed)) moonfish_json_error(argv0);
+		if (!cJSON_IsString(speed)) moonfish_json_error();
 		
 		if (!strcmp(speed->valuestring, "correspondence")) {
 			snprintf(request, sizeof request, "POST /api/challenge/%s/decline", id->valuestring);
-			if (moonfish_basic_request(argv0, host, port, token, request, NULL, "reason=tooSlow")) {
-				fprintf(stderr, "%s: could not decline challenge '%s' (too slow)\n", argv0, id->valuestring);
+			if (moonfish_basic_request(host, port, token, request, NULL, "reason=tooSlow")) {
+				fprintf(stderr, "could not decline challenge '%s' (too slow)\n", id->valuestring);
 			}
 			continue;
 		}
 		
 		snprintf(request, sizeof request, "POST /api/challenge/%s/accept", id->valuestring);
-		if (moonfish_basic_request(argv0, host, port, token, request, NULL, NULL)) {
-			fprintf(stderr, "%s: could not accept challenge '%s'\n", argv0, id->valuestring);
+		if (moonfish_basic_request(host, port, token, request, NULL, NULL)) {
+			fprintf(stderr, "could not accept challenge '%s'\n", id->valuestring);
 		}
 	}
 }
 
-static char *moonfish_username(char *argv0, char *host, char *port, char *token)
+static char *moonfish_username(char *host, char *port, char *token)
 {
 	char *line;
 	char *username;
@@ -425,34 +423,34 @@ static char *moonfish_username(char *argv0, char *host, char *port, char *token)
 	cJSON *root, *id;
 	struct tls *tls;
 	
-	tls = moonfish_connect(argv0, host, port);
+	tls = moonfish_connect(host, port);
 	
-	moonfish_request(argv0, tls, host, "GET /api/account", token, NULL, 0);
+	moonfish_request(tls, host, "GET /api/account", token, NULL, 0);
 	
-	if (moonfish_response(argv0, tls)) {
-		fprintf(stderr, "%s: could not request the Lichess username\n", argv0);
+	if (moonfish_response(tls)) {
+		fprintf(stderr, "could not request the Lichess account information\n");
 		exit(1);
 	}
 	
-	line = moonfish_read_line(argv0, tls);
+	line = moonfish_read_line(tls);
 	
 	end = NULL;
 	root = cJSON_ParseWithOpts(line, &end, 1);
-	if (end != line + strlen(line)) moonfish_json_error(argv0);
+	if (end != line + strlen(line)) moonfish_json_error();
 	free(line);
 	
-	if (!cJSON_IsObject(root)) moonfish_json_error(argv0);
+	if (!cJSON_IsObject(root)) moonfish_json_error();
 	
 	id = cJSON_GetObjectItem(root, "id");
-	if (!cJSON_IsString(id)) moonfish_json_error(argv0);
+	if (!cJSON_IsString(id)) moonfish_json_error();
 	
 	username = strdup(id->valuestring);
 	if (username == NULL) {
-		perror(argv0);
+		perror("strdup");
 		exit(1);
 	}
 	
-	moonfish_close(argv0, tls);
+	moonfish_close(tls);
 	
 	return username;
 }
@@ -506,20 +504,18 @@ int main(int argc, char **argv)
 	action.sa_flags = 0;
 	
 	if (sigaction(SIGCHLD, &action, NULL)) {
-		perror(argv[0]);
+		perror("sigaction");
 		return 1;
 	}
 	
-	tls = moonfish_connect(argv[0], args[0].value, args[1].value);
-	moonfish_request(argv[0], tls, args[0].value, "GET /api/stream/event", token, NULL, 0);
-	if (moonfish_response(argv[0], tls)) {
-		fprintf(stderr, "%s: could not request event stream\n", argv[0]);
+	tls = moonfish_connect(args[0].value, args[1].value);
+	moonfish_request(tls, args[0].value, "GET /api/stream/event", token, NULL, 0);
+	if (moonfish_response(tls)) {
+		fprintf(stderr, "could not request event stream\n");
 		return 1;
 	}
 	
-	username = moonfish_username(argv[0], args[0].value, args[1].value, token);
-	moonfish_handle_events(tls, argv[0], args[0].value, args[1].value, token, command, username);
-	
-	fprintf(stderr, "%s: Unreachable\n", argv[0]);
+	username = moonfish_username(args[0].value, args[1].value, token);
+	moonfish_handle_events(tls, args[0].value, args[1].value, token, command, username);
 	return 1;
 }
