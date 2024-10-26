@@ -323,8 +323,7 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 int main(int argc, char **argv)
 {
 	static char *format = "<UCI-options> [--] <cmd> <args>...";
-	static struct moonfish_arg args[] =
-	{
+	static struct moonfish_arg args[] = {
 		{"N", "host", "<name>", "irc.libera.chat", "network host name (default: 'irc.libera.chat')"},
 		{"P", "port", "<port>", "6697", "network port (default: '6697')"},
 		{"M", "nick", "<nickname>", "moonfish", "the bot's nickname (default: 'moonfish')"},

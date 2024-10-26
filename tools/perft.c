@@ -34,8 +34,7 @@ static long int moonfish_perft(struct moonfish_chess *chess, int depth)
 int main(int argc, char **argv)
 {
 	static char *format = "<depth>";
-	static struct moonfish_arg args[] =
-	{
+	static struct moonfish_arg args[] = {
 		{"F", "fen", "<FEN>", NULL, "starting position for the game"},
 		{NULL, NULL, NULL, NULL, NULL},
 	};

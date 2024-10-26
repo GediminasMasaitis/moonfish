@@ -702,8 +702,7 @@ int main(int argc, char **argv)
 {
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static char *format = "<UCI-options>... [--] <cmd> <args>...";
-	static struct moonfish_arg args[] =
-	{
+	static struct moonfish_arg args[] = {
 		{"F", "fen", "<FEN>", NULL, "the position to analyse"},
 		{"G", "pgn", "<file-name>", NULL, "PGN game to load"},
 		{NULL, NULL, NULL, NULL, NULL},

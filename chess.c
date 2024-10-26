@@ -189,8 +189,7 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from)
 {
 	static int steps[] = {0, 1, 8, 8, 8, 1};
-	static int deltas[][5] =
-	{
+	static int deltas[][5] = {
 		{0},
 		{21, 19, 12, 8, 0},
 		{11, 9, 0},
