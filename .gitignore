@@ -15,7 +15,6 @@
 !/tools
 !/tools/tools.h
 !/tools/utils.c
-!/tools/play.c
 !/tools/analyse.c
 !/tools/lichess.c
 !/tools/chat.c

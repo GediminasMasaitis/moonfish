@@ -19,7 +19,7 @@ tasks:
   
   - strip: |
       cd moonfish
-      strip --strip-all moonfish play lichess analyse chat
+      strip --strip-all moonfish lichess analyse chat
   
   - deploy: |
       set +x
@@ -36,7 +36,6 @@ tasks:
       cd moonfish
       curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
         -F "$root"/moonfish=@moonfish \
-        -F "$root"/play=@play \
         -F "$root"/lichess=@lichess \
         -F "$root"/analyse=@analyse \
         -F "$root"/chat=@chat \

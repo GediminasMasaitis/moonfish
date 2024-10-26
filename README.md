@@ -26,8 +26,9 @@ table of contents
   - [compiling on Windows](#compiling-on-windows)
   - [compiling on other systems](#porting-moonfish)
 - using moonfish’s tools
-  - [using “play” and “analyse”](#using-play-and-analyse)
-  - [using “chat”](#using-chat) and [using “lichess”](#using-lichess) (for integrating with IRC and Lichess)
+  - [using “analyse”](#using-analyse)
+  - [using “chat”](#using-chat) (for integrating UCI bots with IRC)
+  - [using “lichess”](#using-lichess) (for integrating UCI bots with Lichess)
 - [helping improve moonfish!](#contributing-to-moonfish)
 - [license](#license)
 
@@ -83,29 +84,16 @@ Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc
 cc -ansi -O3 -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c -lm
 ~~~
 
-using “play” and “analyse”
+using “analyse”
 ---
 
 ~~~
-make play analyse
+make analyse
 ~~~
 
-“play” and “analyse” are TUIs that allows you to play against and analyse with UCI bots respectively.
+“analyse” is a TUIs that allows you to analyse chess games with UCI bots.
 
-After compiling and running them, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
-
-To play against a UCI bot, use `./play` followed by the command of whichever bot you want to play against. The color of your pieces will be decided randomly by default.
-
-~~~
-# (start a game against Stockfish)
-./play stockfish
-
-# (start a game against Leela)
-./play lc0
-
-# (start a game against moonfish)
-./play ./moonfish
-~~~
+After compiling and running it, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
 
 To analyse a game with a UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and then the command of whichever bot you want to use for analysis. (Though note that moonfish currently does not have analysis capabilities.)
 
