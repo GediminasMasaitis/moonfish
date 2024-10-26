@@ -462,12 +462,6 @@ int moonfish_checkmate(struct moonfish_chess *chess)
 	return moonfish_finished(chess);
 }
 
-int moonfish_stalemate(struct moonfish_chess *chess)
-{
-	if (moonfish_check(chess)) return 0;
-	return moonfish_finished(chess);
-}
-
 static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char type, unsigned char promotion, int x0, int y0, int x1, int y1, int check, int captured)
 {
 	int found;

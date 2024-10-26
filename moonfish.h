@@ -173,9 +173,8 @@ int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsi
 /* note: 0 means false (i.e. not finished) */
 int moonfish_finished(struct moonfish_chess *chess);
 
-/* returns whether the game ended due to respectively checkmate or stalemate */
-/* note: 0 means false */
+/* returns whether the game ended due to checkmate */
+/* note: 0 means false (i.e. no checkmate) */
 int moonfish_checkmate(struct moonfish_chess *chess);
-int moonfish_stalemate(struct moonfish_chess *chess);
 
 #endif
