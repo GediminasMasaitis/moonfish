@@ -8,19 +8,21 @@
 
 #include "moonfish.h"
 
-static void moonfish_go(struct moonfish_chess *chess)
+static void moonfish_go(struct moonfish_node *node)
 {
-	static struct moonfish_move move;
+	static struct moonfish_result result;
 	static struct moonfish_options options;
+	static struct moonfish_chess chess;
 	
 	long int our_time, their_time, *xtime, time;
 	char *arg, *end;
-	long int count;
 	char name[6];
 	
 	our_time = -1;
 	their_time = -1;
 	time = -1;
+	
+	moonfish_root(node, &chess);
 	
 	for (;;) {
 		
@@ -29,7 +31,7 @@ static void moonfish_go(struct moonfish_chess *chess)
 		
 		if (!strcmp(arg, "wtime") || !strcmp(arg, "btime")) {
 			
-			if (chess->white) {
+			if (chess.white) {
 				if (!strcmp(arg, "wtime")) xtime = &our_time;
 				else xtime = &their_time;
 			}
@@ -75,15 +77,16 @@ static void moonfish_go(struct moonfish_chess *chess)
 	
 	options.max_time = time;
 	options.our_time = our_time;
-	count = moonfish_best_move(chess, &move, &options);
-	moonfish_to_uci(chess, &move, name);
+	moonfish_best_move(node, &result, &options);
+	moonfish_to_uci(&chess, &result.move, name);
 	
-	printf("info nodes %ld\n", count);
+	printf("info nodes %ld\n", result.node_count);
 	printf("bestmove %s\n", name);
 }
 
-static void moonfish_position(struct moonfish_chess *chess)
+static void moonfish_position(struct moonfish_node *node)
 {
+	static struct moonfish_chess chess, chess0;
 	static struct moonfish_move move;
 	static char line[2048];
 	
@@ -95,6 +98,8 @@ static void moonfish_position(struct moonfish_chess *chess)
 		exit(1);
 	}
 	
+	moonfish_chess(&chess);
+	
 	if (!strcmp(arg, "fen")) {
 		
 		arg = strtok(NULL, "\r\n");
@@ -103,54 +108,60 @@ static void moonfish_position(struct moonfish_chess *chess)
 			exit(1);
 		}
 		
-		moonfish_from_fen(chess, arg);
+		moonfish_from_fen(&chess, arg);
 		
 		arg = strstr(arg, "moves");
-		if (arg == NULL) return;
-		
-		do arg--;
-		while (*arg == '\t' || *arg == ' ');
-		
-		strcpy(line, arg);
-		strtok(line, "\r\n\t ");
+		if (arg != NULL) {
+			do arg--;
+			while (*arg == '\t' || *arg == ' ');
+			strcpy(line, arg);
+			strtok(line, "\r\n\t ");
+		}
 	}
 	else {
-		if (!strcmp(arg, "startpos")) {
-			moonfish_chess(chess);
-		}
-		else {
+		if (strcmp(arg, "startpos")) {
 			fprintf(stderr, "malformed 'position' command\n");
 			exit(1);
 		}
 	}
 	
 	arg = strtok(NULL, "\r\n\t ");
-	if (arg == NULL || strcmp(arg, "moves")) return;
 	
-	for (;;) {
-		arg = strtok(NULL, "\r\n\t ");
-		if (arg == NULL) break;
-		if (moonfish_from_uci(chess, &move, arg)) {
-			fprintf(stderr, "malformed move '%s'\n", arg);
-			exit(1);
+	if (arg != NULL && !strcmp(arg, "moves")) {
+		
+		for (;;) {
+			
+			arg = strtok(NULL, "\r\n\t ");
+			if (arg == NULL) break;
+			if (moonfish_from_uci(&chess, &move, arg)) {
+				fprintf(stderr, "malformed move '%s'\n", arg);
+				exit(1);
+			}
+			
+			moonfish_root(node, &chess0);
+			if (moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &move.chess);
+			
+			chess = move.chess;
 		}
-		*chess = move.chess;
 	}
+	
+	moonfish_root(node, &chess0);
+	if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &chess);
 }
 
 int main(int argc, char **argv)
 {
 	static char line[2048];
-	static struct moonfish_chess chess;
 	
 	char *arg;
+	struct moonfish_node *node;
 	
 	if (argc > 1) {
 		fprintf(stderr, "usage: %s (no arguments)\n", argv[0]);
 		return 1;
 	}
 	
-	moonfish_chess(&chess);
+	node = moonfish_new();
 	
 	for (;;) {
 		
@@ -166,14 +177,14 @@ int main(int argc, char **argv)
 		if (arg == NULL) continue;
 		
 		if (!strcmp(arg, "go")) {
-			moonfish_go(&chess);
+			moonfish_go(node);
 			continue;
 		}
 		
 		if (!strcmp(arg, "quit")) break;
 		
 		if (!strcmp(arg, "position")) {
-			moonfish_position(&chess);
+			moonfish_position(node);
 			continue;
 		}
 		
@@ -194,5 +205,6 @@ int main(int argc, char **argv)
 		fprintf(stderr, "warning: unknown command '%s'\n", arg);
 	}
 	
+	moonfish_finish(node);
 	return 0;
 }

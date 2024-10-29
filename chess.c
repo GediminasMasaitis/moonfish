@@ -821,3 +821,26 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	
 	*name = 0;
 }
+
+int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
+{
+	int x, y, i;
+	
+	if (a->white != b->white) return 0;
+	if (a->passing != b->passing) return 0;
+	if (a->oo[0] != b->oo[0]) return 0;
+	if (a->oo[1] != b->oo[1]) return 0;
+	if (a->ooo[0] != b->ooo[0]) return 0;
+	if (a->ooo[1] != b->ooo[1]) return 0;
+	
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			i = (x + 1) + (y + 2) * 10;
+			if (a->board[i] != b->board[i]) {
+				return 0;
+			}
+		}
+	}
+	
+	return 1;
+}

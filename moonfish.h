@@ -90,10 +90,19 @@ struct moonfish_move {
 	unsigned char from, to;
 };
 
+/* represents cross-search state */
+struct moonfish_node;
+
 /* represents options for the search */
 struct moonfish_options {
 	long int max_time;
 	long int our_time;
+};
+
+/* represents a search result */
+struct moonfish_result {
+	struct moonfish_move move;
+	long int node_count;
 };
 
 /* the PST */
@@ -113,10 +122,8 @@ void moonfish_chess(struct moonfish_chess *chess);
 int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
 
 /* tries to find the best move in the given position with the given options */
-/* the move is stored in the "move" pointer */
 /* the move found is the best for the player whose turn it is on the given position */
-/* this will return the number of positions that were looked into */
-long int moonfish_best_move(struct moonfish_chess *chess, struct moonfish_move *move, struct moonfish_options *options);
+void moonfish_best_move(struct moonfish_node *node, struct moonfish_result *result, struct moonfish_options *options);
 
 /* returns the depth-zero score for the given position */
 double moonfish_score(struct moonfish_chess *chess);
@@ -176,5 +183,21 @@ int moonfish_finished(struct moonfish_chess *chess);
 /* returns whether the game ended due to checkmate */
 /* note: 0 means false (i.e. no checkmate) */
 int moonfish_checkmate(struct moonfish_chess *chess);
+
+/* returns whether two positions are equal */
+/* note: 0 means false (i.e. the positions are different) */
+int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b);
+
+/* sets the state's position */
+void moonfish_reroot(struct moonfish_node *node, struct moonfish_chess *chess);
+
+/* get the state's position (it is stored in the given position pointer) */
+void moonfish_root(struct moonfish_node *node, struct moonfish_chess *chess);
+
+/* creates a new state (with the initial position) */
+struct moonfish_node *moonfish_new(void);
+
+/* frees the given state (so that it is no longer usable) */
+void moonfish_finish(struct moonfish_node *node);
 
 #endif
