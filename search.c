@@ -44,6 +44,7 @@ struct moonfish_node {
 	struct moonfish_node *children;
 	double score;
 	long int visits;
+	float bounds[2];
 	int count;
 };
 
@@ -90,6 +91,8 @@ static void moonfish_node(struct moonfish_node *node)
 	node->count = 0;
 	node->score = 0;
 	node->visits = 0;
+	node->bounds[0] = 0;
+	node->bounds[1] = 1;
 }
 
 static void moonfish_expand(struct moonfish_node *node)
@@ -115,11 +118,9 @@ static void moonfish_expand(struct moonfish_node *node)
 			
 			for (i = 0 ; i < count ; i++) {
 				if (!moonfish_validate(&moves[i].chess)) continue;
+				moonfish_node(node->children + node->count);
 				node->children[node->count].move = moves[i];
 				node->children[node->count].parent = node;
-				node->children[node->count].score = 0;
-				node->children[node->count].visits = 0;
-				node->children[node->count].count = 0;
 				node->count++;
 			}
 		}
@@ -145,7 +146,7 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node)
 	while (node->count > 0) {
 		
 		next = NULL;
-		max_confidence = -1e9;
+		max_confidence = -1;
 		
 		for (i = 0 ; i < node->count ; i++) {
 			confidence = moonfish_confidence(node->children + i);
@@ -171,6 +172,48 @@ static void moonfish_propagate(struct moonfish_node *node, double score)
 	}
 }
 
+static void moonfish_remove(struct moonfish_node *node, int i)
+{
+	int j;
+	
+	node->count--;
+	moonfish_discard(node->children + i);
+	memmove(node->children + i, node->children + i + 1, (node->count - i) * sizeof *node);
+	
+	for (;;) {
+		if (i >= node->count) break;
+		for (j = 0 ; j < node->children[i].count ; j++) {
+			node->children[i].children[j].parent = node->children + i;
+		}
+		i++;
+	}
+}
+
+static void moonfish_propagate_bounds(struct moonfish_node *node, int i)
+{
+	int j;
+	
+	while (node != NULL) {
+		
+		node->bounds[i] = 0;
+		
+		for (j = 0 ; j < node->count ; j++) {
+			if (1 - node->children[j].bounds[1 - i] > node->bounds[i]) {
+				node->bounds[i] = 1 - node->children[j].bounds[1 - i];
+			}
+		}
+		
+		for (j = 0 ; j < node->count ; j++) {
+			if (1 - node->children[j].bounds[1 - i] < node->bounds[i]) {
+				moonfish_remove(node, j--);
+			}
+		}
+		
+		node = node->parent;
+		i = 1 - i;
+	}
+}
+
 static void moonfish_search(struct moonfish_node *node, int count)
 {
 	int i;
@@ -180,8 +223,10 @@ static void moonfish_search(struct moonfish_node *node, int count)
 	for (i = 0 ; i < count ; i++) {
 		leaf = moonfish_select(node);
 		if (moonfish_finished(&leaf->move.chess)) {
-			if (moonfish_checkmate(&leaf->move.chess)) moonfish_propagate(leaf, 0.5);
-			else moonfish_propagate(leaf, 0.5);
+			moonfish_propagate(leaf, 0.5);
+			if (moonfish_checkmate(&leaf->move.chess)) {
+				moonfish_propagate_bounds(leaf, 1);
+			}
 			continue;
 		}
 		moonfish_expand(leaf);
@@ -207,6 +252,7 @@ void moonfish_best_move(struct moonfish_node *node, struct moonfish_result *resu
 	
 	moonfish_search(node, 0x800);
 	while (moonfish_clock() - time0 < time) {
+		if (node->count == 1) break;
 		moonfish_search(node, 0x2000);
 	}
 	
