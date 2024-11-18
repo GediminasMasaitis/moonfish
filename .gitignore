@@ -25,6 +25,7 @@
 !/tools/https.c
 !/tools/perft.c
 !/tools/pgn.c
+!/tools/line.c
 !/scripts
 !/scripts/minify.sh
 !/scripts/rename.sh

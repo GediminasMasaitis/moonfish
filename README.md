@@ -83,6 +83,7 @@ moonfish also has a few tools to use UCI bots in various ways.
 - `analyse` — TUI for analysing chess games with UCI bots
 - `chat` — IRC integration for UCI bots
 - `lichess` — Lichess integration for UCI bots
+- `line` — terminal wrapper for UCI bots
 
 To compile them, simply run `make` followed by the name of the tool you want to compile.
 
@@ -90,6 +91,7 @@ To compile them, simply run `make` followed by the name of the tool you want to 
 make analyse
 make chat
 make lichess
+make line
 ~~~
 
 Each of them has fairly good `--help` documentation, so you may use that to learn more about them!
@@ -98,6 +100,7 @@ Each of them has fairly good `--help` documentation, so you may use that to lear
 ./analyse --help
 ./chat --help
 ./lichess --help
+./line --help
 ~~~
 
 Note that some of them have external dependencies!
