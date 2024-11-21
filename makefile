@@ -23,8 +23,6 @@ analyse: tools/pgn.c
 lichess chat: tools/https.c
 lichess: cflags := -ltls -lssl -lcrypto -lcjson
 chat: cflags := -ltls -lssl -lcrypto
-learn: search.c
-learn: cflags := -Dmoonfish_learn -lm
 
 clean:
 	git clean -fdx
