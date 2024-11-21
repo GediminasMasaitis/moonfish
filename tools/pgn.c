@@ -40,7 +40,7 @@ static int moonfish_pgn_token(FILE *file)
 
 static int moonfish_isalnum(int ch)
 {
-	if (ch == '-' || ch == '_' || ch == '/') return 1;
+	if (ch == '-' || ch == '_' || ch == '/' || ch == '=') return 1;
 	if (isalnum(ch)) return 1;
 	return 0;
 }

@@ -485,10 +485,18 @@ static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_mov
 			for (i = 0 ; i < count ; i++) {
 				
 				if (chess->board[moves[i].from] % 16 != type) continue;
-				if (captured && chess->board[moves[i].to] == moonfish_empty) continue;
 				if (promotion && promotion != moves[i].chess.board[moves[i].to] % 16) continue;
 				if (moves[i].to % 10 != x1) continue;
 				if (moves[i].to / 10 - 1 != y1) continue;
+				
+				if (captured) {
+					if (chess->board[moves[i].from] % 16 == moonfish_pawn) {
+						if (moves[i].from % 10 == moves[i].to % 10) continue;
+					}
+					else {
+						if (chess->board[moves[i].to] == moonfish_empty) continue;
+					}
+				}
 				
 				if (!moonfish_validate(&moves[i].chess)) continue;
 				if (check && !moonfish_check(chess)) continue;
