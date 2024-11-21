@@ -12,6 +12,7 @@
 !/chess.c
 !/search.c
 !/main.c
+!/mini.c
 !/tools
 !/tools/tools.h
 !/tools/utils.c
@@ -22,3 +23,8 @@
 !/tools/https.c
 !/tools/perft.c
 !/tools/pgn.c
+!/scripts
+!/scripts/minify.sh
+!/scripts/rename.sh
+!/scripts/compare.sh
+!/scripts/offload.sh

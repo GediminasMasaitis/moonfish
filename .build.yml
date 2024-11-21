@@ -20,12 +20,13 @@ tasks:
   - strip: |
       cd moonfish
       strip --strip-all moonfish lichess analyse chat
+      scripts/minify.sh
   
   - deploy: |
       set +x
       
       if test "x$GIT_REF" = x || ! test -f neocities-token.txt
-      then exit 0
+      then exit
       fi
       
       if test "$GIT_REF" = refs/heads/main
@@ -36,6 +37,7 @@ tasks:
       cd moonfish
       curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
         -F "$root"/moonfish=@moonfish \
+        -F "$root"/moonfish.sh=@moonfish.sh \
         -F "$root"/lichess=@lichess \
         -F "$root"/analyse=@analyse \
         -F "$root"/chat=@chat \

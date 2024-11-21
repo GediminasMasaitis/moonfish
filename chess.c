@@ -1,8 +1,6 @@
 /* moonfish is licensed under the AGPL (v3 or later) */
 /* copyright 2023, 2024 zamfofex */
 
-#include <string.h>
-
 #include "moonfish.h"
 
 static void moonfish_force_promotion(struct moonfish_chess *chess, struct moonfish_move **moves, unsigned char from, unsigned char to, unsigned char promotion)
@@ -45,6 +43,8 @@ static void moonfish_deltas(struct moonfish_chess *chess, struct moonfish_move *
 		deltas++;
 	}
 }
+
+int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
 
 int moonfish_validate(struct moonfish_chess *chess)
 {
@@ -461,6 +461,33 @@ int moonfish_checkmate(struct moonfish_chess *chess)
 	return moonfish_finished(chess);
 }
 
+int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
+{
+	int x, y, i;
+	
+	if (a->white != b->white) return 0;
+	if (a->passing != b->passing) return 0;
+	if (a->oo[0] != b->oo[0]) return 0;
+	if (a->oo[1] != b->oo[1]) return 0;
+	if (a->ooo[0] != b->ooo[0]) return 0;
+	if (a->ooo[1] != b->ooo[1]) return 0;
+	
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			i = (x + 1) + (y + 2) * 10;
+			if (a->board[i] != b->board[i]) {
+				return 0;
+			}
+		}
+	}
+	
+	return 1;
+}
+
+#ifndef moonfish_mini
+
+#include <string.h>
+
 static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char type, unsigned char promotion, int x0, int y0, int x1, int y1, int check, int captured)
 {
 	int found;
@@ -830,25 +857,4 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 	*name = 0;
 }
 
-int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
-{
-	int x, y, i;
-	
-	if (a->white != b->white) return 0;
-	if (a->passing != b->passing) return 0;
-	if (a->oo[0] != b->oo[0]) return 0;
-	if (a->oo[1] != b->oo[1]) return 0;
-	if (a->ooo[0] != b->ooo[0]) return 0;
-	if (a->ooo[1] != b->ooo[1]) return 0;
-	
-	for (y = 0 ; y < 8 ; y++) {
-		for (x = 0 ; x < 8 ; x++) {
-			i = (x + 1) + (y + 2) * 10;
-			if (a->board[i] != b->board[i]) {
-				return 0;
-			}
-		}
-	}
-	
-	return 1;
-}
+#endif
