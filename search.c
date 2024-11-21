@@ -54,23 +54,22 @@ double moonfish_score(struct moonfish_chess *chess)
 {
 	int x, y;
 	int x1, y1;
-	int from;
-	unsigned char type, color;
+	unsigned char type, color, piece;
 	double score;
 	
 	score = 0;
 	
 	for (y = 0 ; y < 8 ; y++) {
 		for (x = 0 ; x < 8 ; x++) {
-			from = (x + 1) + (y + 2) * 10;
-			type = chess->board[from] % 16;
-			color = chess->board[from] / 16 - 1;
-			if (chess->board[from] == moonfish_empty) continue;
+			piece = chess->board[(x + 1) + (y + 2) * 10];
+			if (piece == moonfish_empty) continue;
+			type = piece % 16 - 1;
+			color = piece / 16 - 1;
 			x1 = x;
 			y1 = y;
 			if (x1 > 3) x1 = 7 - x1;
 			if (color == 1) y1 = 7 - y1;
-			score -= moonfish_values[x1 + y1 * 4 + (type - 1) * 32] * (color * 2 - 1);
+			score -= moonfish_values[x1 + y1 * 4 + type * 32] * (color * 2 - 1);
 		}
 	}
 	

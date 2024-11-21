@@ -467,8 +467,7 @@ static void moonfish_signal(int signal)
 int main(int argc, char **argv)
 {
 	static char *format = "<cmd> <args>...";
-	static struct moonfish_arg args[] =
-	{
+	static struct moonfish_arg args[] = {
 		{"N", "host", "<name>", "lichess.org", "Lichess' host name (default: 'lichess.org')"},
 		{"P", "port", "<port>", "443", "Lichess' port (default: '443')"},
 		{NULL, NULL, NULL, NULL, NULL},
