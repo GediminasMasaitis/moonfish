@@ -97,6 +97,7 @@ struct moonfish_node;
 struct moonfish_options {
 	long int max_time;
 	long int our_time;
+	int thread_count;
 };
 
 /* represents a search result */

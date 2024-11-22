@@ -9,7 +9,7 @@ moonfish
 [![Lichess rapid rating](https://lichess-shield.vercel.app/api?username=munfish&format=rapid)](https://lichess.org/@/munfish/perf/rapid)
 [![Lichess blitz rating](https://lichess-shield.vercel.app/api?username=munfish&format=blitz)](https://lichess.org/@/munfish/perf/blitz)
 
-**moonfish** is a simple chess bot written in C89.
+**moonfish** is a simple chess bot written in C89 (using just a few POSIX and C11 APIs).
 
 You may [play moonfish on Lichess]! You don’t need a Lichess account, just make sure to choose “real time” and select a fast enough time control.
 
@@ -81,7 +81,19 @@ make moonfish
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
 ~~~
-cc -ansi -O3 -D_POSIX_C_SOURCE=199309L -o moonfish chess.c search.c main.c -lm
+cc -O3 -o moonfish chess.c search.c main.c -lm -pthread
+~~~
+
+By default, moonfish uses C11 `<threads.h>`, but it is possible to have it use POSIX `<pthread.h>` instead by passing `-Dmoonfish_pthreads` to the compiler. (This is necessary if you’re on Mac OS.)
+
+~~~
+cc -O3 -Dmoonfish_pthreads -o moonfish chess.c search.c main.c -lm -pthread
+~~~
+
+It is also possible to compile moonfish without a dependency on threads by passing `-Dmoonfish_no_threads` to the compiler.
+
+~~~
+cc -O3 -Dmoonfish_no_threads -o moonfish chess.c search.c main.c -lm
 ~~~
 
 using “analyse”
@@ -158,7 +170,7 @@ After installing [NPE], each file may be compiled and linked as expected. (Note:
 
 ~~~
 # (example for x86-64)
-6c -I/sys/include/npe chess.c search.c main.c
+6c -I/sys/include/npe -Dmoonfish_pthreads chess.c search.c main.c
 6l -o moonfish chess.6 search.6 main.6
 moonfish
 ~~~

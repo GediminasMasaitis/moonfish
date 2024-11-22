@@ -7,7 +7,7 @@ cc="${HOST_CC:-gcc}"
 
 header='#!/bin/sh
 t=`mktemp`
-tail -n+5 "$0"|unxz -Fraw|'""${CC:-cc}""' -ansi -O3 -o $t -xc - -lm
+tail -n+5 "$0"|unxz -Fraw|'""${CC:-cc}""' -O3 -o $t -xc - -lm -pthread -latomic
 (sleep 3;rm $t)&exec $t'
 
 # for each C source file
@@ -40,7 +40,7 @@ awk '/^#/ { print $0 ; next } { x = x $0 "\n" } END { print x }' |
 scripts/rename.sh |
 
 # put spaces between identifiers
-awk '/^[^a-zA-Z0-9]/ { n = 0 ; print $0 ; next } { if (++n > 1) print " " ; } 1' |
+awk '/^[^a-zA-Z0-9_]/ { n = 0 ; print $0 ; next } { if (++n > 1) print " " ; } 1' |
 
 # remove line breaks (except in '#include' lines)
 awk '/^#/ { print $0 ; next } { printf "%s", $0 }' |

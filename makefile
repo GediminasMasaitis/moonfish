@@ -1,7 +1,7 @@
 # moonfish is licensed under the AGPL (v3 or later)
 # copyright 2023, 2024 zamfofex
 
-CFLAGS ?= -ansi -O3 -Wall -Wextra -Wpedantic
+CFLAGS ?= -O3 -Wall -Wextra -Wpedantic
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 RM ?= rm -f
@@ -13,10 +13,10 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 all: moonfish lichess analyse chat
 
 moonfish: moonfish.h chess.c search.c main.c
-	$(cc) $(filter %.c,$^) -D_POSIX_C_SOURCE=199309L -o $@ -lm
+	$(cc) $(filter %.c,$^) -o $@ -lm -pthread -latomic
 
 %: moonfish.h tools/tools.h tools/utils.c chess.c tools/%.c
-	$(cc) $(filter %.c,$^) -D_POSIX_C_SOURCE=200809L -o $@ $(cflags)
+	$(cc) $(filter %.c,$^) -o $@ $(cflags)
 
 analyse: cflags := -pthread
 analyse: tools/pgn.c

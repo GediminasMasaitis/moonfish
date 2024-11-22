@@ -22,6 +22,7 @@ int main(void)
 	
 	node = moonfish_new();
 	moonfish_root(node, &chess);
+	options.thread_count = 1;
 	
 	for (;;) {
 		
@@ -70,7 +71,11 @@ int main(void)
 			if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &chess);
 		}
 		
-		if (!strcmp(line, "uci")) printf("uciok\n");
+		if (!strncmp(line, "setoption ", 10)) {
+			sscanf(line, "setoption name Threads value %d", &options.thread_count);
+		}
+		
+		if (!strcmp(line, "uci")) printf("option name Threads type spin default 1 min 1 max 256\nuciok\n");
 		if (!strcmp(line, "isready")) printf("readyok\n");
 		if (!strcmp(line, "quit")) return 0;
 	}

@@ -5,10 +5,11 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <strings.h>
 
 #include "moonfish.h"
 
-static void moonfish_go(struct moonfish_node *node)
+static void moonfish_go(struct moonfish_node *node, int thread_count)
 {
 	static struct moonfish_result result;
 	static struct moonfish_options options;
@@ -77,6 +78,7 @@ static void moonfish_go(struct moonfish_node *node)
 	
 	options.max_time = time;
 	options.our_time = our_time;
+	options.thread_count = thread_count;
 	moonfish_best_move(node, &result, &options);
 	moonfish_to_uci(&chess, &result.move, name);
 	
@@ -149,9 +151,49 @@ static void moonfish_position(struct moonfish_node *node)
 	if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &chess);
 }
 
+static void moonfish_setoption(int *thread_count)
+{
+	char *arg, *end;
+	long int count;
+	
+	arg = strtok(NULL, "\r\n\t ");
+	if (arg == NULL || strcmp(arg, "name")) {
+		fprintf(stderr, "malformed 'setoption' command\n");
+		exit(1);
+	}
+	
+	arg = strtok(NULL, "\r\n\t ");
+	if (arg == NULL || strcasecmp(arg, "Threads")) {
+		fprintf(stderr, "unknown option '%s'\n", arg);
+		exit(1);
+	}
+	
+	arg = strtok(NULL, "\r\n\t ");
+	if (arg == NULL || strcmp(arg, "value")) {
+		fprintf(stderr, "malformed 'setoption' command\n");
+		exit(1);
+	}
+	
+	arg = strtok(NULL, "\r\n\t ");
+	if (arg == NULL) {
+		fprintf(stderr, "missing value\n");
+		exit(1);
+	}
+	
+	errno = 0;
+	count = strtol(arg, &end, 10);
+	if (errno || *end != 0 || count < 1 || count > 256) {
+		fprintf(stderr, "malformed thread count\n");
+		exit(1);
+	}
+	
+	*thread_count = count;
+}
+
 int main(int argc, char **argv)
 {
 	static char line[2048];
+	int thread_count;
 	
 	char *arg;
 	struct moonfish_node *node;
@@ -162,6 +204,7 @@ int main(int argc, char **argv)
 	}
 	
 	node = moonfish_new();
+	thread_count = 1;
 	
 	for (;;) {
 		
@@ -177,7 +220,7 @@ int main(int argc, char **argv)
 		if (arg == NULL) continue;
 		
 		if (!strcmp(arg, "go")) {
-			moonfish_go(node);
+			moonfish_go(node, thread_count);
 			continue;
 		}
 		
@@ -191,6 +234,9 @@ int main(int argc, char **argv)
 		if (!strcmp(arg, "uci")) {
 			printf("id name moonfish\n");
 			printf("id author zamfofex\n");
+#ifndef moonfish_no_threads
+			printf("option name Threads type spin default 1 min 1 max 256\n");
+#endif
 			printf("uciok\n");
 			continue;
 		}
@@ -200,7 +246,14 @@ int main(int argc, char **argv)
 			continue;
 		}
 		
-		if (!strcmp(arg, "debug") || !strcmp(arg, "setoption") || !strcmp(arg, "ucinewgame") || !strcmp(arg, "stop")) continue;
+#ifndef moonfish_no_threads
+		if (!strcmp(arg, "setoption")) {
+			moonfish_setoption(&thread_count);
+			continue;
+		}
+#endif
+		
+		if (!strcmp(arg, "debug") || !strcmp(arg, "ucinewgame") || !strcmp(arg, "stop")) continue;
 		
 		fprintf(stderr, "warning: unknown command '%s'\n", arg);
 	}
