@@ -42,6 +42,7 @@ struct moonfish_node {
 	struct moonfish_move move;
 	struct moonfish_node *parent;
 	struct moonfish_node *children;
+	double chance;
 	double score;
 	long int visits;
 	float bounds[2];
@@ -88,10 +89,18 @@ static void moonfish_node(struct moonfish_node *node)
 {
 	node->parent = NULL;
 	node->count = 0;
-	node->score = 0;
+	node->chance = 0;
 	node->visits = 0;
 	node->bounds[0] = 0;
 	node->bounds[1] = 1;
+}
+
+static int moonfish_compare(const void *ax, const void *bx)
+{
+	const struct moonfish_node *a, *b;
+	a = ax;
+	b = bx;
+	return a->score - b->score;
 }
 
 static void moonfish_expand(struct moonfish_node *node)
@@ -116,14 +125,21 @@ static void moonfish_expand(struct moonfish_node *node)
 			}
 			
 			for (i = 0 ; i < count ; i++) {
+				
 				if (!moonfish_validate(&moves[i].chess)) continue;
 				moonfish_node(node->children + node->count);
 				node->children[node->count].move = moves[i];
 				node->children[node->count].parent = node;
+				
+				node->children[node->count].score = moonfish_score(&moves[i].chess);
+				if (!moves[i].chess.white) node->children[node->count].score *= -1;
+				
 				node->count++;
 			}
 		}
 	}
+	
+	qsort(node->children, node->count, sizeof *node, &moonfish_compare);
 	
 	if (node->count == 0 && node->children != NULL) {
 		free(node->children);
@@ -133,7 +149,7 @@ static void moonfish_expand(struct moonfish_node *node)
 static double moonfish_confidence(struct moonfish_node *node)
 {
 	if (node->visits == 0) return 1e9;
-	return node->score / node->visits + 1.25 * sqrt(log(node->parent->visits) / node->visits);
+	return node->chance / node->visits + 1.25 * sqrt(log(node->parent->visits) / node->visits);
 }
 
 static struct moonfish_node *moonfish_select(struct moonfish_node *node)
@@ -161,13 +177,13 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node)
 	return node;
 }
 
-static void moonfish_propagate(struct moonfish_node *node, double score)
+static void moonfish_propagate(struct moonfish_node *node, double chance)
 {
 	while (node != NULL) {
 		node->visits++;
-		node->score += score;
+		node->chance += chance;
 		node = node->parent;
-		score = 1 - score;
+		chance = 1 - chance;
 	}
 }
 
@@ -217,7 +233,6 @@ static void moonfish_search(struct moonfish_node *node, int count)
 {
 	int i;
 	struct moonfish_node *leaf;
-	double score;
 	
 	for (i = 0 ; i < count ; i++) {
 		leaf = moonfish_select(node);
@@ -229,9 +244,7 @@ static void moonfish_search(struct moonfish_node *node, int count)
 			continue;
 		}
 		moonfish_expand(leaf);
-		score = moonfish_score(&leaf->move.chess);
-		if (!leaf->move.chess.white) score *= -1;
-		moonfish_propagate(leaf, 1 / (1 + pow(10, score / 400)));
+		moonfish_propagate(leaf, 1 / (1 + pow(10, leaf->score / 400)));
 	}
 }
 
