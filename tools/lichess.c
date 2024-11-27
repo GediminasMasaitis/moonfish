@@ -19,8 +19,10 @@ struct moonfish_game {
 	char *token;
 	char id[512];
 	char **argv;
+	char **options;
 	char *username;
 	char fen[512];
+	int ponder;
 };
 
 static void moonfish_json_error(void)
@@ -33,7 +35,9 @@ static pthread_mutex_t moonfish_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *game, FILE *in, FILE *out)
 {
-	char request[2048];
+	static char request[2048];
+	static char name0[6];
+	
 	char *line;
 	cJSON *root, *type, *state, *white_player, *id, *moves, *fen;
 	cJSON *wtime, *btime, *winc, *binc;
@@ -41,21 +45,26 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 	int white;
 	int move_count, count;
 	int i;
-	char *name, name0[6];
+	char *name;
 	int variant;
 	struct moonfish_chess chess;
 	struct moonfish_move move;
+	char *value, **options;
 	
 	pthread_mutex_lock(&moonfish_mutex);
 	
 	fprintf(in, "uci\n");
 	moonfish_wait(out, "uciok");
 	
-	fprintf(in, "isready\n");
-	moonfish_wait(out, "readyok");
+	options = game->options;
+	for (;;) {
+		value = strchr(*options, '=');
+		if (value == NULL) break;
+		fprintf(in, "setoption name %.*s value %s\n", (int) (value - *options), *options, value + 1);
+		options++;
+	}
 	
 	fprintf(in, "ucinewgame\n");
-	
 	fprintf(in, "isready\n");
 	moonfish_wait(out, "readyok");
 	
@@ -145,10 +154,8 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		}
 		
 		if (count <= move_count) continue;
-		
 		move_count = count;
-		
-		if (count % 2 == white) continue;
+		if (count % 2 == white && !game->ponder) continue;
 		
 		wtime = cJSON_GetObjectItem(state, "wtime");
 		btime = cJSON_GetObjectItem(state, "btime");
@@ -160,10 +167,12 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 		if (!cJSON_IsNumber(winc)) moonfish_json_error();
 		if (!cJSON_IsNumber(binc)) moonfish_json_error();
 		
+		if (game->ponder) fprintf(in, "stop\n");
 		fprintf(in, "isready\n");
 		moonfish_wait(out, "readyok");
 		
 		fprintf(in, "position %s", game->fen);
+		
 		if (count > 0) {
 			
 			fprintf(in, " moves ");
@@ -189,10 +198,16 @@ static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *g
 				}
 			}
 		}
+		
 		fprintf(in, "\n");
 		
 		fprintf(in, "isready\n");
 		moonfish_wait(out, "readyok");
+		
+		if (count % 2 == white) {
+			fprintf(in, "go infinite\n");
+			continue;
+		}
 		
 		if (count > 1) {
 			fprintf(in, "go wtime %d btime %d", wtime->valueint, btime->valueint);
@@ -275,7 +290,7 @@ static void *moonfish_handle_game(void *data)
 	return NULL;
 }
 
-static void moonfish_handle_events(struct tls *tls, char *host, char *port, char *token, char **argv, char *username)
+static void moonfish_handle_events(struct tls *tls, char *host, char *port, char *token, char **options, char **argv, char *username, int ponder)
 {
 	char request[2048];
 	char *line;
@@ -341,7 +356,9 @@ static void moonfish_handle_events(struct tls *tls, char *host, char *port, char
 			game->token = token;
 			strcpy(game->id, id->valuestring);
 			game->argv = argv;
+			game->options = options;
 			game->username = username;
+			game->ponder = ponder;
 			
 			error = pthread_create(&thread, NULL, &moonfish_handle_game, game);
 			if (error) {
@@ -466,24 +483,48 @@ static void moonfish_signal(int signal)
 
 int main(int argc, char **argv)
 {
-	static char *format = "<cmd> <args>...";
+	static char *format = "<UCI-options> [--] <cmd> <args>...";
 	static struct moonfish_arg args[] = {
 		{"N", "host", "<name>", "lichess.org", "Lichess' host name (default: 'lichess.org')"},
 		{"P", "port", "<port>", "443", "Lichess' port (default: '443')"},
+		{"X", "ponder", NULL, NULL, "whether to think during the opponent's turn"},
 		{NULL, NULL, NULL, NULL, NULL},
 	};
 	
 	char *token;
 	int i;
-	char **command;
+	char **command, **options;
 	int command_count;
 	struct tls *tls;
 	char *username;
 	struct sigaction action;
+	char *value;
+	
+	/* handle command line arguments */
 	
 	command = moonfish_args(args, format, argc, argv);
 	command_count = argc - (command - argv);
 	if (command_count < 1) moonfish_usage(args, format, argv[0]);
+	options = command;
+	
+	for (;;) {
+		
+		value = strchr(*command, '=');
+		if (value == NULL) break;
+		
+		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(args, format, argv[0]);
+		
+		command_count--;
+		command++;
+		
+		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+	}
+	
+	if (!strcmp(*command, "--")) {
+		command_count--;
+		command++;
+		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+	}
 	
 	token = getenv("lichess_token");
 	if (token == NULL || token[0] == 0) {
@@ -515,6 +556,6 @@ int main(int argc, char **argv)
 	}
 	
 	username = moonfish_username(args[0].value, args[1].value, token);
-	moonfish_handle_events(tls, args[0].value, args[1].value, token, command, username);
+	moonfish_handle_events(tls, args[0].value, args[1].value, token, options, command, username, args[2].value != NULL ? 1 : 0);
 	return 1;
 }

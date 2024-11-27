@@ -746,10 +746,8 @@ int main(int argc, char **argv)
 	}
 	
 	if (!strcmp(*command, "--")) {
-		
 		command_count--;
 		command++;
-		
 		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
 	}
 	
