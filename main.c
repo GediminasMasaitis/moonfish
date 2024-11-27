@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <strings.h>
+#include <unistd.h>
 
 #include "moonfish.h"
 #include "threads.h"
@@ -223,6 +224,12 @@ int main(int argc, char **argv)
 	info.thread_count = 1;
 	info.searching = 0;
 	
+#ifndef moonfish_no_threads
+	info.thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+	if (info.thread_count > 256) info.thread_count = 256;
+	if (info.thread_count < 1) info.thread_count = 4;
+#endif
+	
 	for (;;) {
 		
 		fflush(stdout);
@@ -276,7 +283,7 @@ int main(int argc, char **argv)
 			printf("id name moonfish\n");
 			printf("id author zamfofex\n");
 #ifndef moonfish_no_threads
-			printf("option name Threads type spin default 1 min 1 max 256\n");
+			printf("option name Threads type spin default %d min 1 max 256\n", info.thread_count);
 #endif
 			printf("uciok\n");
 			continue;
