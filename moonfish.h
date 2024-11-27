@@ -104,6 +104,7 @@ struct moonfish_options {
 struct moonfish_result {
 	struct moonfish_move move;
 	long int node_count;
+	int score;
 };
 
 /* the PST */

@@ -388,6 +388,7 @@ void moonfish_best_move(struct moonfish_node *node, struct moonfish_result *resu
 	}
 	
 	result->move = best_node->move;
+	result->score = node->score;
 	result->node_count = node->visits;
 }
 

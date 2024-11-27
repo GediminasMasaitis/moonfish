@@ -82,7 +82,7 @@ static void moonfish_go(struct moonfish_node *node, int thread_count)
 	moonfish_best_move(node, &result, &options);
 	moonfish_to_uci(&chess, &result.move, name);
 	
-	printf("info nodes %ld\n", result.node_count);
+	printf("info depth 1 score cp %d nodes %ld multipv 1 pv %s\n", result.score, result.node_count, name);
 	printf("bestmove %s\n", name);
 }
 

@@ -33,14 +33,12 @@ int main(void)
 		if (arg) *arg = 0;
 		
 		if (!strncmp(line, "go ", 3)) {
-			
 			sscanf(line, "go wtime %d btime %d", &wtime, &btime);
-			
 			options.max_time = -1;
 			options.our_time = chess.white ? wtime : btime;
 			moonfish_best_move(node, &result, &options);
 			moonfish_to_uci(&chess, &result.move, name);
-			printf("bestmove %s\n", name);
+			printf("info depth 1 score cp %d nodes %ld\nbestmove %s\n", result.score, result.node_count, name);
 		}
 		
 		if (!strncmp(line, "position ", 9)) {
@@ -71,10 +69,7 @@ int main(void)
 			if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &chess);
 		}
 		
-		if (!strncmp(line, "setoption ", 10)) {
-			sscanf(line, "setoption name Threads value %d", &options.thread_count);
-		}
-		
+		if (!strncmp(line, "setoption ", 10)) sscanf(line, "setoption name Threads value %d", &options.thread_count);
 		if (!strcmp(line, "uci")) printf("option name Threads type spin default 1 min 1 max 256\nuciok\n");
 		if (!strcmp(line, "isready")) printf("readyok\n");
 		if (!strcmp(line, "quit")) return 0;
