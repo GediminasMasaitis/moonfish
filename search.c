@@ -13,42 +13,8 @@
 #include <time.h>
 #endif
 
-#ifdef moonfish_no_threads
-
-#define moonfish_result_t int
-#define moonfish_value 0
-#define _Atomic
-
-#else
-
-#include <stdatomic.h>
-
-#ifndef moonfish_pthreads
-
-#include <threads.h>
-#define moonfish_result_t int
-#define moonfish_value 0
-
-#else
-
-#include <pthread.h>
-#define thrd_t pthread_t
-#define thrd_create(thread, fn, arg) pthread_create(thread, NULL, fn, arg)
-#define thrd_join pthread_join
-#define moonfish_result_t void *
-#define moonfish_value NULL
-#define thrd_success 0
-
-#endif
-
-#endif
-
-#ifdef moonfish_mini
-#undef atomic_compare_exchange_strong
-#undef atomic_fetch_add
-#endif
-
 #include "moonfish.h"
+#include "threads.h"
 
 #ifdef _WIN32
 
@@ -323,6 +289,7 @@ static moonfish_result_t moonfish_start(void *data0)
 	
 	moonfish_search(data->node, 0x100);
 	while (moonfish_clock() - data->time0 < data->time) {
+		if (data->node->ignored) break;
 		count = data->node->count;
 		for (i = 0 ; i < data->node->count ; i++) {
 			if (data->node->children[i].ignored) count--;
@@ -350,6 +317,7 @@ void moonfish_best_move(struct moonfish_node *node, struct moonfish_result *resu
 	if (options->our_time >= 0 && time > options->our_time / 16) time = options->our_time / 16;
 	time -= time / 32 + 125;
 	
+	node->ignored = 0;
 	data.node = node;
 	data.time = time;
 	data.time0 = moonfish_clock();
@@ -450,3 +418,12 @@ void moonfish_finish(struct moonfish_node *node)
 	moonfish_discard(node);
 	free(node);
 }
+
+#ifndef moonfish_mini
+
+void moonfish_stop(struct moonfish_node *node)
+{
+	node->ignored = 1;
+}
+
+#endif

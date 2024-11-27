@@ -8,8 +8,18 @@
 #include <strings.h>
 
 #include "moonfish.h"
+#include "threads.h"
 
-static void moonfish_go(struct moonfish_node *node, int thread_count)
+struct moonfish_info {
+	struct moonfish_node *node;
+	int thread_count;
+	_Atomic unsigned char searching;
+#ifndef moonfish_no_threads
+	thrd_t thread;
+#endif
+};
+
+static moonfish_result_t moonfish_go(void *data)
 {
 	static struct moonfish_result result;
 	static struct moonfish_options options;
@@ -18,12 +28,15 @@ static void moonfish_go(struct moonfish_node *node, int thread_count)
 	long int our_time, their_time, *xtime, time;
 	char *arg, *end;
 	char name[6];
+	struct moonfish_info *info;
+	
+	info = data;
 	
 	our_time = -1;
 	their_time = -1;
 	time = -1;
 	
-	moonfish_root(node, &chess);
+	moonfish_root(info->node, &chess);
 	
 	for (;;) {
 		
@@ -78,12 +91,16 @@ static void moonfish_go(struct moonfish_node *node, int thread_count)
 	
 	options.max_time = time;
 	options.our_time = our_time;
-	options.thread_count = thread_count;
-	moonfish_best_move(node, &result, &options);
+	options.thread_count = info->thread_count;
+	moonfish_best_move(info->node, &result, &options);
 	moonfish_to_uci(&chess, &result.move, name);
 	
+	info->searching = 2;
 	printf("info depth 1 score cp %d nodes %ld multipv 1 pv %s\n", result.score, result.node_count, name);
 	printf("bestmove %s\n", name);
+	fflush(stdout);
+	
+	return moonfish_value;
 }
 
 static void moonfish_position(struct moonfish_node *node)
@@ -193,18 +210,18 @@ static void moonfish_setoption(int *thread_count)
 int main(int argc, char **argv)
 {
 	static char line[2048];
-	int thread_count;
 	
 	char *arg;
-	struct moonfish_node *node;
+	struct moonfish_info info;
 	
 	if (argc > 1) {
 		fprintf(stderr, "usage: %s (no arguments)\n", argv[0]);
 		return 1;
 	}
 	
-	node = moonfish_new();
-	thread_count = 1;
+	info.node = moonfish_new();
+	info.thread_count = 1;
+	info.searching = 0;
 	
 	for (;;) {
 		
@@ -220,14 +237,38 @@ int main(int argc, char **argv)
 		if (arg == NULL) continue;
 		
 		if (!strcmp(arg, "go")) {
-			moonfish_go(node, thread_count);
+#ifdef moonfish_no_threads
+			moonfish_go(&info);
+#else
+			if (info.searching == 2) {
+				if (thrd_join(info.thread, NULL) != thrd_success) {
+					fprintf(stderr, "could not join thread\n");
+					exit(1);
+				}
+			}
+			else {
+				if (info.searching) {
+					fprintf(stderr, "cannot start search while searching\n");
+					exit(1);
+				}
+			}
+			info.searching = 1;
+			if (thrd_create(&info.thread, &moonfish_go, &info) != thrd_success) {
+				fprintf(stderr, "could not create thread\n");
+				exit(1);
+			}
+#endif
 			continue;
 		}
 		
 		if (!strcmp(arg, "quit")) break;
 		
 		if (!strcmp(arg, "position")) {
-			moonfish_position(node);
+			if (info.searching == 1) {
+				fprintf(stderr, "cannot set position while searching\n");
+				exit(1);
+			}
+			moonfish_position(info.node);
 			continue;
 		}
 		
@@ -247,10 +288,27 @@ int main(int argc, char **argv)
 		}
 		
 #ifndef moonfish_no_threads
+		
 		if (!strcmp(arg, "setoption")) {
-			moonfish_setoption(&thread_count);
+			moonfish_setoption(&info.thread_count);
+			if (info.searching == 1) {
+				printf("info string warning: option will only take effect next search request\n");
+			}
 			continue;
 		}
+		
+		if (!strcmp(arg, "stop")) {
+			if (info.searching) {
+				moonfish_stop(info.node);
+				if (thrd_join(info.thread, NULL) != thrd_success) {
+					fprintf(stderr, "could not join thread\n");
+					exit(1);
+				}
+				info.searching = 0;
+			}
+			continue;
+		}
+		
 #endif
 		
 		if (!strcmp(arg, "debug") || !strcmp(arg, "ucinewgame") || !strcmp(arg, "stop")) continue;
@@ -258,6 +316,16 @@ int main(int argc, char **argv)
 		fprintf(stderr, "warning: unknown command '%s'\n", arg);
 	}
 	
-	moonfish_finish(node);
+#ifndef moonfish_no_threads
+	if (info.searching) {
+		moonfish_stop(info.node);
+		if (thrd_join(info.thread, NULL) != thrd_success) {
+			fprintf(stderr, "could not join thread\n");
+			exit(1);
+		}
+	}
+#endif
+	
+	moonfish_finish(info.node);
 	return 0;
 }

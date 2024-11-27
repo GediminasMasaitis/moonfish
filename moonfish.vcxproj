@@ -20,6 +20,7 @@
 	</ItemDefinitionGroup>
 	<ItemGroup>
 		<ClInclude Include="moonfish.h" />
+		<ClInclude Include="threads.h" />
 		<ClCompile Include="chess.c" />
 		<ClCompile Include="search.c" />
 		<ClCompile Include="main.c" />

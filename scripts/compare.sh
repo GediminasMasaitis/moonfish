@@ -58,7 +58,7 @@ fi
 "$cli" \
 	-engine {name=,cmd=./}moonfish-"$rev1$dirty" \
 	-engine {name=,cmd=./}moonfish-"$rev2" \
-	-each $protocol tc=inf/10+0.1 \
+	-each $protocol tc=inf/10+0.1 option.Threads=1 \
 	-openings $format file=openings.fen order=random \
 	-games 2 -rounds 1024 \
 	-sprt elo0=0 elo1=12 alpha=0.05 beta=0.05 \

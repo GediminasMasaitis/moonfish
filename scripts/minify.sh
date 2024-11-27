@@ -11,7 +11,7 @@ tail -n+5 "$0"|unxz -Fraw|'""${CC:-cc}""' -O3 -o $t -xc - -lm -pthread -latomic
 (sleep 3;rm $t)&exec $t'
 
 # for each C source file
-cat moonfish.h chess.c search.c mini.c |
+cat moonfish.h threads.h chess.c search.c mini.c |
 
 # remove the '#' from system '#include'
 sed -E 's/^#(include <)/\1/g' |

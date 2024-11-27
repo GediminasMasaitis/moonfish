@@ -202,4 +202,7 @@ struct moonfish_node *moonfish_new(void);
 /* frees the given state (so that it is no longer usable) */
 void moonfish_finish(struct moonfish_node *node);
 
+/* requests to stop searching the given state (from a different thread) */
+void moonfish_stop(struct moonfish_node *node);
+
 #endif

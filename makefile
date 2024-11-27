@@ -12,7 +12,7 @@ cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 all: moonfish lichess analyse chat
 
-moonfish: moonfish.h chess.c search.c main.c
+moonfish: moonfish.h threads.h chess.c search.c main.c
 	$(cc) $(filter %.c,$^) -o $@ -lm -pthread -latomic
 
 %: moonfish.h tools/tools.h tools/utils.c chess.c tools/%.c

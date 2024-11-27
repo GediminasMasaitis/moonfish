@@ -9,6 +9,7 @@
 !/.build.yml
 !/moonfish.vcxproj
 !/moonfish.h
+!/threads.h
 !/chess.c
 !/search.c
 !/main.c
