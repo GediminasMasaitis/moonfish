@@ -189,12 +189,15 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 	for (;;) {
 		
 #ifdef moonfish_no_threads
-		if (node->count == 0) break;
+		if (node->count <= 0) break;
 #else
 		n = 0;
 		if (atomic_compare_exchange_strong(&node->count, &n, -1)) break;
 		if (n == -1) continue;
+		if (n == -2) break;
 #endif
+		
+		if (moonfish_finished(chess)) node->count = -2;
 		
 		next = NULL;
 		max_confidence = -1;
@@ -293,13 +296,12 @@ static void moonfish_search(struct moonfish_node *node, struct moonfish_chess *c
 	for (i = 0 ; i < count ; i++) {
 		chess = *chess0;
 		leaf = moonfish_select(node, &chess);
-		if (moonfish_finished(&chess)) {
+		if (leaf->count == -2) {
 			leaf->score = 0;
 			moonfish_propagate(leaf);
 			if (moonfish_checkmate(&chess)) {
 				moonfish_propagate_bounds(leaf, 1);
 			}
-			leaf->count = 0;
 			continue;
 		}
 		moonfish_expand(leaf, &chess);
