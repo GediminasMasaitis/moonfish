@@ -53,7 +53,7 @@ struct moonfish_node {
 struct moonfish_root {
 	struct moonfish_node node;
 	struct moonfish_chess chess;
-	int stop;
+	_Atomic int stop;
 };
 
 struct moonfish_data {
@@ -201,12 +201,15 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 		
 		for (i = 0 ; i < node->count ; i++) {
 			if (node->children[i].ignored) continue;
+			if (node->children[i].count == -1) continue;
 			confidence = moonfish_confidence(node->children + i);
 			if (confidence > max_confidence) {
 				next = node->children + i;
 				max_confidence = confidence;
 			}
 		}
+		
+		if (next == NULL) continue;
 		
 		node = next;
 		moonfish_node_chess(node, chess);
@@ -342,7 +345,6 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	if (options->our_time >= 0 && time > options->our_time / 16) time = options->our_time / 16;
 	time -= time / 32 + 125;
 	
-	root->stop = 0;
 	data.root = root;
 	data.time = time;
 	data.time0 = moonfish_clock();
@@ -437,6 +439,7 @@ struct moonfish_root *moonfish_new(void)
 		exit(1);
 	}
 	
+	root->stop = 0;
 	moonfish_node(&root->node);
 	moonfish_chess(&root->chess);
 	
@@ -454,6 +457,11 @@ void moonfish_finish(struct moonfish_root *root)
 void moonfish_stop(struct moonfish_root *root)
 {
 	root->stop = 1;
+}
+
+void moonfish_unstop(struct moonfish_root *root)
+{
+	root->stop = 0;
 }
 
 #endif

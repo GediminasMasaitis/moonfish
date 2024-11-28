@@ -204,5 +204,6 @@ void moonfish_finish(struct moonfish_root *root);
 
 /* requests to stop searching the given state (from a different thread) */
 void moonfish_stop(struct moonfish_root *root);
+void moonfish_unstop(struct moonfish_root *root);
 
 #endif
