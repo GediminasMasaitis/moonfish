@@ -12,7 +12,7 @@
 #include "threads.h"
 
 struct moonfish_info {
-	struct moonfish_node *node;
+	struct moonfish_root *root;
 	int thread_count;
 	_Atomic unsigned char searching;
 #ifndef moonfish_no_threads
@@ -37,7 +37,7 @@ static moonfish_result_t moonfish_go(void *data)
 	their_time = -1;
 	time = -1;
 	
-	moonfish_root(info->node, &chess);
+	moonfish_root(info->root, &chess);
 	
 	for (;;) {
 		
@@ -93,7 +93,7 @@ static moonfish_result_t moonfish_go(void *data)
 	options.max_time = time;
 	options.our_time = our_time;
 	options.thread_count = info->thread_count;
-	moonfish_best_move(info->node, &result, &options);
+	moonfish_best_move(info->root, &result, &options);
 	moonfish_to_uci(&chess, &result.move, name);
 	
 	info->searching = 2;
@@ -104,7 +104,7 @@ static moonfish_result_t moonfish_go(void *data)
 	return moonfish_value;
 }
 
-static void moonfish_position(struct moonfish_node *node)
+static void moonfish_position(struct moonfish_root *root)
 {
 	static struct moonfish_chess chess, chess0;
 	static struct moonfish_move move;
@@ -158,15 +158,15 @@ static void moonfish_position(struct moonfish_node *node)
 				exit(1);
 			}
 			
-			moonfish_root(node, &chess0);
-			if (moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &move.chess);
+			moonfish_root(root, &chess0);
+			if (moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &move.chess);
 			
 			chess = move.chess;
 		}
 	}
 	
-	moonfish_root(node, &chess0);
-	if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &chess);
+	moonfish_root(root, &chess0);
+	if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &chess);
 }
 
 static void moonfish_setoption(int *thread_count)
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	info.node = moonfish_new();
+	info.root = moonfish_new();
 	info.thread_count = 1;
 	info.searching = 0;
 	
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
 				fprintf(stderr, "cannot set position while searching\n");
 				exit(1);
 			}
-			moonfish_position(info.node);
+			moonfish_position(info.root);
 			continue;
 		}
 		
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 		
 		if (!strcmp(arg, "stop")) {
 			if (info.searching) {
-				moonfish_stop(info.node);
+				moonfish_stop(info.root);
 				if (thrd_join(info.thread, NULL) != thrd_success) {
 					fprintf(stderr, "could not join thread\n");
 					exit(1);
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
 	
 #ifndef moonfish_no_threads
 	if (info.searching) {
-		moonfish_stop(info.node);
+		moonfish_stop(info.root);
 		if (thrd_join(info.thread, NULL) != thrd_success) {
 			fprintf(stderr, "could not join thread\n");
 			exit(1);
@@ -333,6 +333,6 @@ int main(int argc, char **argv)
 	}
 #endif
 	
-	moonfish_finish(info.node);
+	moonfish_finish(info.root);
 	return 0;
 }

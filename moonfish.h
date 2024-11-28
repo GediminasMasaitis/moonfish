@@ -91,7 +91,7 @@ struct moonfish_move {
 };
 
 /* represents cross-search state */
-struct moonfish_node;
+struct moonfish_root;
 
 /* represents options for the search */
 struct moonfish_options {
@@ -125,7 +125,7 @@ int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, un
 
 /* tries to find the best move in the given position with the given options */
 /* the move found is the best for the player whose turn it is on the given position */
-void moonfish_best_move(struct moonfish_node *node, struct moonfish_result *result, struct moonfish_options *options);
+void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *result, struct moonfish_options *options);
 
 /* returns the depth-zero score for the given position */
 double moonfish_score(struct moonfish_chess *chess);
@@ -191,18 +191,18 @@ int moonfish_checkmate(struct moonfish_chess *chess);
 int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b);
 
 /* sets the state's position */
-void moonfish_reroot(struct moonfish_node *node, struct moonfish_chess *chess);
+void moonfish_reroot(struct moonfish_root *root, struct moonfish_chess *chess);
 
 /* get the state's position (it is stored in the given position pointer) */
-void moonfish_root(struct moonfish_node *node, struct moonfish_chess *chess);
+void moonfish_root(struct moonfish_root *root, struct moonfish_chess *chess);
 
 /* creates a new state (with the initial position) */
-struct moonfish_node *moonfish_new(void);
+struct moonfish_root *moonfish_new(void);
 
 /* frees the given state (so that it is no longer usable) */
-void moonfish_finish(struct moonfish_node *node);
+void moonfish_finish(struct moonfish_root *root);
 
 /* requests to stop searching the given state (from a different thread) */
-void moonfish_stop(struct moonfish_node *node);
+void moonfish_stop(struct moonfish_root *root);
 
 #endif

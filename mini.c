@@ -15,13 +15,13 @@ int main(void)
 	static struct moonfish_options options;
 	static struct moonfish_result result;
 	
-	struct moonfish_node *node;
+	struct moonfish_root *root;
 	char name[6];
 	int wtime, btime;
 	char *arg;
 	
-	node = moonfish_new();
-	moonfish_root(node, &chess);
+	root = moonfish_new();
+	moonfish_root(root, &chess);
 	options.thread_count = 1;
 	
 	for (;;) {
@@ -36,7 +36,7 @@ int main(void)
 			sscanf(line, "go wtime %d btime %d", &wtime, &btime);
 			options.max_time = -1;
 			options.our_time = chess.white ? wtime : btime;
-			moonfish_best_move(node, &result, &options);
+			moonfish_best_move(root, &result, &options);
 			moonfish_to_uci(&chess, &result.move, name);
 			printf("info depth 1 score cp %d nodes %ld\nbestmove %s\n", result.score, result.node_count, name);
 		}
@@ -59,14 +59,14 @@ int main(void)
 					exit(1);
 				}
 				
-				moonfish_root(node, &chess0);
-				if (moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &move.chess);
+				moonfish_root(root, &chess0);
+				if (moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &move.chess);
 				
 				chess = move.chess;
 			}
 			
-			moonfish_root(node, &chess0);
-			if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(node, &chess);
+			moonfish_root(root, &chess0);
+			if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &chess);
 		}
 		
 		if (!strncmp(line, "setoption ", 10)) sscanf(line, "setoption name Threads value %d", &options.thread_count);
