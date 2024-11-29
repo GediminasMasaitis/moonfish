@@ -31,12 +31,14 @@ static moonfish_result_t moonfish_go(void *data)
 	char *arg, *end;
 	char name[6];
 	struct moonfish_info *info;
+	long int node_count;
 	
 	info = data;
 	
 	our_time = -1;
 	their_time = -1;
 	time = -1;
+	node_count = -1;
 	
 	moonfish_root(info->root, &chess);
 	
@@ -89,11 +91,30 @@ static moonfish_result_t moonfish_go(void *data)
 			
 			continue;
 		}
+		
+		if (!strcmp(arg, "nodes")) {
+			
+			arg = strtok(NULL, "\r\n\t ");
+			if (arg == NULL) {
+				fprintf(stderr, "malformed 'go nodes' command\n");
+				exit(1);
+			}
+			
+			errno = 0;
+			node_count = strtol(arg, &end, 10);
+			if (errno || *end != 0 || node_count < 0) {
+				fprintf(stderr, "malformed 'nodes' in 'go' command\n");
+				exit(1);
+			}
+			
+			continue;
+		}
 	}
 	
 	options.max_time = time;
 	options.our_time = our_time;
 	options.thread_count = info->thread_count;
+	options.node_count = node_count;
 	moonfish_best_move(info->root, &result, &options);
 	moonfish_to_uci(&chess, &result.move, name);
 	

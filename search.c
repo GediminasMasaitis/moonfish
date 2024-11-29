@@ -59,6 +59,7 @@ struct moonfish_root {
 struct moonfish_data {
 	struct moonfish_root *root;
 	long int time, time0;
+	long int node_count;
 };
 
 double moonfish_values[] = {0,0,0,0,103,124,116,101,104,120,104,108,106,118,107,112,122,131,118,123,170,183,170,167,243,249,232,223,0,0,0,0,293,328,339,338,338,342,357,365,338,368,378,391,362,386,397,401,377,389,418,419,367,395,416,424,347,367,394,400,249,342,356,371,373,383,375,379,390,403,404,398,395,405,409,415,395,408,414,426,400,416,423,432,409,419,422,423,383,403,409,407,378,390,384,394,592,607,611,616,586,602,606,606,594,608,604,608,610,619,619,623,631,636,642,645,643,651,655,655,652,655,661,663,649,652,653,654,1181,1168,1172,1190,1178,1189,1199,1195,1187,1197,1203,1200,1191,1208,1209,1214,1211,1213,1226,1231,1217,1224,1240,1240,1197,1189,1233,1238,1214,1227,1239,1243,-21,2,-24,-31,-6,-2,-6,-8,-17,-1,4,8,-12,10,18,23,6,32,34,33,20,44,40,29,5,34,27,16,-50,-1,-5,-10};
@@ -319,6 +320,12 @@ static moonfish_result_t moonfish_start(void *data0)
 	moonfish_search(&data->root->node, &data->root->chess, 0x100);
 	while (moonfish_clock() - data->time0 < data->time) {
 		if (data->root->stop) break;
+#ifndef moonfish_mini
+		if (data->root->node.visits + 0x1000 >= data->node_count) {
+			moonfish_search(&data->root->node, &data->root->chess, data->node_count - data->root->node.visits);
+			break;
+		}
+#endif
 		count = data->root->node.count;
 		for (i = 0 ; i < data->root->node.count ; i++) {
 			if (data->root->node.children[i].ignored) count--;
@@ -332,8 +339,7 @@ static moonfish_result_t moonfish_start(void *data0)
 
 void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *result, struct moonfish_options *options)
 {
-	static struct moonfish_data data;
-	
+	struct moonfish_data data;
 	struct moonfish_node *best_node;
 	long int time;
 	long int best_visits;
@@ -350,6 +356,8 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	data.root = root;
 	data.time = time;
 	data.time0 = moonfish_clock();
+	if (options->node_count < 0) data.node_count = LONG_MAX;
+	else data.node_count = options->node_count;
 	
 #ifdef moonfish_no_threads
 	

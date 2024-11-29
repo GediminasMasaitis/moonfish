@@ -35,6 +35,7 @@ int main(void)
 		if (!strncmp(line, "go ", 3)) {
 			sscanf(line, "go wtime %d btime %d", &wtime, &btime);
 			options.max_time = -1;
+			options.node_count = -1;
 			options.our_time = chess.white ? wtime : btime;
 			moonfish_best_move(root, &result, &options);
 			moonfish_to_uci(&chess, &result.move, name);

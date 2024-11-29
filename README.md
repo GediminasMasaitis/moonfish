@@ -47,7 +47,7 @@ limitations
 These are things that might be resolved eventually.
 
 - the TUIs do not let you underpromote
-- no support for `go depth`, `go infinite`, `go mate`, or `go nodes`
+- no support for `go depth`, `go infinite`, `go mate`
 - no FEN validation (may lead to potential exploits)
 
 download

@@ -97,6 +97,7 @@ struct moonfish_root;
 struct moonfish_options {
 	long int max_time;
 	long int our_time;
+	long int node_count;
 	int thread_count;
 };
 
