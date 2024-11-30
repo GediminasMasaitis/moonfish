@@ -93,9 +93,8 @@ double moonfish_score(struct moonfish_chess *chess)
 static void moonfish_discard(struct moonfish_node *node)
 {
 	int i;
-	if (node->count == 0) return;
 	for (i = 0 ; i < node->count ; i++) moonfish_discard(node->children + i);
-	free(node->children);
+	if (node->count > 0) free(node->children);
 }
 
 static void moonfish_node(struct moonfish_node *node)
@@ -122,6 +121,12 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 	int count, i;
 	int child_count;
 	struct moonfish_move moves[32];
+	
+	if (node->count == -2) return;
+	if (moonfish_finished(chess)) {
+		node->count = -2;
+		return;
+	}
 	
 	node->children = NULL;
 	child_count = 0;
@@ -197,8 +202,6 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 		if (n == -1) continue;
 		if (n == -2) break;
 #endif
-		
-		if (moonfish_finished(chess)) node->count = -2;
 		
 		next = NULL;
 		max_confidence = -1;
@@ -297,16 +300,11 @@ static void moonfish_search(struct moonfish_node *node, struct moonfish_chess *c
 	for (i = 0 ; i < count ; i++) {
 		chess = *chess0;
 		leaf = moonfish_select(node, &chess);
-		if (leaf->count == -2) {
-			leaf->score = 0;
-			moonfish_propagate(leaf);
-			if (moonfish_checkmate(&chess)) {
-				moonfish_propagate_bounds(leaf, 1);
-			}
-			continue;
-		}
 		moonfish_expand(leaf, &chess);
 		moonfish_propagate(leaf);
+		if (leaf->count == -2 && moonfish_check(&chess)) {
+			moonfish_propagate_bounds(leaf, 1);
+		}
 	}
 }
 
