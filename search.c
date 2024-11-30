@@ -328,7 +328,7 @@ static moonfish_result_t moonfish_start(void *data0)
 		for (i = 0 ; i < data->root->node.count ; i++) {
 			if (data->root->node.children[i].ignored) count--;
 		}
-		if (count == 1) break;
+		if (count <= 1) break;
 		moonfish_search(&data->root->node, &data->root->chess, 0x1000);
 	}
 	
@@ -412,7 +412,7 @@ void moonfish_reroot(struct moonfish_root *root, struct moonfish_chess *chess)
 	
 	root->chess = *chess;
 	
-	if (i == root->node.count) {
+	if (i >= root->node.count) {
 		moonfish_discard(&root->node);
 		moonfish_node(&root->node);
 		return;
