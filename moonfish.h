@@ -108,9 +108,6 @@ struct moonfish_result {
 	int score;
 };
 
-/* the PST */
-extern double moonfish_values[];
-
 /* initialises the position and sets up the initial position */
 /* note: this must be called *first* even if you want to use "moonfish_from_fen" */
 void moonfish_chess(struct moonfish_chess *chess);
@@ -127,9 +124,6 @@ int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, un
 /* tries to find the best move in the given position with the given options */
 /* the move found is the best for the player whose turn it is on the given position */
 void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *result, struct moonfish_options *options);
-
-/* returns the depth-zero score for the given position */
-double moonfish_score(struct moonfish_chess *chess);
 
 /* creates a move from UCI notation */
 /* the move is stored in "move" */

@@ -42,10 +42,10 @@ static long int moonfish_clock(void)
 struct moonfish_node {
 	struct moonfish_node *parent;
 	struct moonfish_node *children;
-	_Atomic double score;
+	_Atomic short int score;
 	_Atomic long int visits;
-	_Atomic float bounds[2];
-	_Atomic int count;
+	_Atomic unsigned char bounds[2];
+	_Atomic short int count;
 	_Atomic unsigned char ignored;
 	unsigned char from, index;
 };
@@ -62,14 +62,14 @@ struct moonfish_data {
 	long int node_count;
 };
 
-double moonfish_values[] = {0,0,0,0,103,124,116,101,104,120,104,108,106,118,107,112,122,131,118,123,170,183,170,167,243,249,232,223,0,0,0,0,293,328,339,338,338,342,357,365,338,368,378,391,362,386,397,401,377,389,418,419,367,395,416,424,347,367,394,400,249,342,356,371,373,383,375,379,390,403,404,398,395,405,409,415,395,408,414,426,400,416,423,432,409,419,422,423,383,403,409,407,378,390,384,394,592,607,611,616,586,602,606,606,594,608,604,608,610,619,619,623,631,636,642,645,643,651,655,655,652,655,661,663,649,652,653,654,1181,1168,1172,1190,1178,1189,1199,1195,1187,1197,1203,1200,1191,1208,1209,1214,1211,1213,1226,1231,1217,1224,1240,1240,1197,1189,1233,1238,1214,1227,1239,1243,-21,2,-24,-31,-6,-2,-6,-8,-17,-1,4,8,-12,10,18,23,6,32,34,33,20,44,40,29,5,34,27,16,-50,-1,-5,-10};
+static short int moonfish_values[] = {0,0,0,0,103,124,116,101,104,120,104,108,106,118,107,112,122,131,118,123,170,183,170,167,243,249,232,223,0,0,0,0,293,328,339,338,338,342,357,365,338,368,378,391,362,386,397,401,377,389,418,419,367,395,416,424,347,367,394,400,249,342,356,371,373,383,375,379,390,403,404,398,395,405,409,415,395,408,414,426,400,416,423,432,409,419,422,423,383,403,409,407,378,390,384,394,592,607,611,616,586,602,606,606,594,608,604,608,610,619,619,623,631,636,642,645,643,651,655,655,652,655,661,663,649,652,653,654,1181,1168,1172,1190,1178,1189,1199,1195,1187,1197,1203,1200,1191,1208,1209,1214,1211,1213,1226,1231,1217,1224,1240,1240,1197,1189,1233,1238,1214,1227,1239,1243,-21,2,-24,-31,-6,-2,-6,-8,-17,-1,4,8,-12,10,18,23,6,32,34,33,20,44,40,29,5,34,27,16,-50,-1,-5,-10};
 
-double moonfish_score(struct moonfish_chess *chess)
+static short int moonfish_score(struct moonfish_chess *chess)
 {
 	int x, y;
 	int x1, y1;
 	unsigned char type, color, piece;
-	double score;
+	short int score;
 	
 	score = 0;
 	
@@ -165,10 +165,10 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 	node->count = child_count;
 }
 
-static double moonfish_confidence(struct moonfish_node *node)
+static float moonfish_confidence(struct moonfish_node *node)
 {
 	if (node->visits == 0) return 1e9;
-	return 1 / (1 + pow(10, node->score / 400)) + 1.25 * sqrt(log(node->parent->visits) / node->visits);
+	return 1 / (1 + pow(10, node->score / 400.0)) + 1.25 * sqrt(log(node->parent->visits) / node->visits);
 }
 
 static void moonfish_node_move(struct moonfish_node *node, struct moonfish_chess *chess, struct moonfish_move *move)
@@ -188,9 +188,9 @@ static void moonfish_node_chess(struct moonfish_node *node, struct moonfish_ches
 static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct moonfish_chess *chess)
 {
 	struct moonfish_node *next;
-	double max_confidence, confidence;
+	float max_confidence, confidence;
 	int i;
-	int n;
+	short int n;
 	
 	for (;;) {
 		
@@ -233,7 +233,7 @@ static void moonfish_propagate(struct moonfish_node *node)
 	
 	while (node != NULL) {
 		node->visits++;
-		node->score = -1e9;
+		node->score = SHRT_MIN;
 		for (i = 0 ; i < node->count ; i++) {
 			if (node->score < -node->children[i].score) {
 				node->score = -node->children[i].score;
@@ -248,10 +248,10 @@ static void moonfish_propagate(struct moonfish_node *node)
 static void moonfish_propagate(struct moonfish_node *node)
 {
 	int i;
-	double score, child_score;
+	short int score, child_score;
 	
 	while (node != NULL) {
-		score = -1e9;
+		score = SHRT_MIN;
 		for (i = 0 ; i < node->count ; i++) {
 			child_score = -node->children[i].score;
 			if (score < child_score) score = child_score;
@@ -267,7 +267,7 @@ static void moonfish_propagate(struct moonfish_node *node)
 static void moonfish_propagate_bounds(struct moonfish_node *node, int i)
 {
 	int j;
-	float bound;
+	int bound;
 	
 	while (node != NULL) {
 		
@@ -317,8 +317,8 @@ static moonfish_result_t moonfish_start(void *data0)
 	
 	moonfish_search(&data->root->node, &data->root->chess, 0x100);
 	while (moonfish_clock() - data->time0 < data->time) {
-		if (data->root->stop) break;
 #ifndef moonfish_mini
+		if (data->root->stop) break;
 		if (data->root->node.visits + 0x1000 >= data->node_count) {
 			moonfish_search(&data->root->node, &data->root->chess, data->node_count - data->root->node.visits);
 			break;
