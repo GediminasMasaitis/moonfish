@@ -1,0 +1,258 @@
+<!-- moonfish is licensed under the AGPL (v3 or later) -->
+<!-- copyright 2024 zamfofex -->
+
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+
+<title> moonfish &mdash; a simple chess bot </title>
+
+<style>
+
+body {
+	font-family:
+		"DejaVu Sans",
+		"DejaVu LGC Sans",
+		"Verdana",
+		"Bitstream Vera Sans",
+		"Geneva",
+		sans-serif;
+	margin: 0;
+	background: linear-gradient(#DEF, #FFF) fixed;
+	color: #444;
+}
+
+body > header > *, body > header ~ * {
+	margin-left: auto !important;
+	margin-right: auto !important;
+	padding-left: 64px !important;
+	padding-right: 64px !important;
+	max-width: 64em;
+}
+
+p {
+	margin: 0;
+}
+
+svg {
+	height: 3em;
+}
+
+header {
+	background:
+		linear-gradient(90deg, #123 256px, #0000),
+		radial-gradient(circle, #ABC8, #0000 2px) 0 0 / 48px 48px repeat,
+		radial-gradient(circle, #ABC1, #0000 24px) 0 0 / 48px 48px repeat,
+		radial-gradient(circle, #ABC8, #0000 2px) 24px 24px / 48px 48px repeat,
+		radial-gradient(circle, #ABC1, #0000 24px) 24px 24px / 48px 48px repeat
+		#123;
+	padding: 1em 0;
+	color: #EEE;
+	border-bottom: 2px solid #68A;
+	position: sticky;
+	top: -5em;
+	margin-bottom: 2em;
+	z-index: 1;
+}
+
+header > div {
+	display: flex;
+	align-items: center;
+	font-style: italic;
+}
+
+header > div > p {
+	margin: 0 2em;
+}
+
+header > p {
+	margin: 0;
+	margin-top: 2em;
+	display: flex;
+	gap: 2em;
+}
+
+header > p > a {
+	color: #EEE;
+	transition: text-decoration-color ease 0.25s;
+}
+
+header > p > a:not(:hover) {
+	text-decoration-color: #0000;
+}
+
+header > * {
+	filter: drop-shadow(0 0 2em #ABC);
+}
+
+section section {
+	border: 2px solid #486;
+	background: #FFF;
+}
+
+section section {
+	border: 2px solid #486;
+	background: #FFF;
+	padding: 0 2em 1em;
+	border-radius: 1em;
+	overflow: hidden;
+	text-align: center;
+	flex: 1;
+	min-width: 12em;
+}
+
+section section > h3 {
+	background: #DFE;
+	font-style: italic;
+	margin: 0 -2em 1em;
+	padding: 0.5em 2em;
+	font-size: 1em;
+}
+
+section section a {
+	display: block;
+	background: #BDF;
+	color: #444;
+	padding: 0.5em 1em;
+	border-radius: 2em;
+	margin: 0.5em 0;
+	text-decoration: none;
+	box-shadow: 0 0 0.5em #0002;
+	transition: box-shadow ease 0.25s;
+}
+
+section section a:hover {
+	box-shadow: 0 0.5em 1em #0004;
+}
+
+section > div {
+	display: flex;
+	gap: 2em;
+	margin: 2em 0;
+	filter: drop-shadow(0 0.5em 0.5em #0002);
+	flex-flow: wrap;
+}
+
+h2 {
+	font-size: 1.5em;
+	margin: 0;
+	text-align: center;
+}
+
+</style>
+
+<header>
+	<div>
+		<svg viewbox="-0.5 -3 29 9" stroke-linejoin="round" stroke-linecap="round">
+			<title> moonfish's logo </title>
+			<mask id="m">
+				<rect x="-50" y="-50" width="100" height="100" fill="#FFF" />
+				<use href="#f" fill="#000" stroke="#000" stroke-width="2.5" transform="translate(17.5 0) scale(0.75 1) translate(-17.5 0)" />
+			</mask>
+			<g mask="url('#m')">
+				<g id="w4">
+					<g id="w3">
+						<g id="w2">
+						<g id="w1">
+						<path id="w0" fill="none" stroke="#CEF" stroke-width="0.25" d="M 0 5 Q 0.25 5 0.5 4.75 Q 0.75 5 1 5" />
+						<use href="#w0" x="1" />
+						</g>
+							<use href="#w1" x="2" />
+						</g>
+						<use href="#w2" x="4" />
+					</g>
+					<use href="#w3" x="7" />
+				</g>
+				<use href="#w4" x="13" />
+			</g>
+			<g fill="#EEE">
+				<path d="M 0 0 0 4 1 4 1 1.5 2 3.5 3 3.5 4 1.5 4 4 5 4 5 0 3.75 0 2.5 2.25 1.25 0" />
+				<g transform="translate(0 2) scale(1 1.125)">
+					<path id="o" d="M 7.25 -2 a 1.75 2 0 0 0 0 4 a 1.75 2 0 0 0 0 -4 m 0 1 a 0.75 1 0 0 1 0 2 a 0.75 1 0 0 1 0 -2" />
+					<use href="#o" x="4" />
+				</g>
+				<path d="M 13.5 4 13.5 0 14.5 0 16 2.5 16 0 17 0 17 4 16 4 14.5 1.5 14.5 4" />
+			</g>
+			<g transform="translate(17.5 0) scale(0.75 1) translate(-17.5 0)" fill="none" stroke="#EEE">
+				<path d="M 16 5 C 20 6 17.5 -3 22 -1.75" id="f" />
+				<path d="M 18 0.5 C 26 -0.5 17 4.25 21.5 3.75" />
+				<path d="M 26 0.5 C 23.5 -0.5 22.5 1.75 24.5 2 S 25.5 4.5 23 3.5" />
+				<path d="M 26 -2 Q 30 -3 27 3.75 C 29 -1 32 0 31 3.75" />
+			</g>
+		</svg>
+		<p> a simple chess bot </p>
+	</div>
+	<p> <a href="#about">about</a> <a href="#download">download</a> <a href="https://git.sr.ht/~zamfofex/moonfish">hack</a> <a href="https://lichess.org/?user=munfish#friend">play</a> <a href="https://web.libera.chat/#moonfish">chat</a> </p>
+</header>
+
+<section id="about">
+	<h2> about moonfish </h2>
+	<div>
+		<section>
+			<h3> free software </h3>
+			<p> this means anyone can benefit from moonfish by having access to its source code </p>
+			<p> <a href="https://gnu.org/philosophy/free-sw">more about free software</a> </p>
+		</section>
+		<section>
+			<h3> simple and fun </h3>
+			<p> moonfish is simple and lightweight, which means it's easy and fun to understand how it works </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish">read the source code</a> </p>
+		</section>
+		<section>
+			<h3> portable </h3>
+			<p> written in straight-forward C89, moonfish can run in effectively any operating system and platform </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#compiling-from-source">compile moonfish</a> </p>
+		</section>
+		<section>
+			<h3> welcoming </h3>
+			<p> moonfish has a small but kind community, where you can feel comfortable being yourself </p>
+			<p> <a href="https://web.libera.chat/#moonfish">chat on IRC</a> </p>
+		</section>
+		<section>
+			<h3> effective </h3>
+			<p> moonfish uses MCTS, which allows for it to be reasonably effective despite being so simple </p>
+			<p> <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">more about MCTS</a> </p>
+		</section>
+		<section>
+			<h3> efficient </h3>
+			<p> moonfish makes efficient uses of resources, allowing for it to run in constrained environments such as embedded devices </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#porting-moonfish">port moonfish</a> </p>
+		</section>
+	</div>
+</section>
+
+<section id="download">
+	<h2> download </h2>
+	<div>
+		<section>
+			<h3> source code </h3>
+			<p> this is moonfish's source code, choose this if you want to help hack on moonfish! </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish">sourcehut Git repository</a> </p>
+		</section>
+		<section>
+			<h3> Linux x86-64 (static) </h3>
+			<p> choose this if you want to run moonfish on 64-bit Linux </p>
+			<p> <a download href="moonfish">download moonfish!</a> </p>
+		</section>
+		<section>
+			<h3> UNIX (minified) </h3>
+			<p> this is a shell script with compressed source code, so it requires a shell, as well as <code>xz</code> and <code>cc</code> (it is very small!) </p>
+			<p> <a download href="moonfish.sh">download shell script</a> </p>
+		</section>
+		<section>
+			<h3> Windows </h3>
+			<p> you can compile moonfish for Windows using MinGW or Visual Studio </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#compiling-on-windows">compilation instructions</a> </p>
+		</section>
+		<section>
+			<h3> Mac OS X (and other UNIX) </h3>
+			<p> you can compile moonfish for UNIX and UNIX clones, including Mac OS </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#compiling-from-source">compilation instructions</a> </p>
+		</section>
+		<section>
+			<h3> others </h3>
+			<p> because of moonfish's adherence to the C89 standard, you can port moonfish to other platforms relatively easily </p>
+			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#porting-moonfish">port moonfish</a> </p>
+		</section>
+	</div>
+</section>

@@ -16,10 +16,7 @@ tasks:
   - build: |
       cd moonfish
       make LDFLAGS=-static
-  
-  - strip: |
-      cd moonfish
-      strip --strip-all moonfish lichess analyse chat
+      strip --strip-all moonfish
       scripts/minify.sh
   
   - deploy: |
@@ -38,7 +35,5 @@ tasks:
       curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
         -F "$root"/moonfish=@moonfish \
         -F "$root"/moonfish.sh=@moonfish.sh \
-        -F "$root"/lichess=@lichess \
-        -F "$root"/analyse=@analyse \
-        -F "$root"/chat=@chat \
+        -F "$root"/index.html=@index.html \
         https://neocities.org/api/upload
