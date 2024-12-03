@@ -205,24 +205,23 @@ int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, un
 	moves0 = moves;
 	piece = chess->board[from];
 	
-	if (chess->white ? piece / 16 == 1 : piece / 16 == 2) {
+	if (chess->white ? piece / 16 != 1 : piece / 16 != 2) return 0;
+	
+	moonfish_deltas(chess, &moves, from, deltas[piece % 16 - 1], steps[piece % 16 - 1], 1);
+	moonfish_deltas(chess, &moves, from, deltas[piece % 16 - 1], steps[piece % 16 - 1], -1);
+	
+	if (piece % 16 == moonfish_pawn) moonfish_move_pawn(chess, &moves, from);
+	
+	if (piece % 16 == moonfish_king) {
 		
-		moonfish_deltas(chess, &moves, from, deltas[piece % 16 - 1], steps[piece % 16 - 1], 1);
-		moonfish_deltas(chess, &moves, from, deltas[piece % 16 - 1], steps[piece % 16 - 1], -1);
+		moonfish_castle_high(chess, &moves, from);
+		moonfish_castle_low(chess, &moves, from);
 		
-		if (piece % 16 == moonfish_pawn) moonfish_move_pawn(chess, &moves, from);
+		count = moves - moves0;
 		
-		if (piece % 16 == moonfish_king) {
-			
-			moonfish_castle_high(chess, &moves, from);
-			moonfish_castle_low(chess, &moves, from);
-			
-			count = moves - moves0;
-			
-			for (i = 0 ; i < count ; i++) {
-				moves0[i].chess.oo[1 - chess->white] = 0;
-				moves0[i].chess.ooo[1 - chess->white] = 0;
-			}
+		for (i = 0 ; i < count ; i++) {
+			moves0[i].chess.oo[chess->white ^ 1] = 0;
+			moves0[i].chess.ooo[chess->white ^ 1] = 0;
 		}
 	}
 	
