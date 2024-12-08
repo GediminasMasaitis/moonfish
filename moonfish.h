@@ -108,6 +108,8 @@ struct moonfish_result {
 	int score;
 };
 
+#ifndef moonfish_mini
+
 /* initialises the position and sets up the initial position */
 /* note: this must be called *first* even if you want to use "moonfish_from_fen" */
 void moonfish_chess(struct moonfish_chess *chess);
@@ -200,5 +202,7 @@ void moonfish_finish(struct moonfish_root *root);
 /* requests to stop searching the given state (from a different thread) */
 void moonfish_stop(struct moonfish_root *root);
 void moonfish_unstop(struct moonfish_root *root);
+
+#endif
 
 #endif

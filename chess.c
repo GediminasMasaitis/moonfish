@@ -349,6 +349,51 @@ int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, uns
 	return 1;
 }
 
+int moonfish_finished(struct moonfish_chess *chess)
+{
+	struct moonfish_move moves[32];
+	int x, y;
+	int i, count;
+	
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+			for (i = 0 ; i < count ; i++) {
+				if (moonfish_validate(&moves[i].chess)) return 0;
+			}
+		}
+	}
+	
+	return 1;
+}
+
+int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
+{
+	int x, y, i;
+	
+	if (a->white != b->white) return 0;
+	if (a->passing != b->passing) return 0;
+	if (a->oo[0] != b->oo[0]) return 0;
+	if (a->oo[1] != b->oo[1]) return 0;
+	if (a->ooo[0] != b->ooo[0]) return 0;
+	if (a->ooo[1] != b->ooo[1]) return 0;
+	
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			i = (x + 1) + (y + 2) * 10;
+			if (a->board[i] != b->board[i]) {
+				return 0;
+			}
+		}
+	}
+	
+	return 1;
+}
+
+#ifndef moonfish_mini
+
+#include <string.h>
+
 int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 {
 	int x, y;
@@ -436,56 +481,11 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 	return 0;
 }
 
-int moonfish_finished(struct moonfish_chess *chess)
-{
-	struct moonfish_move moves[32];
-	int x, y;
-	int i, count;
-	
-	for (y = 0 ; y < 8 ; y++) {
-		for (x = 0 ; x < 8 ; x++) {
-			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-			for (i = 0 ; i < count ; i++) {
-				if (moonfish_validate(&moves[i].chess)) return 0;
-			}
-		}
-	}
-	
-	return 1;
-}
-
 int moonfish_checkmate(struct moonfish_chess *chess)
 {
 	if (!moonfish_check(chess)) return 0;
 	return moonfish_finished(chess);
 }
-
-int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
-{
-	int x, y, i;
-	
-	if (a->white != b->white) return 0;
-	if (a->passing != b->passing) return 0;
-	if (a->oo[0] != b->oo[0]) return 0;
-	if (a->oo[1] != b->oo[1]) return 0;
-	if (a->ooo[0] != b->ooo[0]) return 0;
-	if (a->ooo[1] != b->ooo[1]) return 0;
-	
-	for (y = 0 ; y < 8 ; y++) {
-		for (x = 0 ; x < 8 ; x++) {
-			i = (x + 1) + (y + 2) * 10;
-			if (a->board[i] != b->board[i]) {
-				return 0;
-			}
-		}
-	}
-	
-	return 1;
-}
-
-#ifndef moonfish_mini
-
-#include <string.h>
 
 static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char type, unsigned char promotion, int x0, int y0, int x1, int y1, int check, int captured)
 {
