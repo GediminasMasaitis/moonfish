@@ -68,7 +68,7 @@ static short int moonfish_score(struct moonfish_chess *chess)
 {
 	int x, y;
 	int x1, y1;
-	unsigned char type, color, piece;
+	int type, color, piece;
 	short int score;
 	
 	score = 0;

@@ -42,7 +42,7 @@ struct moonfish_fancy {
 
 static void moonfish_fancy_square(struct moonfish_fancy *fancy, int x, int y)
 {
-	unsigned char piece;
+	int piece;
 	
 	if (x + 1 == fancy->x && y + 1 == fancy->y) {
 		printf("\x1B[48;5;219m");
@@ -284,7 +284,7 @@ static void moonfish_fancy_score(struct moonfish_fancy *fancy)
 
 static void moonfish_fancy(struct moonfish_fancy *fancy)
 {
-	unsigned char x, y;
+	int x, y;
 	
 	printf("\x1B[%dH", fancy->oy);
 	

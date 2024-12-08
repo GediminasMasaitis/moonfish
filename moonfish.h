@@ -121,7 +121,7 @@ void moonfish_chess(struct moonfish_chess *chess);
 /* note: it will not generate any other kind of invalid move */
 /* to filter out invalid moves, you may use "moonfish_validate" below on the position *after* the generated move was played */
 /* this will return the number of moves generated */
-int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, unsigned char from);
+int moonfish_moves(struct moonfish_chess *chess, struct moonfish_move *moves, int from);
 
 /* tries to find the best move in the given position with the given options */
 /* the move found is the best for the player whose turn it is on the given position */
@@ -173,7 +173,7 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 /* if the move is valid, this will return 0, and the pointer will point to a move that may be used */
 /* on failure (i.e. invalid move), this will return 1, and the move the pointer points to will not be usable */
 /* note: this will ignore underpromotions (always promotes to queen when a pawn reaches the last rank) */
-int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, unsigned char from, unsigned char to);
+int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, int from, int to);
 
 /* returns whether the game ended due to either checkmate or stalemate */
 /* note: 0 means false (i.e. not finished) */
