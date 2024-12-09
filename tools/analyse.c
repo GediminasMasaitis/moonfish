@@ -209,7 +209,7 @@ static void moonfish_scoresheet_move(struct moonfish_fancy *fancy, int i)
 	}
 	
 	if (i <= 0) {
-		printf("%*s", 11 - length, "");
+		printf("%*s\x1B[0m", 11 - length, "");
 		return;
 	}
 	
