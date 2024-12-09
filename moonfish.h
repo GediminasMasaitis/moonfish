@@ -67,7 +67,7 @@ struct moonfish_chess {
 	/* 10 x 12 array board representation */
 	unsigned char board[120];
 	
-	/* booleans representing castling rights */
+	/* flags representing castling rights */
 	unsigned char oo[2], ooo[2];
 	
 	/* square index of a pawn that may be captured via e.p. */
@@ -190,7 +190,7 @@ int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b);
 /* sets the state's position */
 void moonfish_reroot(struct moonfish_root *root, struct moonfish_chess *chess);
 
-/* get the state's position (it is stored in the given position pointer) */
+/* gets the state's position (it is stored in the given position pointer) */
 void moonfish_root(struct moonfish_root *root, struct moonfish_chess *chess);
 
 /* creates a new state (with the initial position) */

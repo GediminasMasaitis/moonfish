@@ -225,26 +225,6 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 	return node;
 }
 
-#ifdef moonfish_no_threads
-
-static void moonfish_propagate(struct moonfish_node *node)
-{
-	int i;
-	
-	while (node != NULL) {
-		node->visits++;
-		node->score = SHRT_MIN;
-		for (i = 0 ; i < node->count ; i++) {
-			if (node->score < -node->children[i].score) {
-				node->score = -node->children[i].score;
-			}
-		}
-		node = node->parent;
-	}
-}
-
-#else
-
 static void moonfish_propagate(struct moonfish_node *node)
 {
 	int i;
@@ -257,12 +237,14 @@ static void moonfish_propagate(struct moonfish_node *node)
 			if (score < child_score) score = child_score;
 		}
 		node->score = score;
+#ifdef moonfish_no_threads
+		node->visits++;
+#else
 		atomic_fetch_add(&node->visits, 1);
+#endif
 		node = node->parent;
 	}
 }
-
-#endif
 
 static void moonfish_propagate_bounds(struct moonfish_node *node, int i)
 {

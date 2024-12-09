@@ -1,6 +1,8 @@
 /* moonfish is licensed under the AGPL (v3 or later) */
 /* copyright 2023, 2024 zamfofex */
 
+#include <string.h>
+
 #include "moonfish.h"
 
 static void moonfish_force_promotion(struct moonfish_chess *chess, struct moonfish_move **moves, int from, int to, int promotion)
@@ -136,12 +138,12 @@ static void moonfish_pawn_moves(struct moonfish_chess *chess, struct moonfish_mo
 {
 	int color;
 	
-	color = chess->board[from] & 0xF0;
-	if ((color == 0x10 && from < 80) || (color == 0x20 && from > 40)) {
+	if (to > 30 && to < 90) {
 		moonfish_force_move(chess, moves, from, to);
 		return;
 	}
 	
+	color = chess->board[from] & 0xF0;
 	moonfish_force_promotion(chess, moves, from, to, color | moonfish_queen);
 	moonfish_force_promotion(chess, moves, from, to, color | moonfish_rook);
 	moonfish_force_promotion(chess, moves, from, to, color | moonfish_bishop);
@@ -153,9 +155,7 @@ static void moonfish_pawn_capture(struct moonfish_chess *chess, struct moonfish_
 	int dy;
 	
 	if (to == chess->passing) {
-		
 		dy = chess->white ? 10 : -10;
-		
 		moonfish_force_move(chess, moves, from, to);
 		(*moves)[-1].chess.board[to - dy] = moonfish_empty;
 		return;
@@ -173,9 +173,7 @@ static void moonfish_move_pawn(struct moonfish_chess *chess, struct moonfish_mov
 	dy = chess->white ? 10 : -10;
 	
 	if (chess->board[from + dy] == moonfish_empty) {
-		
 		moonfish_pawn_moves(chess, moves, from, from + dy);
-		
 		if ((chess->white ? from < 40 : from > 80) && chess->board[from + dy * 2] == moonfish_empty) {
 			moonfish_force_move(chess, moves, from, from + dy * 2);
 			(*moves)[-1].chess.passing = from + dy;
@@ -331,23 +329,6 @@ void moonfish_to_uci(struct moonfish_chess *chess, struct moonfish_move *move, c
 	}
 }
 
-int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, int from, int to)
-{
-	struct moonfish_move moves[32];
-	int i, count;
-	
-	count = moonfish_moves(chess, moves, from);
-	
-	for (i = 0 ; i < count ; i++) {
-		if (moves[i].to == to && moonfish_validate(&moves[i].chess)) {
-			*found = moves[i];
-			return 0;
-		}
-	}
-	
-	return 1;
-}
-
 int moonfish_finished(struct moonfish_chess *chess)
 {
 	struct moonfish_move moves[32];
@@ -391,7 +372,22 @@ int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
 
 #ifndef moonfish_mini
 
-#include <string.h>
+int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, int from, int to)
+{
+	struct moonfish_move moves[32];
+	int i, count;
+	
+	count = moonfish_moves(chess, moves, from);
+	
+	for (i = 0 ; i < count ; i++) {
+		if (moves[i].to == to && moonfish_validate(&moves[i].chess)) {
+			*found = moves[i];
+			return 0;
+		}
+	}
+	
+	return 1;
+}
 
 int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 {
