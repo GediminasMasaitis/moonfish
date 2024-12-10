@@ -76,4 +76,3 @@ int main(void)
 		if (!strcmp(line, "quit")) return 0;
 	}
 }
-
