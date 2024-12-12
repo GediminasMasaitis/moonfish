@@ -4,36 +4,39 @@
 image: alpine/latest
 
 secrets:
-  - 72a028fc-f8df-43d3-a315-305d80720e45
+- 72a028fc-f8df-43d3-a315-305d80720e45
 
 packages:
-  - build-base
-  - libressl-dev
-  - curl
-  - cjson-dev
+- build-base
+- libressl-dev
+- curl
+- cjson-dev
 
 tasks:
-  - build: |
-      cd moonfish
-      make LDFLAGS=-static
-      strip --strip-all moonfish
-      scripts/minify.sh
-  
-  - deploy: |
-      set +x
-      
-      if test "x$GIT_REF" = x || ! test -f neocities-token.txt
-      then exit
-      fi
-      
-      if test "$GIT_REF" = refs/heads/main
-      then root=
-      else root="${GIT_REF#refs/*/}"
-      fi
-      
-      cd moonfish
-      curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
-        -F "$root"/moonfish=@moonfish \
-        -F "$root"/moonfish.sh=@moonfish.sh \
-        -F "$root"/index.html=@index.html \
-        https://neocities.org/api/upload
+
+- build: |
+    cd moonfish
+    make LDFLAGS=-static
+    strip moonfish lichess chat
+    scripts/minify.sh
+
+- deploy: |
+    set +x
+    
+    if test "x$GIT_REF" = x || ! test -f neocities-token.txt
+    then exit
+    fi
+    
+    if test "$GIT_REF" = refs/heads/main
+    then root=
+    else root="${GIT_REF#refs/*/}"
+    fi
+    
+    cd moonfish
+    curl -fsSL --oauth2-bearer "$(cat ~/neocities-token.txt)" \
+      -F "$root"/moonfish=@moonfish \
+      -F "$root"/moonfish.sh=@moonfish.sh \
+      -F "$root"/lichess=@lichess \
+      -F "$root"/chat=@chat \
+      -F "$root"/index.html=@index.html \
+      https://neocities.org/api/upload
