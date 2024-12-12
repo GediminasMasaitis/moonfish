@@ -146,6 +146,28 @@ static void moonfish_read_chat(struct tls *tls, char *username, char **channel, 
 	}
 }
 
+static void moonfish_write_fen(struct tls *tls, struct moonfish_chess *chess, struct moonfish_move *move, char *channel)
+{
+	char fen[128];
+	char name[6];
+	int i;
+	
+	moonfish_to_fen(&move->chess, fen);
+	moonfish_to_uci(chess, move, name);
+	
+	for (i = 0 ; fen[i] != 0 ; i++) {
+		if (fen[i] == ' ') fen[i] = '_';
+	}
+	
+	moonfish_write_text(tls, "PRIVMSG ");
+	moonfish_write_text(tls, channel);
+	moonfish_write_text(tls, " :https://lichess.org/export/fen.gif?theme=blue&piece=caliente&lastMove=");
+	moonfish_write_text(tls, name);
+	moonfish_write_text(tls, "&fen=");
+	moonfish_write_text(tls, fen);
+	moonfish_write_text(tls, "\r\n");
+}
+
 static void moonfish_chat(char **command, char **options, char *host, char *port, char *username, char *channels)
 {
 	struct tls *tls;
@@ -157,9 +179,7 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 	FILE *in, *out;
 	char *value;
 	char *names, *name0;
-	char fen[128];
 	char *password;
-	int i;
 	
 	moonfish_chess(&chess);
 	
@@ -231,23 +251,11 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 		
 		if (moonfish_from_san(&chess, &move, message)) continue;
 		
-		moonfish_to_uci(&chess, &move, name);
-		chess = move.chess;
-		
-		if (moonfish_finished(&chess)) {
+		if (moonfish_finished(&move.chess)) {
 			
-			moonfish_to_fen(&chess, fen);
+			moonfish_write_fen(tls, &chess, &move, channel);
 			moonfish_chess(&chess);
 			fprintf(in, "ucinewgame\n");
-			
-			for (i = 0 ; fen[i] != 0 ; i++) {
-				if (fen[i] == ' ') fen[i] = '_';
-			}
-			moonfish_write_text(tls, "PRIVMSG ");
-			moonfish_write_text(tls, channel);
-			moonfish_write_text(tls, " :https://lichess.org/export/fen.gif?fen=");
-			moonfish_write_text(tls, fen);
-			moonfish_write_text(tls, "\r\n");
 			
 			moonfish_write_text(tls, "PRIVMSG ");
 			moonfish_write_text(tls, channel);
@@ -255,6 +263,9 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 			
 			continue;
 		}
+		
+		moonfish_to_uci(&chess, &move, name);
+		chess = move.chess;
 		
 		names = realloc(names, strlen(names) + strlen(name) + 2);
 		if (names == NULL) {
@@ -289,12 +300,6 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 		}
 		
 		moonfish_to_san(&chess, &move, name, 0);
-		chess = move.chess;
-		moonfish_to_fen(&chess, fen);
-		
-		for (i = 0 ; fen[i] != 0 ; i++) {
-			if (fen[i] == ' ') fen[i] = '_';
-		}
 		
 		moonfish_write_text(tls, "PRIVMSG ");
 		moonfish_write_text(tls, channel);
@@ -302,11 +307,8 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 		moonfish_write_text(tls, name);
 		moonfish_write_text(tls, "\r\n");
 		
-		moonfish_write_text(tls, "PRIVMSG ");
-		moonfish_write_text(tls, channel);
-		moonfish_write_text(tls, " :https://lichess.org/export/fen.gif?fen=");
-		moonfish_write_text(tls, fen);
-		moonfish_write_text(tls, "\r\n");
+		moonfish_write_fen(tls, &chess, &move, channel);
+		chess = move.chess;
 		
 		if (moonfish_finished(&chess)) {
 			
