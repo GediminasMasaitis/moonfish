@@ -11,12 +11,14 @@ git add .
 git commit -m xxx && undo=yes
 git push --force --all tests
 
-commit="$(git rev-parse HEAD)"
+rev1="$(git rev-parse HEAD)"
 
 [[ "$undo" = yes ]] && git reset HEAD~
+
+rev2="$(git rev-parse "${1:-main}")"
 
 url="$(git remote get-url tests)"
 ssh="${url%%:*}"
 dir="${url#*:}"
 
-ssh "$ssh" -- "cd '$dir/..' && git reset --hard '$commit' && scripts/compare.sh '${1:-main}'"
+ssh "$ssh" -- "cd '$dir/..' && git reset --hard '$rev1' && scripts/compare.sh '$rev2'"
