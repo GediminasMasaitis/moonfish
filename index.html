@@ -1,6 +1,7 @@
 <!-- moonfish is licensed under the AGPL (v3 or later) -->
 <!-- copyright 2024 zamfofex -->
 
+<!doctype html>
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
@@ -8,6 +9,14 @@
 <title> moonfish &mdash; a simple chess bot </title>
 
 <style>
+
+::selection {
+	background: #A8E8;
+}
+
+html, body {
+	min-height: 100%;
+}
 
 body {
 	font-family:
@@ -18,7 +27,12 @@ body {
 		"Geneva",
 		sans-serif;
 	margin: 0;
-	background: linear-gradient(#DEF, #FFF) fixed;
+	--background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4096 4096"><filter id="f"><feTurbulence baseFrequency="0.125" stitchTiles="stitch" /><feComponentTransfer result="stars"><feFuncR type="discrete" tableValues="1 1" /><feFuncG type="discrete" tableValues="1 1" /><feFuncB type="discrete" tableValues="1 1" /><feFuncA type="discrete" tableValues="0 0.5" /></feComponentTransfer><feMorphology operator="dilate" radius="1" /><feGaussianBlur stdDeviation="32" /><feComposite in2="stars" /></filter><rect width="100%" height="100%" filter="url(%23f)" /></svg>') 50% 0 / 100vmax auto;
+	background:
+		var(--background),
+		linear-gradient(#0000 12em, #1028, #001 calc(100% - 12em)),
+		linear-gradient(90deg, #213, #0000, #246, #0000, #132)
+		#123;
 	color: #444;
 }
 
@@ -36,15 +50,13 @@ p {
 
 svg {
 	height: 3em;
+	filter: drop-shadow(0 0 2em #ABC);
 }
 
 header {
 	background:
-		linear-gradient(90deg, #123 256px, #0000),
-		radial-gradient(circle, #ABC8, #0000 2px) 0 0 / 48px 48px repeat,
-		radial-gradient(circle, #ABC1, #0000 24px) 0 0 / 48px 48px repeat,
-		radial-gradient(circle, #ABC8, #0000 2px) 24px 24px / 48px 48px repeat,
-		radial-gradient(circle, #ABC1, #0000 24px) 24px 24px / 48px 48px repeat
+		var(--background),
+		linear-gradient(90deg, #213, #0000, #246, #0000, #132)
 		#123;
 	padding: 1em 0;
 	color: #EEE;
@@ -55,13 +67,13 @@ header {
 	z-index: 1;
 }
 
-header > div {
+.logo {
 	display: flex;
 	align-items: center;
 	font-style: italic;
 }
 
-header > div > p {
+.logo > p {
 	margin: 0 2em;
 }
 
@@ -69,7 +81,7 @@ header > p {
 	margin: 0;
 	margin-top: 2em;
 	display: flex;
-	gap: 2em;
+	gap: 1em;
 }
 
 header > p > a {
@@ -82,27 +94,23 @@ header > p > a:not(:hover) {
 }
 
 header > * {
-	filter: drop-shadow(0 0 2em #ABC);
+	text-shadow: 0 0 2em #ABC;
 }
 
 section section {
-	border: 2px solid #486;
-	background: #FFF;
-}
-
-section section {
-	border: 2px solid #486;
+	border: 4px solid #A8E;
 	background: #FFF;
 	padding: 0 2em 1em;
-	border-radius: 1em;
+	border-radius: 2em;
 	overflow: hidden;
 	text-align: center;
 	flex: 1;
 	min-width: 12em;
+	box-shadow: 0 0 0.5em #A8E, 0 0 1em #0008;
 }
 
 section section > h3 {
-	background: #DFE;
+	background: #CBD;
 	font-style: italic;
 	margin: 0 -2em 1em;
 	padding: 0.5em 2em;
@@ -111,7 +119,7 @@ section section > h3 {
 
 section section a {
 	display: block;
-	background: #BDF;
+	background: #C8D;
 	color: #444;
 	padding: 0.5em 1em;
 	border-radius: 2em;
@@ -119,6 +127,7 @@ section section a {
 	text-decoration: none;
 	box-shadow: 0 0 0.5em #0002;
 	transition: box-shadow ease 0.25s;
+	font-weight: bold;
 }
 
 section section a:hover {
@@ -127,22 +136,74 @@ section section a:hover {
 
 section > div {
 	display: flex;
-	gap: 2em;
+	gap: 4em;
 	margin: 2em 0;
-	filter: drop-shadow(0 0.5em 0.5em #0002);
 	flex-flow: wrap;
+	align-items: center;
 }
+
+section section:nth-child(6n + 1) { transform: translate(1em, 1em); }
+section section:nth-child(6n + 2) { transform: translate(-1em, -1em); }
+section section:nth-child(6n + 3) { transform: translate(-1em, 0); }
+section section:nth-child(6n + 4) { transform: translate(0, 1em); }
+section section:nth-child(6n + 5) { transform: translate(-2em, -1em); }
+section section:nth-child(6n + 6) { transform: translate(0, 0); }
 
 h2 {
 	font-size: 1.5em;
 	margin: 0;
 	text-align: center;
+	color: #FED;
+	text-shadow: 0 0 1em #FEE;
+	margin: 0 auto;
+	max-width: max-content;
+}
+
+@media (min-width: 1024px) {
+	h2 {
+		position: sticky;
+		top: 0;
+		z-index: 2;
+		line-height: 3rem;
+	}
+}
+
+pre, code {
+	font-family:
+		"DejaVu Sans Mono",
+		"DejaVu LGC Sans Mono",
+		"Bitstream Vera Sans Mono",
+		"Liberation Mono",
+		"Consolas",
+		monospace;
+}
+
+.ascii {
+	position: relative;
+	user-select: none;
+	text-shadow: 0 0 1em #000, 0 0 1em #000, 0 0 1em #000, 0 0 1em #000, 0 0 1em #000, 0 0 1em #000;
+}
+
+.ascii pre {
+	margin: 0;
+	font-weight: bold;
+	opacity: 75%;
+	position: absolute;
+	bottom: 0;
+	right: 8em;
+	font-size: 0.5em;
+}
+
+@media (max-width: 768px) {
+	.ascii {
+		display: none;
+	}
 }
 
 </style>
 
 <header>
-	<div>
+	<div class="logo">
 		<svg viewbox="-0.5 -3 29 9" stroke-linejoin="round" stroke-linecap="round">
 			<title> moonfish's logo </title>
 			<mask id="m">
@@ -183,6 +244,10 @@ h2 {
 		<p> a simple chess bot </p>
 	</div>
 	<p> <a href="#about">about</a> <a href="#download">download</a> <a href="https://git.sr.ht/~zamfofex/moonfish">hack</a> <a href="https://lichess.org/?user=munfish#friend">play</a> <a href="https://web.libera.chat/#moonfish">chat</a> </p>
+	<div class="ascii"><pre>
+   ___ z   _    _     __   /)        _o_  _+_
+)\/  -\ z (_)  (_)   /'_)  /|   |M|  \W/  \_/
+)/\___/   /_\  /_\  (__)  (__)  /_\  (_)  (_)</pre></div>
 </header>
 
 <section id="about">
