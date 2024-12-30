@@ -129,6 +129,8 @@ static int moonfish_compare(const void *ax, const void *bx)
 	const struct moonfish_node *a, *b;
 	a = ax;
 	b = bx;
+	if (!a->ignored && b->ignored) return -1;
+	if (a->ignored && !b->ignored) return 1;
 	return a->score - b->score;
 }
 
@@ -337,9 +339,7 @@ static moonfish_result_t moonfish_start(void *data0)
 void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *result, struct moonfish_options *options)
 {
 	struct moonfish_data data;
-	struct moonfish_node *best_node;
 	long int time;
-	long int best_visits;
 	int i;
 #ifndef moonfish_no_threads
 	thrd_t threads[256];
@@ -378,18 +378,8 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	
 #endif
 	
-	best_visits = -1;
-	best_node = NULL;
-	
-	for (i = 0 ; i < root->node.count ; i++) {
-		if (root->node.children[i].ignored) continue;
-		if (root->node.children[i].visits > best_visits) {
-			best_node = root->node.children + i;
-			best_visits = best_node->visits;
-		}
-	}
-	
-	moonfish_node_move(best_node, &root->chess, &result->move);
+	qsort(root->node.children, root->node.count, sizeof root->node, &moonfish_compare);
+	moonfish_node_move(root->node.children, &root->chess, &result->move);
 	result->score = root->node.score;
 	result->node_count = root->node.visits;
 }
@@ -469,6 +459,48 @@ void moonfish_stop(struct moonfish_root *root)
 void moonfish_unstop(struct moonfish_root *root)
 {
 	root->stop = 0;
+}
+
+void moonfish_pv(struct moonfish_root *root, struct moonfish_move *moves, struct moonfish_result *result, int i, int *count)
+{
+	struct moonfish_node *node;
+	struct moonfish_chess chess;
+	int j;
+	int best_score;
+	struct moonfish_node *best_node;
+	
+	if (i >= root->node.count) *count = 0;
+	if (*count == 0) return;
+	
+	node = root->node.children + i;
+	chess = root->chess;
+	
+	moonfish_node_move(node, &chess, &result->move);
+	result->score = -node->score;
+	result->node_count = node->visits;
+	
+	for (j = 0 ; j < *count ; j++) {
+		
+		if (node == NULL) {
+			*count = j - 1;
+			break;
+		}
+		
+		moonfish_node_move(node, &chess, moves + j);
+		chess = moves[j].chess;
+		
+		best_score = INT_MAX;
+		best_node = NULL;
+		for (i = 0 ; i < node->count ; i++) {
+			if (node->children[i].ignored) continue;
+			if (node->children[i].score < best_score) {
+				best_node = node->children + i;
+				best_score = best_node->score;
+			}
+		}
+		
+		node = best_node;
+	}
 }
 
 #endif

@@ -11,27 +11,45 @@
 #include "moonfish.h"
 #include "threads.h"
 
+struct moonfish_option {
+	char *name;
+	char *type;
+	int value;
+	int min, max;
+};
+
 struct moonfish_info {
 	struct moonfish_root *root;
-	_Atomic int thread_count;
 	_Atomic unsigned char searching;
 #ifndef moonfish_no_threads
 	unsigned char has_thread;
 	thrd_t thread;
 #endif
+	struct moonfish_option *options;
 };
+
+static int moonfish_getoption(struct moonfish_option *options, char *name)
+{
+	int i;
+	for (i = 0 ; options[i].name != NULL ; i++) {
+		if (!strcasecmp(options[i].name, name)) return options[i].value;
+	}
+	return -1;
+}
 
 static moonfish_result_t moonfish_go(void *data)
 {
-	static struct moonfish_result result;
+	static struct moonfish_result result, pv_result;
 	static struct moonfish_options options;
 	static struct moonfish_chess chess;
+	static struct moonfish_move pv[256];
 	
 	long int our_time, their_time, *xtime, time;
 	char *arg, *end;
 	char name[6];
 	struct moonfish_info *info;
 	long int node_count;
+	int i, j, pv_count, count;
 	
 	info = data;
 	
@@ -113,13 +131,32 @@ static moonfish_result_t moonfish_go(void *data)
 	
 	options.max_time = time;
 	options.our_time = our_time;
-	options.thread_count = info->thread_count;
+	options.thread_count = moonfish_getoption(info->options, "Threads");
 	options.node_count = node_count;
+	
 	moonfish_best_move(info->root, &result, &options);
+	info->searching = 0;
+	
+	pv_count = moonfish_getoption(info->options, "MultiPV");
+	for (i = 0 ; i < pv_count ; i++) {
+		count = sizeof pv / sizeof *pv;
+		moonfish_pv(info->root, pv, &pv_result, i, &count);
+		if (count == 0) continue;
+		printf("info depth 1 score cp %d nodes %ld multipv %d pv", pv_result.score, pv_result.node_count, i + 1);
+		moonfish_root(info->root, &chess);
+		for (j = 0 ; j < count ; j++) {
+			moonfish_to_uci(&chess, pv + j, name);
+			chess = pv[j].chess;
+			printf(" %s", name);
+		}
+		printf("\n");
+	}
+	
+	printf("info depth 1 score cp %d nodes %ld\n", result.score, result.node_count);
+	
+	moonfish_root(info->root, &chess);
 	moonfish_to_uci(&chess, &result.move, name);
 	
-	info->searching = 0;
-	printf("info depth 1 score cp %d nodes %ld multipv 1 pv %s\n", result.score, result.node_count, name);
 	printf("bestmove %s\n", name);
 	fflush(stdout);
 	
@@ -191,10 +228,11 @@ static void moonfish_position(struct moonfish_root *root)
 	if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &chess);
 }
 
-static void moonfish_setoption(_Atomic int *thread_count)
+static void moonfish_setoption(struct moonfish_info *info)
 {
 	char *arg, *end;
-	long int count;
+	long int value;
+	int i;
 	
 	arg = strtok(NULL, "\r\n\t ");
 	if (arg == NULL || strcmp(arg, "name")) {
@@ -203,7 +241,16 @@ static void moonfish_setoption(_Atomic int *thread_count)
 	}
 	
 	arg = strtok(NULL, "\r\n\t ");
-	if (arg == NULL || strcasecmp(arg, "Threads")) {
+	if (arg == NULL) {
+		fprintf(stderr, "missing option name\n");
+		exit(1);
+	}
+	
+	for (i = 0 ; info->options[i].name != NULL ; i++) {
+		if (!strcasecmp(arg, info->options[i].name)) break;
+	}
+	
+	if (info->options[i].name == NULL) {
 		fprintf(stderr, "unknown option '%s'\n", arg);
 		exit(1);
 	}
@@ -221,21 +268,29 @@ static void moonfish_setoption(_Atomic int *thread_count)
 	}
 	
 	errno = 0;
-	count = strtol(arg, &end, 10);
-	if (errno || *end != 0 || count < 1 || count > 256) {
-		fprintf(stderr, "malformed thread count\n");
+	value = strtol(arg, &end, 10);
+	if (errno || *end != 0 || value < info->options[i].min || value > info->options[i].max) {
+		fprintf(stderr, "malformed option value\n");
 		exit(1);
 	}
 	
-	*thread_count = count;
+	info->options[i].value = value;
 }
 
 int main(int argc, char **argv)
 {
 	static char line[2048];
+	static struct moonfish_info info;
+	static struct moonfish_option options[] = {
+#ifndef moonfish_no_threads
+		{"Threads", "spin", 0, 1, 256},
+#endif
+		{"MultiPV", "spin", 0, 0, 256},
+		{NULL},
+	};
 	
 	char *arg;
-	struct moonfish_info info;
+	int i;
 	
 	if (argc > 1) {
 		fprintf(stderr, "usage: %s (no arguments)\n", argv[0]);
@@ -243,14 +298,14 @@ int main(int argc, char **argv)
 	}
 	
 	info.root = moonfish_new();
-	info.thread_count = 1;
 	info.searching = 0;
+	info.options = options;
 	
 #ifndef moonfish_no_threads
 	info.has_thread = 0;
-	info.thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-	if (info.thread_count > 256) info.thread_count = 256;
-	if (info.thread_count < 1) info.thread_count = 4;
+	options[0].value = sysconf(_SC_NPROCESSORS_ONLN);
+	if (options[0].value > options[0].max) options[0].value = options[0].max;
+	if (options[0].value < 1) options[0].value = 4;
 #endif
 	
 	for (;;) {
@@ -307,9 +362,9 @@ int main(int argc, char **argv)
 		if (!strcmp(arg, "uci")) {
 			printf("id name moonfish\n");
 			printf("id author zamfofex\n");
-#ifndef moonfish_no_threads
-			printf("option name Threads type spin default %d min 1 max 256\n", info.thread_count);
-#endif
+			for (i = 0 ; options[i].name != NULL ; i++) {
+				printf("option name %s type %s default %d min %d max %d\n", options[i].name, options[i].type, options[i].value, options[i].min, options[i].max);
+			}
 			printf("uciok\n");
 			continue;
 		}
@@ -319,13 +374,13 @@ int main(int argc, char **argv)
 			continue;
 		}
 		
-#ifndef moonfish_no_threads
-		
 		if (!strcmp(arg, "setoption")) {
-			moonfish_setoption(&info.thread_count);
-			if (info.searching) printf("info string warning: option will only take effect next search request\n");
+			moonfish_setoption(&info);
+			if (info.searching) printf("info string warning: option may only take effect next search request\n");
 			continue;
 		}
+		
+#ifndef moonfish_no_threads
 		
 		if (!strcmp(arg, "stop")) {
 			moonfish_stop(info.root);

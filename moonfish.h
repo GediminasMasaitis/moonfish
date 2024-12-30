@@ -203,6 +203,9 @@ void moonfish_finish(struct moonfish_root *root);
 void moonfish_stop(struct moonfish_root *root);
 void moonfish_unstop(struct moonfish_root *root);
 
+/* requests the PV with the given index, with at most 'count' moves */
+void moonfish_pv(struct moonfish_root *root, struct moonfish_move *moves, struct moonfish_result *result, int index, int *count);
+
 #endif
 
 #endif
