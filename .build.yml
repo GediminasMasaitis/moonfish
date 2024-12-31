@@ -11,6 +11,7 @@ packages:
 - libressl-dev
 - curl
 - cjson-dev
+- xz
 
 tasks:
 

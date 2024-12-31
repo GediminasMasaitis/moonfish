@@ -30,7 +30,7 @@ sed -E 's/^ +#/#/g' |
 grep -Eoh "'[^']*'"'|"[^"]*"|#.*|[a-zA-Z0-9_]+|[^a-zA-Z0-9_"'"'"' ]+' |
 
 # remove spaces in '#include' lines
-sed '/^#/s/ //g' |
+sed -E '/^#/s/ //g' |
 
 # put '#include' lines at the start
 # (note: this materialises the file)
