@@ -18,24 +18,38 @@
 
 #ifdef _WIN32
 
-static long int moonfish_clock(void)
+static unsigned long int moonfish_clock(void)
 {
 	return GetTickCount();
 }
 
 #else
 
-static long int moonfish_clock(void)
+#ifdef moonfish_no_clock
+
+static unsigned long int moonfish_clock(void)
+{
+	time_t t;
+	if (time(&t) < 0) {
+		perror("time");
+		exit(1);
+	}
+	return t * 1000;
+}
+
+#else
+
+static unsigned long int moonfish_clock(void)
 {
 	struct timespec ts;
-	
 	if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
 		perror("clock_gettime");
 		exit(1);
 	}
-	
 	return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
+
+#endif
 
 #endif
 
@@ -58,7 +72,7 @@ struct moonfish_root {
 
 struct moonfish_data {
 	struct moonfish_root *root;
-	long int time, time0;
+	unsigned long int time, time0;
 	long int node_count;
 };
 
@@ -346,9 +360,10 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 #endif
 	
 	time = LONG_MAX;
+	if (options->our_time >= 0) time = options->our_time / 16;
 	if (options->max_time >= 0 && time > options->max_time) time = options->max_time;
-	if (options->our_time >= 0 && time > options->our_time / 16) time = options->our_time / 16;
 	time -= time / 32 + 125;
+	if (time < 0) time = 0;
 	
 	data.root = root;
 	data.time = time;
