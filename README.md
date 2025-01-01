@@ -1,5 +1,5 @@
 <!-- moonfish is licensed under the AGPL (v3 or later) -->
-<!-- copyright 2023, 2024 zamfofex -->
+<!-- copyright 2025 zamfofex -->
 
 moonfish
 ===
@@ -202,7 +202,7 @@ Thus, moonfish can be compiled within a strict C89 implementation by setting the
 license
 ---
 
-[AGPL] ([v3 or later]) © zamfofex 2023, 2024
+[AGPL] ([v3 or later]) © zamfofex 2025
 
 [AGPL]: <https://gnu.org/licenses/agpl-3.0>
 [v3 or later]: <https://gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>

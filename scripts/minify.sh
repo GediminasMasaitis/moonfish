@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # moonfish is licensed under the AGPL (v3 or later)
-# copyright 2023, 2024 zamfofex
+# copyright 2025 zamfofex
 
 cc="${HOST_CC:-gcc}"
 

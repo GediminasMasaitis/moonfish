@@ -1,5 +1,5 @@
 # moonfish is licensed under the AGPL (v3 or later)
-# copyright 2023, 2024 zamfofex
+# copyright 2025 zamfofex
 
 CFLAGS ?= -O3 -Wall -Wextra -Wpedantic
 PREFIX ?= /usr/local

@@ -1,5 +1,5 @@
 <!-- moonfish is licensed under the AGPL (v3 or later) -->
-<!-- copyright 2023, 2024 zamfofex -->
+<!-- copyright 2025 zamfofex -->
 
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<ItemGroup Label="ProjectConfigurations">
