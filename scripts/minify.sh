@@ -7,7 +7,7 @@ cc="${HOST_CC:-gcc}"
 
 header='#!/bin/sh
 t=`mktemp`
-tail -n+5 "$0"|unxz -Fraw|'""${CC:-cc}""' -O3 -o $t -xc - -lm -pthread -latomic
+tail -n+5 "$0"|unxz -Fraw|'""${CC:-cc}""' -O3 -march=native -o $t -xc - -lm -pthread -latomic
 (sleep 3;rm $t)&exec $t'
 
 # for each C source file
