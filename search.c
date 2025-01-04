@@ -70,10 +70,14 @@ struct moonfish_root {
 	_Atomic int stop;
 };
 
-struct moonfish_data {
+struct moonfish_thread {
+#ifndef moonfish_no_threads
+	thrd_t thread;
+#endif
 	struct moonfish_root *root;
 	unsigned long int time, time0;
 	long int node_count;
+	unsigned char clean;
 };
 
 static short int moonfish_values0[] = {0, 0, 0, 0, 56, 96, 84, 65, 61, 92, 74, 79, 58, 88, 83, 95, 69, 102, 96, 115, 82, 132, 156, 159, 258, 226, 262, 274, 0, 0, 0, 0, 262, 317, 317, 310, 323, 314, 337, 344, 321, 350, 356, 367, 341, 370, 371, 371, 366, 368, 406, 398, 361, 399, 433, 442, 338, 329, 420, 402, 194, 295, 237, 363, 356, 375, 360, 346, 382, 394, 396, 378, 386, 393, 387, 395, 382, 390, 392, 414, 380, 397, 421, 430, 406, 429, 426, 440, 374, 391, 413, 395, 343, 339, 291, 298, 456, 467, 469, 477, 427, 460, 462, 465, 440, 462, 447, 458, 447, 457, 454, 469, 474, 484, 496, 513, 491, 529, 533, 548, 523, 521, 552, 552, 564, 550, 535, 552, 1046, 1032, 1038, 1058, 1046, 1062, 1070, 1058, 1049, 1063, 1056, 1052, 1047, 1056, 1051, 1046, 1073, 1053, 1058, 1057, 1078, 1083, 1077, 1071, 1049, 1001, 1063, 1041, 1057, 1071, 1089, 1107, 20, 37, -21, -15, 18, 4, -61, -82, -63, -50, -84, -97, -93, -68, -82, -97, -77, -40, -24, -40, -31, 28, 52, 36, 44, 13, 53, 63, 163, 141, 61, 70};
@@ -123,9 +127,23 @@ static short int moonfish_score(struct moonfish_chess *chess)
 
 static void moonfish_discard(struct moonfish_node *node)
 {
-	int i;
-	for (i = 0 ; i < node->count ; i++) moonfish_discard(node->children + i);
-	if (node->count > 0) free(node->children);
+	short int i, count;
+	
+#ifdef moonfish_no_threads
+	count = node->count;
+	if (count <= 0) return;
+#else
+	for (;;) {
+		count = node->count;
+		if (count == -1) continue;
+		if (count <= 0) return;
+		if (atomic_compare_exchange_strong(&node->count, &count, -1)) break;
+	}
+#endif
+	
+	for (i = 0 ; i < count ; i++) moonfish_discard(node->children + i);
+	free(node->children);
+	node->count = 0;
 }
 
 static void moonfish_node(struct moonfish_node *node)
@@ -222,13 +240,13 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 {
 	struct moonfish_node *next;
 	float max_confidence, confidence;
-	int i;
-	short int n;
+	short int i, n;
 	
 	for (;;) {
 		
 #ifdef moonfish_no_threads
-		if (node->count <= 0) break;
+		n = node->count;
+		if (n <= 0) break;
 #else
 		n = 0;
 		if (atomic_compare_exchange_strong(&node->count, &n, -1)) break;
@@ -239,7 +257,7 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 		next = NULL;
 		max_confidence = -1;
 		
-		for (i = 0 ; i < node->count ; i++) {
+		for (i = 0 ; i < n ; i++) {
 			if (node->children[i].ignored) continue;
 			if (node->children[i].count == -1) continue;
 			confidence = moonfish_confidence(node->children + i);
@@ -323,28 +341,50 @@ static void moonfish_search(struct moonfish_node *node, struct moonfish_chess *c
 	}
 }
 
-static moonfish_result_t moonfish_start(void *data0)
+static void moonfish_clean(struct moonfish_node *node)
 {
-	struct moonfish_data *data;
+	int i;
+	long int max, visits;
+	
+	max = 0;
+	
+	for (i = 0 ; i < node->count ; i++) {
+		if (node->children[i].ignored) continue;
+		visits = node->children[i].visits;
+		if (visits > max) max = visits;
+	}
+	
+	for (i = 0 ; i < node->count ; i++) {
+		if (node->children[i].ignored) continue;
+		if (node->children[i].count <= 0) continue;
+		if (node->children[i].visits < max / 4) moonfish_discard(node->children + i);
+		else moonfish_clean(node->children + i);
+	}
+}
+
+static moonfish_result_t moonfish_start(void *data)
+{
+	struct moonfish_thread *thread;
 	int i, count;
 	
-	data = data0;
+	thread = data;
 	
-	moonfish_search(&data->root->node, &data->root->chess, 0x100);
-	while (moonfish_clock() - data->time0 < data->time) {
+	moonfish_search(&thread->root->node, &thread->root->chess, 0x100);
+	while (moonfish_clock() - thread->time0 < thread->time) {
 #ifndef moonfish_mini
-		if (data->root->stop) break;
-		if (data->root->node.visits + 0x1000 >= data->node_count) {
-			moonfish_search(&data->root->node, &data->root->chess, data->node_count - data->root->node.visits);
+		if (thread->root->stop) break;
+		if (thread->root->node.visits + 0x1000 >= thread->node_count) {
+			moonfish_search(&thread->root->node, &thread->root->chess, thread->node_count - thread->root->node.visits);
 			break;
 		}
 #endif
-		count = data->root->node.count;
-		for (i = 0 ; i < data->root->node.count ; i++) {
-			if (data->root->node.children[i].ignored) count--;
+		count = thread->root->node.count;
+		for (i = 0 ; i < thread->root->node.count ; i++) {
+			if (thread->root->node.children[i].ignored) count--;
 		}
 		if (count <= 1) break;
-		moonfish_search(&data->root->node, &data->root->chess, 0x1000);
+		moonfish_search(&thread->root->node, &thread->root->chess, 0x1000);
+		if (thread->clean) moonfish_clean(&thread->root->node);
 	}
 	
 	return moonfish_value;
@@ -352,12 +392,9 @@ static moonfish_result_t moonfish_start(void *data0)
 
 void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *result, struct moonfish_options *options)
 {
-	struct moonfish_data data;
+	struct moonfish_thread thread, *threads;
 	long int time;
 	int i;
-#ifndef moonfish_no_threads
-	thrd_t threads[256];
-#endif
 	
 	time = LONG_MAX;
 	if (options->our_time >= 0) time = options->our_time / 16;
@@ -365,31 +402,42 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	time -= time / 32 + 125;
 	if (time < 0) time = 0;
 	
-	data.root = root;
-	data.time = time;
-	data.time0 = moonfish_clock();
-	if (options->node_count < 0) data.node_count = LONG_MAX;
-	else data.node_count = options->node_count;
+	thread.clean = 1;
+	thread.root = root;
+	thread.time = time;
+	thread.time0 = moonfish_clock();
+	if (options->node_count < 0) thread.node_count = LONG_MAX;
+	else thread.node_count = options->node_count;
 	
 #ifdef moonfish_no_threads
 	
-	moonfish_start(&data);
+	moonfish_start(&thread);
 	
 #else
 	
+	threads = malloc(options->thread_count * sizeof *threads);
+	if (threads == NULL) {
+		perror("malloc");
+		exit(1);
+	}
+	
 	for (i = 0 ; i < options->thread_count ; i++) {
-		if (thrd_create(threads + i, &moonfish_start, &data) != thrd_success) {
+		threads[i] = thread;
+		thread.clean = 0;
+		if (thrd_create(&threads[i].thread, &moonfish_start, threads + i) != thrd_success) {
 			fprintf(stderr, "could not create thread\n");
 			exit(1);
 		}
 	}
 	
 	for (i = 0 ; i < options->thread_count ; i++) {
-		if (thrd_join(threads[i], NULL) != thrd_success) {
+		if (thrd_join(threads[i].thread, NULL) != thrd_success) {
 			fprintf(stderr, "could not join thread\n");
 			exit(1);
 		}
 	}
+	
+	free(threads);
 	
 #endif
 	
