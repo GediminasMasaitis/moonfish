@@ -211,7 +211,7 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 		}
 	}
 	
-	qsort(node->children, child_count, sizeof *node, &moonfish_compare);
+	if (child_count > 0) qsort(node->children, child_count, sizeof *node, &moonfish_compare);
 	if (child_count == 0 && node->children != NULL) free(node->children);
 	node->count = child_count;
 }
@@ -441,7 +441,7 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	
 #endif
 	
-	qsort(root->node.children, root->node.count, sizeof root->node, &moonfish_compare);
+	if (root->node.count > 0) qsort(root->node.children, root->node.count, sizeof root->node, &moonfish_compare);
 	moonfish_node_move(root->node.children, &root->chess, &result->move);
 	result->score = root->node.score;
 	result->node_count = root->node.visits;
