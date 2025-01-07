@@ -29,7 +29,7 @@
 /* whereas the pieces closest to black have a higher index */
 /* this makes so that the board is flipped when displayed naively! (be careful) */
 
-/* the board is not just an 8 x 8 array because of an optisation that is performed when generating moves */
+/* the board is not just an 8 x 8 array because of an optimisation that is performed when generating moves */
 
 /* ~ ~ ~ ~ ~ */
 

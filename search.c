@@ -85,7 +85,7 @@ static short int moonfish_values1[] = {0, 0, 0, 0, 137, 142, 141, 145, 132, 137,
 
 static short int moonfish_score(struct moonfish_chess *chess)
 {
-	static int phases[] = {0, 1, 1, 2, 4, 0};
+	static int values[] = {0, 1, 1, 2, 4, 0};
 	
 	int x, y;
 	int x1, y1;
@@ -118,7 +118,7 @@ static short int moonfish_score(struct moonfish_chess *chess)
 			score0 -= moonfish_values0[i] * (color * 2 - 1);
 			score1 -= moonfish_values1[i] * (color * 2 - 1);
 			
-			phase += phases[type];
+			phase += values[type];
 		}
 	}
 	
@@ -506,13 +506,13 @@ struct moonfish_root *moonfish_new(void)
 	return root;
 }
 
+#ifndef moonfish_mini
+
 void moonfish_finish(struct moonfish_root *root)
 {
 	moonfish_discard(&root->node);
 	free(root);
 }
-
-#ifndef moonfish_mini
 
 void moonfish_stop(struct moonfish_root *root)
 {

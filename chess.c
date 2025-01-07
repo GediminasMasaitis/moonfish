@@ -82,15 +82,10 @@ int moonfish_check(struct moonfish_chess *chess)
 
 static int moonfish_attacked(struct moonfish_chess *chess, int from, int to)
 {
-	int piece;
 	struct moonfish_chess other;
-	
-	if (chess->white) piece = moonfish_white_king;
-	else piece = moonfish_black_king;
-	
 	other = *chess;
 	other.board[from] = moonfish_empty;
-	other.board[to] = piece;
+	other.board[to] = chess->white ? moonfish_white_king : moonfish_black_king;
 	return moonfish_check(&other);
 }
 
@@ -98,7 +93,7 @@ static void moonfish_castle_low(struct moonfish_chess *chess, struct moonfish_mo
 {
 	int to;
 	
-	if (!chess->ooo[1 - chess->white]) return;
+	if (!chess->ooo[chess->white ^ 1]) return;
 	
 	to = from - 3;
 	while (to != from) {
@@ -118,7 +113,7 @@ static void moonfish_castle_high(struct moonfish_chess *chess, struct moonfish_m
 {
 	int to;
 	
-	if (!chess->oo[1 - chess->white]) return;
+	if (!chess->oo[chess->white ^ 1]) return;
 	
 	to = from + 2;
 	while (to != from) {
@@ -261,10 +256,12 @@ int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, 
 	int i, count;
 	struct moonfish_move moves[32];
 	
+#ifndef moonfish_mini
 	if (name[0] < 'a' || name[0] > 'h') return 1;
 	if (name[1] < '1' || name[1] > '8') return 1;
 	if (name[2] < 'a' || name[2] > 'h') return 1;
 	if (name[3] < '1' || name[3] > '8') return 1;
+#endif
 	
 	x0 = name[0] - 'a';
 	y0 = name[1] - '1';
@@ -279,10 +276,12 @@ int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, 
 	if (name[4] == 'n') type = moonfish_knight;
 	if (type == moonfish_empty) return 1;
 	
+#ifndef moonfish_mini
 	if (type == moonfish_king && x0 == 4) {
 		if (x1 == 0) x1 = 2;
 		if (x1 == 7) x1 = 6;
 	}
+#endif
 	
 	from = (x0 + 1) + (y0 + 2) * 10;
 	to = (x1 + 1) + (y1 + 2) * 10;
