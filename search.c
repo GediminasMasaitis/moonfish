@@ -282,7 +282,7 @@ static void moonfish_propagate(struct moonfish_node *node)
 	short int score, child_score;
 	
 	while (node != NULL) {
-		score = SHRT_MIN;
+		score = node->count == -2 ? 0 : SHRT_MIN;
 		for (i = 0 ; i < node->count ; i++) {
 			child_score = -node->children[i].score;
 			if (score < child_score) score = child_score;
