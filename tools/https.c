@@ -140,15 +140,12 @@ int moonfish_response(struct tls *tls)
 		return 1;
 	}
 	
-	for (;;) {
+	while (*line != 0) {
 		free(line);
 		line = moonfish_read_line(tls);
-		if (*line == 0) {
-			free(line);
-			break;
-		}
 	}
 	
+	free(line);
 	return 0;
 }
 

@@ -37,7 +37,7 @@ features
 
 - simple evaluation based on PSTs
 - MCTS (Monte Carlo tree search)
-- cute custom UCI TUIs
+- cute custom UCI TUI
 - custom Lichess integration
 - custom IRC integration
 
@@ -46,9 +46,9 @@ limitations
 
 These are things that might be resolved eventually.
 
-- the TUIs do not let you underpromote
+- the TUI does not let you underpromote
 - no support for `go depth`, `go infinite`, `go mate`
-- no FEN validation (may lead to potential exploits)
+- no support for some seldom used UCI features
 
 download
 ---
@@ -60,12 +60,12 @@ contributing to moonfish
 
 Contributions to moonfish are always welcome! Whether you just have thoughts to share, or you want to improve its source code, any kind of help is vastly appreciated!
 
-Contributions (complaints, ideas, thoughts, patches, etc.) may be submitted via email to <zamfofex@twdb.moe> or shared in its IRC channel ([#moonfish] on [Libera.Chat]).
+Contributions (complaints, ideas, thoughts, patches, etc.) may be submitted via email to <zamfofex@twdb.moe> or shared in its IRC channel ([#moonfish] on [Libera Chat]).
 
 - Note: The IRC channel is also bridged to Discord. (Please ask on IRC for a Discord invite.)
 - Note: There is also a [#moonfish-miscellany] channel for general off‐topic conversations.
 
-[Libera.Chat]: <https://libera.chat>
+[Libera Chat]: <https://libera.chat>
 [#moonfish]: <https://web.libera.chat/#moonfish>
 [#moonfish-miscellany]: <https://web.libera.chat/#moonfish-miscellany>
 
@@ -103,7 +103,7 @@ using “analyse”
 make analyse
 ~~~
 
-“analyse” is a TUIs that allows you to analyse chess games with UCI bots.
+“analyse” is a TUI that allows you to analyse chess games with UCI bots.
 
 After compiling and running it, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
 
@@ -140,7 +140,7 @@ moonfish’s IRC integration, called “chat” may be used to play with a UCI b
 ./chat -N irc.example.net -C '#my-channel,#other-channel' -M chess-bot stockfish
 ~~~
 
-It is only possible to connect to networks using TLS. The default nickname is “moonfish”, and it will connect by default to #moonfish on [Libera.Chat].
+It is only possible to connect to networks using TLS. The default nickname is “moonfish”, and it will connect by default to #moonfish on [Libera Chat].
 
 using “lichess”
 ---

@@ -324,28 +324,41 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 
 int main(int argc, char **argv)
 {
-	static char *format = "<UCI-options> [--] <cmd> <args>...";
-	static struct moonfish_arg args[] = {
-		{"N", "host", "<name>", "irc.libera.chat", "network host name (default: 'irc.libera.chat')"},
-		{"P", "port", "<port>", "6697", "network port (default: '6697')"},
-		{"M", "nick", "<nickname>", "moonfish", "the bot's nickname (default: 'moonfish')"},
-		{"C", "channel", "<channels>", "#moonfish", "channels to join (default: '#moonfish')"},
-		{NULL, NULL, NULL, NULL, NULL},
+	static struct moonfish_command cmd = {
+		"integrate a UCI bot with IRC",
+		"<UCI-opts>... [--] <cmd> <args>...",
+		{
+			{"N", "host", "<name>", "irc.libera.chat", "network host (default: Libera Chat)"},
+			{"P", "port", "<port>", "6697", "network port (default: '6697')"},
+			{"M", "nick", "<nickname>", "moonfish", "bot's nickname (default: 'moonfish')"},
+			{"C", "channel", "<channels>", "#moonfish", "channels to join (default: '#moonfish')"},
+		},
+		{
+			{"-M Leela lc0", "choose a nickname"},
+			{"-N example.net -C '#hey' lc0", "join a given channel"},
+			{"-C '#moonfish,##hey' moonfish", "join multiple channels"},
+		},
+		{
+			{"moonfish_chat_password", "<password>", "password for the IRC bot"},
+		},
+		{
+			"this will connect through TLS (using TCP directly is not supported)",
+		},
 	};
 	
 	char **options, **command;
 	
 	/* todo: validate nickname & channels */
-	options = moonfish_args(args, format, argc, argv);
+	options = moonfish_args(&cmd, argc, argv);
 	
 	command = options;
 	for (;;) {
-		if (*command == NULL) moonfish_usage(args, format, argv[0]);
+		if (*command == NULL) moonfish_usage(&cmd, argv[0]);
 		if (strchr(*command, '=') == NULL) break;
 		command++;
 	}
 	
 	if (!strcmp(*command, "--")) command++;
-	moonfish_chat(command, options, args[0].value, args[1].value, args[2].value, args[3].value);
+	moonfish_chat(command, options, cmd.args[0].value, cmd.args[1].value, cmd.args[2].value, cmd.args[3].value);
 	return 1;
 }

@@ -33,23 +33,28 @@ static long int moonfish_perft(struct moonfish_chess *chess, int depth)
 
 int main(int argc, char **argv)
 {
-	static char *format = "<depth>";
-	static struct moonfish_arg args[] = {
-		{"F", "fen", "<FEN>", NULL, "starting position for the game"},
-		{NULL, NULL, NULL, NULL, NULL},
+	static struct moonfish_command cmd = {
+		"show count of positions reachable from a given position (in 'n' plies)",
+		"<depth>",
+		{
+			{"F", "fen", "<FEN>", NULL, "starting position for the game"},
+		},
+		{{NULL, NULL}},
+		{{NULL, NULL, NULL}},
+		{NULL},
 	};
 	
 	int depth;
 	struct moonfish_chess chess;
 	char **args2;
 	
-	args2 = moonfish_args(args, format, argc, argv);
-	if (args2 - argv != argc - 1) moonfish_usage(args, format, argv[0]);
+	args2 = moonfish_args(&cmd, argc, argv);
+	if (args2 - argv != argc - 1) moonfish_usage(&cmd, argv[0]);
 	
-	if (moonfish_int(args2[0], &depth) || depth < 0) moonfish_usage(args, format, argv[0]);
+	if (moonfish_int(args2[0], &depth) || depth < 0) moonfish_usage(&cmd, argv[0]);
 	
 	moonfish_chess(&chess);
-	if (args[0].value != NULL && moonfish_from_fen(&chess, args[0].value)) moonfish_usage(args, format, argv[0]);
+	if (cmd.args[0].value != NULL && moonfish_from_fen(&chess, cmd.args[0].value)) moonfish_usage(&cmd, argv[0]);
 	
 	printf("perft %d: %ld\n", depth, moonfish_perft(&chess, depth));
 	

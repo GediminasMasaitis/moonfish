@@ -701,11 +701,22 @@ static void moonfish_play(struct moonfish_fancy *fancy, struct moonfish_move *mo
 int main(int argc, char **argv)
 {
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-	static char *format = "<UCI-options>... [--] <cmd> <args>...";
-	static struct moonfish_arg args[] = {
-		{"F", "fen", "<FEN>", NULL, "the position to analyse"},
-		{"G", "pgn", "<file-name>", NULL, "PGN game to load"},
-		{NULL, NULL, NULL, NULL, NULL},
+	static struct moonfish_command cmd = {
+		"analyse chess positions with a UCI bot",
+		"<UCI-opts>... [--] <cmd> <args>...",
+		{
+			{"F", "fen", "<FEN>", NULL, "position to analyse"},
+			{"G", "pgn", "<file-name>", NULL, "PGN game to load"},
+		},
+		{
+			{"lc0", "analyse a game using Leela"},
+			{"stockfish", "analyse a game using Stockfish"},
+			{"UCI_ShowWDL=true lc0", "pass a UCI option to the bot"},
+			{"lc0 --show-wdl", "pass an argument to the bot"},
+			{"-G game.pgn lc0", "load a PGN game for analysis"},
+		},
+		{{NULL, NULL, NULL}},
+		{"this is a TUI, use the mouse to move the pieces"},
 	};
 	
 	struct moonfish_fancy *fancy;
@@ -725,30 +736,30 @@ int main(int argc, char **argv)
 	
 	/* handle command line arguments */
 	
-	command = moonfish_args(args, format, argc, argv);
+	command = moonfish_args(&cmd, argc, argv);
 	command_count = argc - (command - argv);
-	if (command_count < 1) moonfish_usage(args, format, argv[0]);
+	if (command_count < 1) moonfish_usage(&cmd, argv[0]);
 	options = command;
 	
-	if (args[0].value != NULL && args[1].value != NULL) moonfish_usage(args, format, argv[0]);
+	if (cmd.args[0].value != NULL && cmd.args[1].value != NULL) moonfish_usage(&cmd, argv[0]);
 	
 	for (;;) {
 		
 		value = strchr(*command, '=');
 		if (value == NULL) break;
 		
-		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(args, format, argv[0]);
+		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(&cmd, argv[0]);
 		
 		command_count--;
 		command++;
 		
-		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+		if (command_count <= 0) moonfish_usage(&cmd, argv[0]);
 	}
 	
 	if (!strcmp(*command, "--")) {
 		command_count--;
 		command++;
-		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+		if (command_count <= 0) moonfish_usage(&cmd, argv[0]);
 	}
 	
 	/* initialise data structures */
@@ -790,16 +801,16 @@ int main(int argc, char **argv)
 	
 	moonfish_chess(&fancy->plies[0].chess);
 	
-	if (args[0].value != NULL) {
-		fancy->fen = args[0].value;
+	if (cmd.args[0].value != NULL) {
+		fancy->fen = cmd.args[0].value;
 		if (moonfish_from_fen(&fancy->plies[0].chess, fancy->fen)) {
-			moonfish_usage(args, format, argv[0]);
+			moonfish_usage(&cmd, argv[0]);
 		}
 	}
 	
-	if (args[1].value != NULL) {
+	if (cmd.args[1].value != NULL) {
 		
-		file = fopen(args[1].value, "r");
+		file = fopen(cmd.args[1].value, "r");
 		if (file == NULL) {
 			perror("fopen");
 			return 1;

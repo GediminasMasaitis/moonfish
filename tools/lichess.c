@@ -483,12 +483,28 @@ static void moonfish_signal(int signal)
 
 int main(int argc, char **argv)
 {
-	static char *format = "<UCI-options> [--] <cmd> <args>...";
-	static struct moonfish_arg args[] = {
-		{"N", "host", "<name>", "lichess.org", "Lichess' host name (default: 'lichess.org')"},
-		{"P", "port", "<port>", "443", "Lichess' port (default: '443')"},
-		{"X", "ponder", NULL, NULL, "whether to think during the opponent's turn"},
-		{NULL, NULL, NULL, NULL, NULL},
+	static struct moonfish_command cmd = {
+		"integrate a UCI bot with Lichess",
+		"<UCI-opts>... [--] <cmd> <args>...",
+		{
+			{"N", "host", "<name>", "lichess.org", "Lichess' host name (default: 'lichess.org')"},
+			{"P", "port", "<port>", "443", "Lichess' port (default: '443')"},
+			{"X", "ponder", NULL, NULL, "think during the opponent's turn"},
+			{NULL, NULL, NULL, NULL, NULL},
+		},
+		{
+			{"moonfish", "use moonfish as a Lichess bot"},
+			{"-X lc0", "use Leela and enable pondering"},
+			{"-N example.org lc0", "connect to another Lichess instance"},
+		},
+		{
+			{"lichess_token", "<token>", "personal access token for Lichess (required)"},
+		},
+		{
+			"this will connect through HTTPS (using HTTP without TLS is not supported)",
+			"pondering uses UCI 'go infinite' rather than 'go ponder'",
+			"this only accepts incoming challenges without matchmaking",
+		},
 	};
 	
 	char *token;
@@ -500,11 +516,9 @@ int main(int argc, char **argv)
 	struct sigaction action;
 	char *value;
 	
-	/* handle command line arguments */
-	
-	command = moonfish_args(args, format, argc, argv);
+	command = moonfish_args(&cmd, argc, argv);
 	command_count = argc - (command - argv);
-	if (command_count < 1) moonfish_usage(args, format, argv[0]);
+	if (command_count < 1) moonfish_usage(&cmd, argv[0]);
 	options = command;
 	
 	for (;;) {
@@ -512,29 +526,29 @@ int main(int argc, char **argv)
 		value = strchr(*command, '=');
 		if (value == NULL) break;
 		
-		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(args, format, argv[0]);
+		if (strchr(*command, '\n') != NULL || strchr(*command, '\r') != NULL) moonfish_usage(&cmd, argv[0]);
 		
 		command_count--;
 		command++;
 		
-		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+		if (command_count <= 0) moonfish_usage(&cmd, argv[0]);
 	}
 	
 	if (!strcmp(*command, "--")) {
 		command_count--;
 		command++;
-		if (command_count <= 0) moonfish_usage(args, format, argv[0]);
+		if (command_count <= 0) moonfish_usage(&cmd, argv[0]);
 	}
 	
 	token = getenv("lichess_token");
 	if (token == NULL || token[0] == 0) {
-		fprintf(stderr, "%s: Lichess token not provided\n", argv[0]);
+		fprintf(stderr, "Lichess token not provided\n");
 		return 1;
 	}
 	
 	for (i = 0 ; token[i] != 0 ; i++) {
 		if (token[i] <= 0x20 || token[i] >= 0x7F) {
-			fprintf(stderr, "%s: invalid token provided for Lichess\n", argv[0]);
+			fprintf(stderr, "invalid token provided for Lichess\n");
 			return 1;
 		}
 	}
@@ -548,14 +562,14 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	tls = moonfish_connect(args[0].value, args[1].value);
-	moonfish_request(tls, args[0].value, "GET /api/stream/event", token, NULL, 0);
+	tls = moonfish_connect(cmd.args[0].value, cmd.args[1].value);
+	moonfish_request(tls, cmd.args[0].value, "GET /api/stream/event", token, NULL, 0);
 	if (moonfish_response(tls)) {
 		fprintf(stderr, "could not request event stream\n");
 		return 1;
 	}
 	
-	username = moonfish_username(args[0].value, args[1].value, token);
-	moonfish_handle_events(tls, args[0].value, args[1].value, token, options, command, username, args[2].value != NULL ? 1 : 0);
+	username = moonfish_username(cmd.args[0].value, cmd.args[1].value, token);
+	moonfish_handle_events(tls, cmd.args[0].value, cmd.args[1].value, token, options, command, username, cmd.args[2].value != NULL ? 1 : 0);
 	return 1;
 }

@@ -360,7 +360,7 @@ int main(int argc, char **argv)
 		}
 		
 		if (!strcmp(arg, "uci")) {
-			printf("id name moonfish\n");
+			printf("id name moonfish " moonfish_version "\n");
 			printf("id author zamfofex\n");
 			for (i = 0 ; options[i].name != NULL ; i++) {
 				printf("option name %s type %s default %d min %d max %d\n", options[i].name, options[i].type, options[i].value, options[i].min, options[i].max);

@@ -4,6 +4,8 @@
 #ifndef MOONFISH
 #define MOONFISH
 
+#define moonfish_version "indev"
+
 /* moonfish is a very simple chess bot written in C89 (ANSI C) */
 
 /* in moonfish, pieces are each represented as a single 8-bit integer (char) */
@@ -149,7 +151,6 @@ int moonfish_check(struct moonfish_chess *chess);
 /* uses the position from the given FEN, mutating the given position */
 /* returns 0 if the FEN could be parsed */
 /* returns 1 if the FEN could not be parsed (the position becomes unusable then!) */
-/* validation is very loose, so the FEN should be known to be good, otherwise this might cause unexpected results */
 int moonfish_from_fen(struct moonfish_chess *chess, char *fen);
 
 /* converts the given position to FEN */
