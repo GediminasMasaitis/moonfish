@@ -6,32 +6,38 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 RM ?= rm -f
 
-cc := $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
+src = $(.ALLSRC:M*.c)
+tools = lichess analyse chat perft
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install
 
 all: moonfish lichess analyse chat
 
+moonfish $(tools):
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(src) -o $@ $(cflags) $(LIBS)
+
+$(tools): moonfish.h tools/tools.h tools/utils.c chess.c
+
 moonfish: moonfish.h threads.h chess.c search.c main.c
-	$(cc) $(filter %.c,$^) -o $@ -lm -pthread -latomic
+moonfish: cflags = -lm -pthread -latomic
 
-%: moonfish.h tools/tools.h tools/utils.c chess.c tools/%.c
-	$(cc) $(filter %.c,$^) -o $@ $(cflags)
+lichess: tools/lichess.c tools/https.c tools/https.h
+lichess: cflags = -pthread -ltls -lssl -lcrypto -lcjson
 
-analyse: cflags := -pthread
-analyse: tools/pgn.c
-lichess chat: tools/https.c
-lichess: cflags := -ltls -lssl -lcrypto -lcjson
-chat: cflags := -ltls -lssl -lcrypto
+analyse: tools/analyse.c tools/pgn.c
+analyse: cflags = -pthread
+
+chat: tools/chat.c tools/https.c tools/https.h
+chat: cflags = -ltls -lssl -lcrypto
+
+perft: tools/perft.c
+perft: cflags =
 
 clean:
 	git clean -fdx
 
 install: all
-	install -D -m 755 moonfish $(BINDIR)/moonfish
-	install -D -m 755 lichess $(BINDIR)/moonfish-lichess
-	install -D -m 755 analyse $(BINDIR)/moonfish-analyse
-	install -D -m 755 chat $(BINDIR)/moonfish-chat
-
-uninstall:
-	$(RM) $(BINDIR)/moonfish $(BINDIR)/moonfish-*
+	install -D -m 755 moonfish $(DESTDIR)$(BINDIR)/moonfish
+	install -D -m 755 lichess $(DESTDIR)$(BINDIR)/moonfish-lichess
+	install -D -m 755 analyse $(DESTDIR)$(BINDIR)/moonfish-analyse
+	install -D -m 755 chat $(DESTDIR)$(BINDIR)/moonfish-chat

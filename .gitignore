@@ -6,6 +6,7 @@
 !/LICENSE
 !/README.md
 !/makefile
+!/GNUmakefile
 !/index.html
 !/.build.yml
 !/moonfish.vcxproj

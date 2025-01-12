@@ -72,7 +72,7 @@ Contributions (complaints, ideas, thoughts, patches, etc.) may be submitted via 
 compiling from source
 ---
 
-Compiling on UNIX (and clones) should be easy. Make sure you have GNU Make and a C compiler like GCC, then run the following command.
+Compiling on UNIX (and clones) should be easy! Make sure you have GNU Make (or BSD Make) and a C compiler like GCC, then run the following command.
 
 ~~~
 make moonfish
