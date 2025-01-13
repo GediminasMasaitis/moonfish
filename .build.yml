@@ -21,6 +21,11 @@ tasks:
     strip moonfish lichess chat
     scripts/minify.sh
 
+- check: |
+    sudo rc-service devfs start
+    cd moonfish
+    make check
+
 - deploy: |
     set +x
     

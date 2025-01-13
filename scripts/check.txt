@@ -1,0 +1,105 @@
+perft 0: 1
+info depth 1 score cp -1 nodes 4352
+bestmove g1f3
+perft 0: 1
+info depth 1 score cp 85 nodes 4352
+bestmove e2a6
+perft 0: 1
+info depth 1 score cp 64 nodes 4352
+bestmove b4c4
+perft 0: 1
+info depth 1 score cp -522 nodes 4352
+bestmove d2d4
+perft 0: 1
+info depth 1 score cp -522 nodes 4352
+bestmove d7d5
+perft 0: 1
+info depth 1 score cp 577 nodes 4352
+bestmove d7c8r
+perft 0: 1
+info depth 1 score cp 20 nodes 4352
+bestmove a1d1
+perft 1: 20
+info depth 1 score cp 0 nodes 8448
+bestmove b1c3
+perft 1: 48
+info depth 1 score cp 84 nodes 8448
+bestmove e2a6
+perft 1: 14
+info depth 1 score cp 38 nodes 8448
+bestmove b4c4
+perft 1: 6
+info depth 1 score cp -111 nodes 8448
+bestmove c4c5
+perft 1: 6
+info depth 1 score cp -111 nodes 8448
+bestmove c5c4
+perft 1: 44
+info depth 1 score cp 619 nodes 8448
+bestmove d7c8r
+perft 1: 46
+info depth 1 score cp 36 nodes 8448
+bestmove c3d5
+perft 2: 400
+info depth 1 score cp 9 nodes 12544
+bestmove b1c3
+perft 2: 2039
+info depth 1 score cp 203 nodes 12544
+bestmove e2a6
+perft 2: 191
+info depth 1 score cp 38 nodes 12544
+bestmove b4c4
+perft 2: 264
+info depth 1 score cp -345 nodes 12544
+bestmove c4c5
+perft 2: 264
+info depth 1 score cp -345 nodes 12544
+bestmove c5c4
+perft 2: 1486
+info depth 1 score cp 640 nodes 12544
+bestmove d7c8r
+perft 2: 2079
+info depth 1 score cp 25 nodes 12544
+bestmove c3d5
+perft 3: 8902
+info depth 1 score cp 9 nodes 16640
+bestmove b1c3
+perft 3: 97862
+info depth 1 score cp 217 nodes 16640
+bestmove e2a6
+perft 3: 2812
+info depth 1 score cp 38 nodes 16640
+bestmove b4c4
+perft 3: 9467
+info depth 1 score cp -345 nodes 16640
+bestmove c4c5
+perft 3: 9467
+info depth 1 score cp -345 nodes 16640
+bestmove c5c4
+perft 3: 62379
+info depth 1 score cp 640 nodes 16640
+bestmove d7c8q
+perft 3: 89890
+info depth 1 score cp 161 nodes 16640
+bestmove c3d5
+perft 4: 197281
+info depth 1 score cp 19 nodes 20736
+bestmove g1f3
+perft 4: 4085603
+info depth 1 score cp 172 nodes 20736
+bestmove e2a6
+perft 4: 43238
+info depth 1 score cp 32 nodes 20736
+bestmove b4c4
+perft 4: 422333
+info depth 1 score cp -443 nodes 20736
+bestmove c4c5
+perft 4: 422333
+info depth 1 score cp -443 nodes 20736
+bestmove c5c4
+perft 4: 2103487
+info depth 1 score cp 632 nodes 20736
+bestmove d7c8r
+perft 4: 3894594
+info depth 1 score cp 164 nodes 20736
+bestmove c3d5

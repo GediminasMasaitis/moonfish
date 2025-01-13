@@ -31,3 +31,5 @@
 !/scripts/rename.sh
 !/scripts/compare.sh
 !/scripts/offload.sh
+!/scripts/check.sh
+!/scripts/check.txt

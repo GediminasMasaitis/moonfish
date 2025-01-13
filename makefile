@@ -9,7 +9,7 @@ RM ?= rm -f
 src = $(.ALLSRC:M*.c)
 tools = lichess analyse chat perft
 
-.PHONY: all clean install
+.PHONY: all check clean install
 
 all: moonfish lichess analyse chat
 
@@ -32,6 +32,9 @@ chat: cflags = -ltls -lssl -lcrypto
 
 perft: tools/perft.c
 perft: cflags =
+
+check: moonfish perft
+	scripts/check.sh
 
 clean:
 	git clean -fdx
