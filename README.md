@@ -170,7 +170,7 @@ After installing [NPE], each file may be compiled and linked as expected. (Note:
 
 ~~~
 # (example for x86-64)
-6c -I/sys/include/npe -Dmoonfish_pthreads chess.c search.c main.c
+6c -I/sys/include/npe -Dmoonfish_no_threads chess.c search.c main.c
 6l -o moonfish chess.6 search.6 main.6
 moonfish
 ~~~
