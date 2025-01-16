@@ -163,6 +163,7 @@ static int moonfish_compare(const void *ax, const void *bx)
 	b = bx;
 	if (!a->ignored && b->ignored) return -1;
 	if (a->ignored && !b->ignored) return 1;
+	if (a->score == b->score) return a->index - b->index;
 	return a->score - b->score;
 }
 

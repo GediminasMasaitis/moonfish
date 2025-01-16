@@ -1,6 +1,6 @@
 perft 0: 1
 info depth 1 score cp -1 nodes 4352
-bestmove g1f3
+bestmove b1c3
 perft 0: 1
 info depth 1 score cp 85 nodes 4352
 bestmove e2a6
