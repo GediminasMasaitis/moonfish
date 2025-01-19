@@ -4,7 +4,7 @@
 #ifndef MOONFISH
 #define MOONFISH
 
-#define moonfish_version "v1"
+#define moonfish_version "indev"
 
 /* moonfish is a very simple chess bot written in C89 (ANSI C) */
 
