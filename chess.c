@@ -248,40 +248,6 @@ void moonfish_chess(struct moonfish_chess *chess)
 	}
 }
 
-int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name0)
-{
-	struct moonfish_move moves[32];
-	int x, y;
-	int i, count;
-	char name[6];
-	
-#ifndef moonfish_mini
-	if (chess->board[25] == moonfish_white_king) {
-		if (!strcmp(name0, "e1h1")) name0 = "e1g1";
-		if (!strcmp(name0, "e1a1")) name0 = "e1c1";
-	}
-	if (chess->board[85] == moonfish_black_king) {
-		if (!strcmp(name0, "e8h8")) name0 = "e8g8";
-		if (!strcmp(name0, "e8a8")) name0 = "e8c8";
-	}
-#endif
-	
-	for (y = 0 ; y < 8 ; y++) {
-		for (x = 0 ; x < 8 ; x++) {
-			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-			for (i = 0 ; i < count ; i++) {
-				moonfish_to_uci(chess, moves + i, name);
-				if (!strcmp(name, name0)) {
-					*move = moves[i];
-					return 0;
-				}
-			}
-		}
-	}
-	
-	return 1;
-}
-
 /* note: this function does not assume ASCII */
 
 void moonfish_to_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name)
@@ -315,6 +281,40 @@ void moonfish_to_uci(struct moonfish_chess *chess, struct moonfish_move *move, c
 		if (piece % 16 == moonfish_knight) name[4] = 'n';
 		name[5] = 0;
 	}
+}
+
+int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, char *name0)
+{
+	struct moonfish_move moves[32];
+	int x, y;
+	int i, count;
+	char name[6];
+	
+#ifndef moonfish_mini
+	if (chess->board[25] == moonfish_white_king) {
+		if (!strcmp(name0, "e1h1")) name0 = "e1g1";
+		if (!strcmp(name0, "e1a1")) name0 = "e1c1";
+	}
+	if (chess->board[85] == moonfish_black_king) {
+		if (!strcmp(name0, "e8h8")) name0 = "e8g8";
+		if (!strcmp(name0, "e8a8")) name0 = "e8c8";
+	}
+#endif
+	
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+			for (i = 0 ; i < count ; i++) {
+				moonfish_to_uci(chess, moves + i, name);
+				if (!strcmp(name, name0)) {
+					*move = moves[i];
+					return 0;
+				}
+			}
+		}
+	}
+	
+	return 1;
 }
 
 int moonfish_finished(struct moonfish_chess *chess)
