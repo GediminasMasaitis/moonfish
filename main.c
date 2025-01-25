@@ -26,6 +26,8 @@ struct moonfish_info {
 	thrd_t thread;
 #endif
 	struct moonfish_option *options;
+	struct moonfish_result result;
+	struct moonfish_options search_options;
 };
 
 static int moonfish_getoption(struct moonfish_option *options, char *name)
@@ -37,21 +39,54 @@ static int moonfish_getoption(struct moonfish_option *options, char *name)
 	return -1;
 }
 
-static moonfish_result_t moonfish_go(void *data)
+static moonfish_result_t moonfish_go0(void *data)
 {
-	static struct moonfish_result result, pv_result;
-	static struct moonfish_options options;
-	static struct moonfish_chess chess;
 	static struct moonfish_move pv[256];
+	static struct moonfish_result result;
+	static struct moonfish_chess chess;
+	
+	struct moonfish_info *info;
+	int i, j, count;
+	char name[6];
+	
+	info = data;
+	
+	moonfish_best_move(info->root, &info->result, &info->search_options);
+	
+	count = moonfish_getoption(info->options, "MultiPV");
+	for (i = 0 ; i < count ; i++) {
+		count = sizeof pv / sizeof *pv;
+		moonfish_pv(info->root, pv, &result, i, &count);
+		if (count == 0) continue;
+		printf("info depth 1 score cp %d nodes %ld multipv %d pv", result.score, result.node_count, i + 1);
+		moonfish_root(info->root, &chess);
+		for (j = 0 ; j < count ; j++) {
+			moonfish_to_uci(&chess, pv + j, name);
+			chess = pv[j].chess;
+			printf(" %s", name);
+		}
+		printf("\n");
+	}
+	
+	printf("info depth 1 score cp %d nodes %ld\n", info->result.score, info->result.node_count);
+	
+	moonfish_root(info->root, &chess);
+	moonfish_to_uci(&chess, &info->result.move, name);
+	
+	printf("bestmove %s\n", name);
+	fflush(stdout);
+	return moonfish_value;
+}
+
+static void moonfish_go(struct moonfish_info *info)
+{
+	static struct moonfish_chess chess;
 	
 	long int our_time, their_time, *xtime, time;
 	char *arg, *end;
-	char name[6];
-	struct moonfish_info *info;
 	long int node_count;
-	int i, j, pv_count, count;
 	
-	info = data;
+	info->searching = 1;
 	
 	our_time = -1;
 	their_time = -1;
@@ -129,38 +164,29 @@ static moonfish_result_t moonfish_go(void *data)
 		}
 	}
 	
-	options.max_time = time;
-	options.our_time = our_time;
-	options.thread_count = moonfish_getoption(info->options, "Threads");
-	options.node_count = node_count;
+	info->search_options.max_time = time;
+	info->search_options.our_time = our_time;
+	info->search_options.thread_count = moonfish_getoption(info->options, "Threads");
+	info->search_options.node_count = node_count;
 	
-	moonfish_best_move(info->root, &result, &options);
-	info->searching = 0;
-	
-	pv_count = moonfish_getoption(info->options, "MultiPV");
-	for (i = 0 ; i < pv_count ; i++) {
-		count = sizeof pv / sizeof *pv;
-		moonfish_pv(info->root, pv, &pv_result, i, &count);
-		if (count == 0) continue;
-		printf("info depth 1 score cp %d nodes %ld multipv %d pv", pv_result.score, pv_result.node_count, i + 1);
-		moonfish_root(info->root, &chess);
-		for (j = 0 ; j < count ; j++) {
-			moonfish_to_uci(&chess, pv + j, name);
-			chess = pv[j].chess;
-			printf(" %s", name);
+#ifdef moonfish_no_threads
+	moonfish_go0(info);
+#else
+	if (info->has_thread) {
+		if (thrd_join(info->thread, NULL) != thrd_success) {
+			fprintf(stderr, "could not join thread\n");
+			exit(1);
 		}
-		printf("\n");
 	}
+	info->has_thread = 1;
+	moonfish_unstop(info->root);
+	if (thrd_create(&info->thread, &moonfish_go0, info) != thrd_success) {
+		fprintf(stderr, "could not create thread\n");
+		exit(1);
+	}
+#endif
 	
-	printf("info depth 1 score cp %d nodes %ld\n", result.score, result.node_count);
-	
-	moonfish_root(info->root, &chess);
-	moonfish_to_uci(&chess, &result.move, name);
-	
-	printf("bestmove %s\n", name);
-	fflush(stdout);
-	
-	return moonfish_value;
+	info->searching = 0;
 }
 
 static void moonfish_position(struct moonfish_root *root)
@@ -322,29 +348,11 @@ int main(int argc, char **argv)
 		if (arg == NULL) continue;
 		
 		if (!strcmp(arg, "go")) {
-			
-#ifdef moonfish_no_threads
-			moonfish_go(&info);
-#else
 			if (info.searching) {
 				fprintf(stderr, "cannot start search while searching\n");
 				exit(1);
 			}
-			info.searching = 1;
-			if (info.has_thread) {
-				if (thrd_join(info.thread, NULL) != thrd_success) {
-					fprintf(stderr, "could not join thread\n");
-					exit(1);
-				}
-			}
-			info.has_thread = 1;
-			moonfish_unstop(info.root);
-			if (thrd_create(&info.thread, &moonfish_go, &info) != thrd_success) {
-				fprintf(stderr, "could not create thread\n");
-				exit(1);
-			}
-#endif
-			
+			moonfish_go(&info);
 			continue;
 		}
 		

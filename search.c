@@ -60,7 +60,7 @@ struct moonfish_node {
 	_Atomic long int visits;
 	_Atomic unsigned char bounds[2];
 	_Atomic short int count;
-	_Atomic unsigned char ignored;
+	_Atomic unsigned char ignored, uses;
 	unsigned char from, index;
 };
 
@@ -131,18 +131,19 @@ static void moonfish_discard(struct moonfish_node *node)
 	
 #ifdef moonfish_no_threads
 	count = node->count;
-	if (count <= 0) return;
 #else
 	for (;;) {
 		count = node->count;
-		if (count == -1) continue;
-		if (count <= 0) return;
-		if (atomic_compare_exchange_strong(&node->count, &count, -1)) break;
+		if (count < 0) continue;
+		if (atomic_compare_exchange_strong(&node->count, &count, -2)) break;
+	}
+	for (;;) {
+		if (node->uses == 0) break;
 	}
 #endif
 	
 	for (i = 0 ; i < count ; i++) moonfish_discard(node->children + i);
-	free(node->children);
+	if (count > 0) free(node->children);
 	node->count = 0;
 }
 
@@ -154,6 +155,7 @@ static void moonfish_node(struct moonfish_node *node)
 	node->ignored = 0;
 	node->bounds[0] = 0;
 	node->bounds[1] = 1;
+	node->uses = 0;
 }
 
 static int moonfish_compare(const void *ax, const void *bx)
@@ -173,12 +175,6 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 	int count, i;
 	int child_count;
 	struct moonfish_move moves[32];
-	
-	if (node->count == -2) return;
-	if (moonfish_finished(chess)) {
-		node->count = -2;
-		return;
-	}
 	
 	node->children = NULL;
 	child_count = 0;
@@ -212,8 +208,9 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 		}
 	}
 	
-	if (child_count > 0) qsort(node->children, child_count, sizeof *node, &moonfish_compare);
 	if (child_count == 0 && node->children != NULL) free(node->children);
+	if (child_count > 0) qsort(node->children, child_count, sizeof *node, &moonfish_compare);
+	
 	node->count = child_count;
 }
 
@@ -237,71 +234,94 @@ static void moonfish_node_chess(struct moonfish_node *node, struct moonfish_ches
 	*chess = move.chess;
 }
 
+#ifndef moonfish_no_threads
+
+static void moonfish_clear(struct moonfish_node *node)
+{
+	if (node == NULL) return;
+	moonfish_clear(node->parent);
+	atomic_fetch_add(&node->uses, -1);
+}
+
+#endif
+
 static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct moonfish_chess *chess)
 {
 	struct moonfish_node *next;
 	float max_confidence, confidence;
-	short int i, n;
+	short int i, count;
 	
 	for (;;) {
 		
 #ifdef moonfish_no_threads
-		n = node->count;
-		if (n <= 0) break;
+		count = node->count;
+		if (count == 0) return node;
 #else
-		n = 0;
-		if (atomic_compare_exchange_strong(&node->count, &n, -1)) break;
-		if (n == -1) continue;
-		if (n == -2) break;
+		atomic_fetch_add(&node->uses, 1);
+		for (;;) {
+			count = 0;
+			if (atomic_compare_exchange_strong(&node->count, &count, -1)) return node;
+			if (count == -2) {
+				moonfish_clear(node);
+				return NULL;
+			}
+			if (count > 0) break;
+		}
 #endif
 		
-		next = NULL;
-		max_confidence = -1;
-		
-		for (i = 0 ; i < n ; i++) {
-			if (node->children[i].ignored) continue;
-			if (node->children[i].count == -1) continue;
-			confidence = moonfish_confidence(node->children + i);
-			if (confidence > max_confidence) {
-				next = node->children + i;
-				max_confidence = confidence;
+		for (;;) {
+			
+			next = NULL;
+			max_confidence = -1;
+			
+			for (i = 0 ; i < count ; i++) {
+				if (node->children[i].ignored) continue;
+				if (node->children[i].count == -1) continue;
+				confidence = moonfish_confidence(node->children + i);
+				if (confidence > max_confidence) {
+					next = node->children + i;
+					max_confidence = confidence;
+				}
 			}
+			
+			if (next != NULL) break;
 		}
-		
-		if (next == NULL) continue;
 		
 		node = next;
 		moonfish_node_chess(node, chess);
 	}
-	
-	return node;
 }
 
 static void moonfish_propagate(struct moonfish_node *node)
 {
 	int i;
 	short int score, child_score;
+	struct moonfish_node *next;
 	
 	while (node != NULL) {
-		score = node->count == -2 ? 0 : SHRT_MIN;
+		score = node->count == 0 ? 0 : SHRT_MIN;
 		for (i = 0 ; i < node->count ; i++) {
 			child_score = -node->children[i].score;
 			if (score < child_score) score = child_score;
 		}
+		next = node->parent;
 		node->score = score;
 #ifdef moonfish_no_threads
 		node->visits++;
 #else
 		atomic_fetch_add(&node->visits, 1);
+		atomic_fetch_add(&node->uses, -1);
 #endif
-		node = node->parent;
+		node = next;
 	}
 }
 
-static void moonfish_propagate_bounds(struct moonfish_node *node, int i)
+static void moonfish_propagate_bounds(struct moonfish_node *node)
 {
-	int j;
+	int i, j;
 	int bound;
+	
+	i = 1;
 	
 	while (node != NULL) {
 		
@@ -325,31 +345,27 @@ static void moonfish_propagate_bounds(struct moonfish_node *node, int i)
 	}
 }
 
-static void moonfish_search(struct moonfish_node *node, struct moonfish_chess *chess0, int count)
+static void moonfish_search(struct moonfish_node *node, struct moonfish_chess *chess0)
 {
 	int i;
 	struct moonfish_node *leaf;
 	struct moonfish_chess chess;
 	
-	for (i = 0 ; i < count ; i++) {
+	for (i = 0 ; i < 0x1000 ; i++) {
 		chess = *chess0;
 		leaf = moonfish_select(node, &chess);
+		if (leaf == NULL) continue;
 		moonfish_expand(leaf, &chess);
+		if (leaf->count == 0 && moonfish_check(&chess)) moonfish_propagate_bounds(leaf);
 		moonfish_propagate(leaf);
-		if (leaf->count == -2 && moonfish_check(&chess)) {
-			moonfish_propagate_bounds(leaf, 1);
-		}
 	}
 }
 
 static void moonfish_clean(struct moonfish_node *node)
 {
 	int i;
-	
 	for (i = 0 ; i < node->count ; i++) {
-		if (node->children[i].ignored) continue;
-		if (node->children[i].count <= 0) continue;
-		if (node->children[i].visits < node->visits / node->count / 3) {
+		if (node->children[i].visits < node->visits / node->count / 2) {
 			moonfish_discard(node->children + i);
 		}
 		moonfish_clean(node->children + i);
@@ -363,7 +379,7 @@ static moonfish_result_t moonfish_start(void *data)
 	
 	thread = data;
 	
-	moonfish_search(&thread->root->node, &thread->root->chess, 0x100);
+	moonfish_search(&thread->root->node, &thread->root->chess);
 	while (moonfish_clock() - thread->time0 < thread->time) {
 #ifndef moonfish_mini
 		if (thread->root->stop) break;
@@ -374,7 +390,7 @@ static moonfish_result_t moonfish_start(void *data)
 			if (thread->root->node.children[i].ignored) count--;
 		}
 		if (count <= 1) break;
-		moonfish_search(&thread->root->node, &thread->root->chess, 0x1000);
+		moonfish_search(&thread->root->node, &thread->root->chess);
 		if (thread->clean) moonfish_clean(&thread->root->node);
 	}
 	

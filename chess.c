@@ -317,24 +317,6 @@ int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, 
 	return 1;
 }
 
-int moonfish_finished(struct moonfish_chess *chess)
-{
-	struct moonfish_move moves[32];
-	int x, y;
-	int i, count;
-	
-	for (y = 0 ; y < 8 ; y++) {
-		for (x = 0 ; x < 8 ; x++) {
-			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
-			for (i = 0 ; i < count ; i++) {
-				if (moonfish_validate(&moves[i].chess)) return 0;
-			}
-		}
-	}
-	
-	return 1;
-}
-
 int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
 {
 	int x, y, i;
@@ -361,6 +343,24 @@ int moonfish_equal(struct moonfish_chess *a, struct moonfish_chess *b)
 #ifndef moonfish_mini
 
 #include <ctype.h>
+
+int moonfish_finished(struct moonfish_chess *chess)
+{
+	struct moonfish_move moves[32];
+	int x, y;
+	int i, count;
+	
+	for (y = 0 ; y < 8 ; y++) {
+		for (x = 0 ; x < 8 ; x++) {
+			count = moonfish_moves(chess, moves, (x + 1) + (y + 2) * 10);
+			for (i = 0 ; i < count ; i++) {
+				if (moonfish_validate(&moves[i].chess)) return 0;
+			}
+		}
+	}
+	
+	return 1;
+}
 
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *found, int from, int to)
 {
