@@ -14,7 +14,7 @@ tools = lichess analyse chat perft
 all: moonfish lichess analyse chat
 
 moonfish $(tools):
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(src) -o $@ $(cflags) $(LIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $(src) $(cflags) $(LIBS)
 
 $(tools): moonfish.h tools/tools.h tools/utils.c chess.c
 
