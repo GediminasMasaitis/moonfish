@@ -164,7 +164,7 @@ lichess_token=XXX ./lichess ./moonfish
 compiling on 9front
 ---
 
-After installing [NPE], each file may be compiled and linked as expected. (Note: A `mkfile` isn’t provided.)
+After installing [NPE], each file may be compiled and linked as expected. (Note: A `mkfile` is also provided for covenience.)
 
 [NPE]: <https://git.sr.ht/~ft/npe>
 

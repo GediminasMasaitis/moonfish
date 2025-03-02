@@ -94,6 +94,9 @@ struct moonfish_move {
 
 /* represents cross-search state */
 struct moonfish_root;
+#ifdef moonfish_plan9
+#pragma incomplete struct moonfish_root
+#endif
 
 /* represents options for the search */
 struct moonfish_options {
