@@ -12,7 +12,34 @@
 
 #else
 
+#ifndef moonfish_plan9
+
 #include <stdatomic.h>
+
+#else
+
+#define moonfish_pthreads
+#define _Atomic
+
+int cas(int *pointer, int expected, int desired);
+
+static int atomic_compare_exchange_strong(int *pointer, int *expected, int desired)
+{
+	int value;
+	value = *pointer;
+	if (value == *expected && cas(pointer, value, desired)) return 1;
+	*expected = value;
+	return 0;
+}
+
+static void atomic_fetch_add(int *pointer, int addend)
+{
+	int value;
+	do value = *pointer;
+	while (!cas(pointer, value, value + addend));
+}
+
+#endif
 
 #ifndef moonfish_pthreads
 

@@ -329,9 +329,7 @@ int main(int argc, char **argv)
 	
 #ifndef moonfish_no_threads
 	info.has_thread = 0;
-	options[0].value = sysconf(_SC_NPROCESSORS_ONLN);
-	if (options[0].value > options[0].max) options[0].value = options[0].max;
-	if (options[0].value < 1) options[0].value = 4;
+	options[0].value = 1;
 #endif
 	
 	for (;;) {

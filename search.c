@@ -56,11 +56,10 @@ static unsigned long int moonfish_clock(void)
 struct moonfish_node {
 	struct moonfish_node *parent;
 	struct moonfish_node *children;
+	_Atomic int visits, count, uses;
 	_Atomic short int score;
-	_Atomic long int visits;
 	_Atomic unsigned char bounds[2];
-	_Atomic short int count;
-	_Atomic unsigned char ignored, uses;
+	_Atomic unsigned char ignored;
 	unsigned char from, index;
 };
 
@@ -127,7 +126,7 @@ static short int moonfish_score(struct moonfish_chess *chess)
 
 static void moonfish_discard(struct moonfish_node *node)
 {
-	short int i, count;
+	int i, count;
 	
 #ifdef moonfish_no_threads
 	count = node->count;
@@ -249,7 +248,7 @@ static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct 
 {
 	struct moonfish_node *next;
 	float max_confidence, confidence;
-	short int i, count;
+	int i, count;
 	
 	for (;;) {
 		
