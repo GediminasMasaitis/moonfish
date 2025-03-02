@@ -4,10 +4,61 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <signal.h>
+
+#ifndef moonfish_plan9
+
 #include <sys/wait.h>
+#include <signal.h>
 
 #include <cjson/cJSON.h>
+
+#else
+
+#include <json.h>
+
+#define valuestring s
+#define valueint n
+
+typedef JSON cJSON;
+
+static void cJSON_Delete(cJSON *json)
+{
+	jsonfree(json);
+}
+
+static cJSON *cJSON_GetObjectItem(cJSON *json, char *name)
+{
+	return jsonbyname(json, name);
+}
+
+static int cJSON_IsNull(cJSON *json)
+{
+	return json->t == JSONNull;
+}
+
+static int cJSON_IsNumber(cJSON *json)
+{
+	return json->t == JSONNumber;
+}
+
+static int cJSON_IsObject(cJSON *json)
+{
+	return json->t == JSONObject;
+}
+
+static int cJSON_IsString(cJSON *json)
+{
+	return json->t == JSONString;
+}
+
+static cJSON *cJSON_ParseWithOpts(char *string, const char **end, int check_null)
+{
+	(void) check_null;
+	*end = string + strlen(string);
+	return jsonparse(string);
+}
+
+#endif
 
 #include "../moonfish.h"
 #include "tools.h"
@@ -31,7 +82,7 @@ static void moonfish_json_error(void)
 	exit(1);
 }
 
-static pthread_mutex_t moonfish_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t moonfish_mutex;
 
 static void moonfish_handle_game_events(struct tls *tls, struct moonfish_game *game, FILE *in, FILE *out)
 {
@@ -472,14 +523,17 @@ static char *moonfish_username(char *host, char *port, char *token)
 	return username;
 }
 
+#ifndef moonfish_plan9
+
 static void moonfish_signal(int signal)
 {
 	(void) signal;
-	
 	for (;;) {
 		if (waitpid(-1, NULL, WNOHANG) <= 0) break;
 	}
 }
+
+#endif
 
 int main(int argc, char **argv)
 {
@@ -513,8 +567,10 @@ int main(int argc, char **argv)
 	int command_count;
 	struct tls *tls;
 	char *username;
-	struct sigaction action;
 	char *value;
+#ifndef moonfish_plan9
+	struct sigaction action;
+#endif
 	
 	command = moonfish_args(&cmd, argc, argv);
 	command_count = argc - (command - argv);
@@ -553,6 +609,13 @@ int main(int argc, char **argv)
 		}
 	}
 	
+	if (pthread_mutex_init(&moonfish_mutex, NULL)) {
+		fprintf(stderr, "could not initialise mutex\n");
+		return 1;
+	}
+	
+#ifndef moonfish_plan9
+	
 	action.sa_handler = &moonfish_signal;
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
@@ -561,6 +624,8 @@ int main(int argc, char **argv)
 		perror("sigaction");
 		return 1;
 	}
+	
+#endif
 	
 	tls = moonfish_connect(cmd.args[0].value, cmd.args[1].value);
 	moonfish_request(tls, cmd.args[0].value, "GET /api/stream/event", token, NULL, 0);

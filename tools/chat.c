@@ -43,11 +43,13 @@ static void moonfish_parse_chat(char *line, char ***command, int *count)
 		
 		length = 0;
 		while (line[length] != ' ' && line[length] != 0) length++;
-		(*command)[*count] = strndup(line, length);
+		(*command)[*count] = malloc(length + 1);
 		if ((*command)[*count] == NULL) {
-			perror("strndup");
+			perror("malloc");
 			exit(1);
 		}
+		(*command)[*count][0] = 0;
+		strncat((*command)[*count], line, length);
 		line += length;
 		
 		while (*line == ' ') line++;

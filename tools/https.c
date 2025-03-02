@@ -5,6 +5,70 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef moonfish_plan9
+
+#include <libsec.h>
+
+#define TLS_WANT_POLLIN (-2)
+#define TLS_WANT_POLLOUT (-2)
+
+struct tls {
+	int fd;
+};
+
+static struct tls *tls_client(void)
+{
+	struct tls *tls;
+	tls = malloc(sizeof *tls);
+	return tls;
+}
+
+static int tls_connect(struct tls *tls, char *host, char *port)
+{
+	TLSconn conn = {0};
+	int fd;
+	
+	fd = dial(netmkaddr(host, "tcp", port), NULL, NULL, NULL);
+	if (fd < 0) return -1;
+	
+	tls->fd = tlsClient(fd, &conn);
+	if (tls->fd < 0) return -1;
+	free(conn.cert);
+	free(conn.sessionID);
+	return 0;
+}
+
+static int tls_close(struct tls *tls)
+{
+	return close(tls->fd);
+}
+
+static void tls_free(struct tls *tls)
+{
+	free(tls);
+}
+
+static ssize_t tls_read(struct tls *tls, void *buffer, size_t count)
+{
+	ssize_t n;
+	n = read(tls->fd, buffer, count);
+	if (n < 0) return 0;
+	return n;
+}
+
+static ssize_t tls_write(struct tls *tls, void *buffer, size_t count)
+{
+	return write(tls->fd, buffer, count);
+}
+
+static char *tls_error(struct tls *tls)
+{
+	(void) tls;
+	return "TLS error";
+}
+
+#endif
+
 #include "https.h"
 
 int moonfish_read(struct tls *tls, void *data0, size_t length)
@@ -169,7 +233,12 @@ struct tls *moonfish_connect(char *host, char *port)
 
 void moonfish_close(struct tls *tls)
 {
-	if (tls_close(tls)) {
+	int result;
+	
+	do result = tls_close(tls);
+	while (result == TLS_WANT_POLLIN || result == TLS_WANT_POLLOUT);
+	
+	if (result) {
 		fprintf(stderr, "%s\n", tls_error(tls));
 		exit(1);
 	}

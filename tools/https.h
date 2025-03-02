@@ -1,7 +1,12 @@
 /* moonfish is licensed under the AGPL (v3 or later) */
 /* copyright 2025 zamfofex */
 
+#ifndef moonfish_plan9
 #include <tls.h>
+#else
+struct tls;
+#pragma incomplete struct tls
+#endif
 
 int moonfish_read(struct tls *tls, void *data, size_t length);
 int moonfish_write(struct tls *tls, void *data, size_t length);

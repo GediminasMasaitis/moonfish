@@ -8,6 +8,32 @@
 #include <limits.h>
 #include <fcntl.h>
 
+#ifdef moonfish_plan9
+
+#define execvp exec
+#define dup2 dup
+#define fork() rfork(RFFDG | RFREND | RFPROC | RFNOWAIT | RFENVG)
+#define O_WRONLY OWRITE
+
+/* note: the following assumes '_SC_OPEN_MAX' only */
+#define sysconf(which) 2048
+
+static char *strtok_r(char *src, char *delim, char **ptr)
+{
+	char *r;
+	size_t n;
+	if (src != NULL) *ptr = src;
+	*ptr += strspn(*ptr, delim);
+	if (**ptr == 0) return NULL;
+	r = *ptr;
+	n = strcspn(r, delim);
+	r[n] = 0;
+	*ptr += n + 1;
+	return r;
+}
+
+#endif
+
 #include "../moonfish.h"
 #include "tools.h"
 
@@ -17,11 +43,7 @@ static void moonfish_fork(char **argv, int *in_fd, int *out_fd, char *directory)
 	int pid;
 	long int count, i;
 	
-	if (pipe(p1) < 0) {
-		perror("pipe");
-		exit(1);
-	}
-	if (pipe(p2) < 0) {
+	if (pipe(p1) < 0 || pipe(p2) < 0) {
 		perror("pipe");
 		exit(1);
 	}
@@ -82,15 +104,13 @@ void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory)
 		exit(1);
 	}
 	
-	errno = 0;
-	if (setvbuf(*in, NULL, _IOLBF, 0)) {
-		if (errno != 0) perror("setvbuf");
+	if (setvbuf(*in, NULL, _IONBF, 0)) {
+		perror("setvbuf");
 		exit(1);
 	}
 	
-	errno = 0;
-	if (setvbuf(*out, NULL, _IOLBF, 0)) {
-		if (errno != 0) perror("setvbuf");
+	if (setvbuf(*out, NULL, _IONBF, 0)) {
+		perror("setvbuf");
 		exit(1);
 	}
 }
@@ -109,7 +129,10 @@ char *moonfish_wait(FILE *file, char *name)
 	for (;;) {
 		
 		line = moonfish_next(file);
-		if (line == NULL) exit(1);
+		if (line == NULL) {
+			fprintf(stderr, "file closed unexpectedly\n");
+			exit(1);
+		}
 		
 		arg = strtok_r(line, "\r\n\t ", &buffer);
 		if (arg == NULL) continue;
