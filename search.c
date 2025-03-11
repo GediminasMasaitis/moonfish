@@ -350,7 +350,7 @@ static void moonfish_search(struct moonfish_node *node, struct moonfish_chess *c
 	struct moonfish_node *leaf;
 	struct moonfish_chess chess;
 	
-	for (i = 0 ; i < 0x1000 ; i++) {
+	for (i = 0 ; i < 256 ; i++) {
 		chess = *chess0;
 		leaf = moonfish_select(node, &chess);
 		if (leaf == NULL) continue;

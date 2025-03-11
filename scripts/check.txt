@@ -1,105 +1,105 @@
 perft 0: 1
-info depth 1 score cp 2 nodes 4096
-bestmove b1c3
+info depth 1 score cp 23 nodes 2048
+bestmove d2d4
 perft 0: 1
-info depth 1 score cp 116 nodes 4096
+info depth 1 score cp 213 nodes 2048
 bestmove e2a6
 perft 0: 1
-info depth 1 score cp 64 nodes 4096
-bestmove b4c4
+info depth 1 score cp 136 nodes 2048
+bestmove b4f4
 perft 0: 1
-info depth 1 score cp -498 nodes 4096
-bestmove b4c5
+info depth 1 score cp -481 nodes 2048
+bestmove d2d4
 perft 0: 1
-info depth 1 score cp -498 nodes 4096
-bestmove b5c4
+info depth 1 score cp -481 nodes 2048
+bestmove d7d5
 perft 0: 1
-info depth 1 score cp 304 nodes 4096
+info depth 1 score cp 365 nodes 2048
 bestmove d7c8q
 perft 0: 1
-info depth 1 score cp 35 nodes 4096
-bestmove c4d5
+info depth 1 score cp 179 nodes 2048
+bestmove c3d5
 perft 1: 20
-info depth 1 score cp 0 nodes 8192
+info depth 1 score cp -3 nodes 6144
 bestmove b1c3
 perft 1: 48
-info depth 1 score cp 84 nodes 8192
+info depth 1 score cp 47 nodes 6144
 bestmove e2a6
 perft 1: 14
-info depth 1 score cp 64 nodes 8192
+info depth 1 score cp 64 nodes 6144
 bestmove b4c4
 perft 1: 6
-info depth 1 score cp -113 nodes 8192
+info depth 1 score cp -442 nodes 6144
 bestmove c4c5
 perft 1: 6
-info depth 1 score cp -113 nodes 8192
+info depth 1 score cp -442 nodes 6144
 bestmove c5c4
 perft 1: 44
-info depth 1 score cp 619 nodes 8192
+info depth 1 score cp 600 nodes 6144
 bestmove d7c8r
 perft 1: 46
-info depth 1 score cp 37 nodes 8192
+info depth 1 score cp -27 nodes 6144
 bestmove c3d5
 perft 2: 400
-info depth 1 score cp 9 nodes 12288
+info depth 1 score cp 0 nodes 10240
 bestmove b1c3
 perft 2: 2039
-info depth 1 score cp 202 nodes 12288
+info depth 1 score cp 93 nodes 10240
 bestmove e2a6
 perft 2: 191
-info depth 1 score cp 38 nodes 12288
+info depth 1 score cp 38 nodes 10240
 bestmove b4c4
 perft 2: 264
-info depth 1 score cp -345 nodes 12288
+info depth 1 score cp -173 nodes 10240
 bestmove c4c5
 perft 2: 264
-info depth 1 score cp -345 nodes 12288
+info depth 1 score cp -173 nodes 10240
 bestmove c5c4
 perft 2: 1486
-info depth 1 score cp 640 nodes 12288
+info depth 1 score cp 640 nodes 10240
 bestmove d7c8r
 perft 2: 2079
-info depth 1 score cp 22 nodes 12288
+info depth 1 score cp 15 nodes 10240
 bestmove c3d5
 perft 3: 8902
-info depth 1 score cp 9 nodes 16384
+info depth 1 score cp 9 nodes 14336
 bestmove b1c3
 perft 3: 97862
-info depth 1 score cp 217 nodes 16384
+info depth 1 score cp 212 nodes 14336
 bestmove e2a6
 perft 3: 2812
-info depth 1 score cp 32 nodes 16384
+info depth 1 score cp 26 nodes 14336
 bestmove b4c4
 perft 3: 9467
-info depth 1 score cp -443 nodes 16384
-bestmove c4c5
+info depth 1 score cp -343 nodes 14336
+bestmove g1h1
 perft 3: 9467
-info depth 1 score cp -443 nodes 16384
-bestmove c5c4
+info depth 1 score cp -343 nodes 14336
+bestmove g8h8
 perft 3: 62379
-info depth 1 score cp 640 nodes 16384
-bestmove d7c8q
+info depth 1 score cp 640 nodes 14336
+bestmove d7c8r
 perft 3: 89890
-info depth 1 score cp 161 nodes 16384
+info depth 1 score cp 161 nodes 14336
 bestmove c3d5
 perft 4: 197281
-info depth 1 score cp 19 nodes 20480
+info depth 1 score cp 16 nodes 18432
 bestmove g1f3
 perft 4: 4085603
-info depth 1 score cp 178 nodes 20480
+info depth 1 score cp 217 nodes 18432
 bestmove e2a6
 perft 4: 43238
-info depth 1 score cp 26 nodes 20480
-bestmove b4c4
+info depth 1 score cp 123 nodes 18432
+bestmove b4f4
 perft 4: 422333
-info depth 1 score cp -443 nodes 20480
-bestmove c4c5
+info depth 1 score cp -251 nodes 18432
+bestmove f3d4
 perft 4: 422333
-info depth 1 score cp -443 nodes 20480
-bestmove c5c4
+info depth 1 score cp -251 nodes 18432
+bestmove f6d5
 perft 4: 2103487
-info depth 1 score cp 632 nodes 20480
+info depth 1 score cp 641 nodes 18432
 bestmove d7c8r
 perft 4: 3894594
-info depth 1 score cp 164 nodes 20480
+info depth 1 score cp 164 nodes 18432
 bestmove c3d5
