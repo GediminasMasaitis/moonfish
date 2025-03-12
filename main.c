@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <strings.h>
-#include <unistd.h>
 
 #include "moonfish.h"
 #include "threads.h"
@@ -309,7 +308,7 @@ int main(int argc, char **argv)
 	static struct moonfish_info info;
 	static struct moonfish_option options[] = {
 #ifndef moonfish_no_threads
-		{"Threads", "spin", 0, 1, 256},
+		{"Threads", "spin", 0, 1, 0xFFFF},
 #endif
 		{"MultiPV", "spin", 0, 0, 256},
 		{NULL},
