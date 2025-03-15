@@ -159,12 +159,15 @@ static void moonfish_node(struct moonfish_node *node)
 static int moonfish_compare(const void *ax, const void *bx)
 {
 	const struct moonfish_node *a, *b;
+	
 	a = ax;
 	b = bx;
 	if (!a->ignored && b->ignored) return -1;
 	if (a->ignored && !b->ignored) return 1;
-	if (a->score == b->score) return a->index - b->index;
-	return a->score - b->score;
+	if (a->score != b->score) return a->score - b->score;
+	if (a->from != b->from) return a->from - b->from;
+	if (a->index != b->index) return a->index - b->index;
+	return 0;
 }
 
 static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *chess)

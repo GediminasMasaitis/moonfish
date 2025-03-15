@@ -1,6 +1,6 @@
 perft 0: 1
 info depth 1 score cp 23 nodes 2048
-bestmove d2d4
+bestmove e2e4
 perft 0: 1
 info depth 1 score cp 213 nodes 2048
 bestmove e2a6

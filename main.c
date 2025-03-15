@@ -45,15 +45,15 @@ static moonfish_result_t moonfish_go0(void *data)
 	static struct moonfish_chess chess;
 	
 	struct moonfish_info *info;
-	int i, j, count;
+	int i, j, count, count0;
 	char name[6];
 	
 	info = data;
 	
 	moonfish_best_move(info->root, &info->result, &info->search_options);
 	
-	count = moonfish_getoption(info->options, "MultiPV");
-	for (i = 0 ; i < count ; i++) {
+	count0 = moonfish_getoption(info->options, "MultiPV");
+	for (i = 0 ; i < count0 ; i++) {
 		count = sizeof pv / sizeof *pv;
 		moonfish_pv(info->root, pv, &result, i, &count);
 		if (count == 0) continue;
