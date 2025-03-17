@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
-#include <strings.h>
+#include <ctype.h>
 
 #include "moonfish.h"
 #include "threads.h"
@@ -33,7 +33,7 @@ static int moonfish_getoption(struct moonfish_option *options, char *name)
 {
 	int i;
 	for (i = 0 ; options[i].name != NULL ; i++) {
-		if (!strcasecmp(options[i].name, name)) return options[i].value;
+		if (!strcmp(options[i].name, name)) return options[i].value;
 	}
 	return -1;
 }
@@ -253,6 +253,17 @@ static void moonfish_position(struct moonfish_root *root)
 	if (!moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &chess);
 }
 
+static int moonfish_compare_name(char *a, char *b)
+{
+	unsigned char ch0, ch1;
+	while (*a != 0 && *b != 0) {
+		ch0 = *a++;
+		ch1 = *b++;
+		if (tolower(ch0) != tolower(ch1)) return 1;
+	}
+	return 0;
+}
+
 static void moonfish_setoption(struct moonfish_info *info)
 {
 	char *arg, *end;
@@ -272,7 +283,7 @@ static void moonfish_setoption(struct moonfish_info *info)
 	}
 	
 	for (i = 0 ; info->options[i].name != NULL ; i++) {
-		if (!strcasecmp(arg, info->options[i].name)) break;
+		if (!moonfish_compare_name(arg, info->options[i].name)) break;
 	}
 	
 	if (info->options[i].name == NULL) {
