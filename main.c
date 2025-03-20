@@ -61,7 +61,7 @@ static moonfish_result_t moonfish_go0(void *data)
 		moonfish_root(info->root, &chess);
 		for (j = 0 ; j < count ; j++) {
 			moonfish_to_uci(&chess, pv + j, name);
-			chess = pv[j].chess;
+			moonfish_play(&chess, pv + j);
 			printf(" %s", name);
 		}
 		printf("\n");
@@ -243,9 +243,13 @@ static void moonfish_position(struct moonfish_root *root)
 			}
 			
 			moonfish_root(root, &chess0);
-			if (moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &move.chess);
-			
-			chess = move.chess;
+			if (moonfish_equal(&chess0, &chess)) {
+				moonfish_play(&chess, &move);
+				moonfish_reroot(root, &chess);
+			}
+			else {
+				moonfish_play(&chess, &move);
+			}
 		}
 	}
 	

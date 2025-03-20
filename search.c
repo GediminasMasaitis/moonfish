@@ -176,6 +176,7 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 	int count, i;
 	int child_count;
 	struct moonfish_move moves[32];
+	struct moonfish_chess other;
 	
 	node->children = NULL;
 	child_count = 0;
@@ -195,14 +196,17 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 			
 			for (i = 0 ; i < count ; i++) {
 				
-				if (!moonfish_validate(&moves[i].chess)) continue;
+				other = *chess;
+				moonfish_play(&other, moves + i);
+				
+				if (!moonfish_validate(&other)) continue;
 				moonfish_node(node->children + child_count);
 				node->children[child_count].parent = node;
 				node->children[child_count].from = (x + 1) + (y + 2) * 10;
 				node->children[child_count].index = i;
 				
-				node->children[child_count].score = moonfish_score(&moves[i].chess);
-				if (!moves[i].chess.white) node->children[child_count].score *= -1;
+				node->children[child_count].score = moonfish_score(&other);
+				if (chess->white) node->children[child_count].score *= -1;
 				
 				child_count++;
 			}
@@ -232,7 +236,7 @@ static void moonfish_node_chess(struct moonfish_node *node, struct moonfish_ches
 {
 	struct moonfish_move move;
 	moonfish_node_move(node, chess, &move);
-	*chess = move.chess;
+	moonfish_play(chess, &move);
 }
 
 #ifndef moonfish_no_threads
@@ -565,7 +569,7 @@ void moonfish_pv(struct moonfish_root *root, struct moonfish_move *moves, struct
 		}
 		
 		moonfish_node_move(node, &chess, moves + j);
-		chess = moves[j].chess;
+		moonfish_play(&chess, moves + j);
 		
 		best_score = INT_MAX;
 		best_node = NULL;

@@ -154,7 +154,7 @@ static void moonfish_write_fen(struct tls *tls, struct moonfish_chess *chess, st
 	char name[6];
 	int i;
 	
-	moonfish_to_fen(&move->chess, fen);
+	moonfish_to_fen(chess, fen);
 	moonfish_to_uci(chess, move, name);
 	
 	for (i = 0 ; fen[i] != 0 ; i++) {
@@ -253,7 +253,10 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 		
 		if (moonfish_from_san(&chess, &move, message)) continue;
 		
-		if (moonfish_finished(&move.chess)) {
+		moonfish_to_uci(&chess, &move, name);
+		moonfish_play(&chess, &move);
+		
+		if (moonfish_finished(&chess)) {
 			
 			moonfish_write_fen(tls, &chess, &move, channel);
 			moonfish_chess(&chess);
@@ -265,9 +268,6 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 			
 			continue;
 		}
-		
-		moonfish_to_uci(&chess, &move, name);
-		chess = move.chess;
 		
 		names = realloc(names, strlen(names) + strlen(name) + 2);
 		if (names == NULL) {
@@ -310,7 +310,7 @@ static void moonfish_chat(char **command, char **options, char *host, char *port
 		moonfish_write_text(tls, "\r\n");
 		
 		moonfish_write_fen(tls, &chess, &move, channel);
-		chess = move.chess;
+		moonfish_play(&chess, &move);
 		
 		if (moonfish_finished(&chess)) {
 			

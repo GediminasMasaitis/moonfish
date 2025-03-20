@@ -407,14 +407,14 @@ static void *moonfish_start(void *data)
 						strcpy(ply.best, arg);
 					}
 					if (pv > 1) {
-						ply.chess = move.chess;
+						moonfish_play(&ply.chess, &move);
 						i = 1;
 						continue;
 					}
 					moonfish_to_san(&ply.chess, &move, san, 0);
 					length = strlen(san);
 					if (i + length > sizeof fancy->pv - 2) break;
-					ply.chess = move.chess;
+					moonfish_play(&ply.chess, &move);
 					fancy->pv[i++] = ' ';
 					strcpy(fancy->pv + i, san);
 					i += length;
@@ -612,7 +612,7 @@ static void moonfish_scroll(struct moonfish_fancy *fancy)
 	if (fancy->offset < 0) fancy->offset = 0;
 }
 
-static void moonfish_play(struct moonfish_fancy *fancy, struct moonfish_move *move)
+static void moonfish_fancy_play(struct moonfish_fancy *fancy, struct moonfish_move *move)
 {
 	struct moonfish_ply *ply, *next;
 	int i, count;
@@ -687,10 +687,11 @@ static void moonfish_play(struct moonfish_fancy *fancy, struct moonfish_move *mo
 	if (move == NULL) return;
 	moonfish_to_san(&fancy->plies[fancy->i].chess, move, fancy->plies[fancy->i].san, 1);
 	
-	ply->chess = move->chess;
+	ply->chess = fancy->plies[fancy->i].chess;
+	moonfish_play(&ply->chess, move);
 	
 	if (i + 1 < fancy->count && ply->chess.white == ply[1].chess.white) {
-		moonfish_play(fancy, NULL);
+		moonfish_fancy_play(fancy, NULL);
 		fancy->i = i;
 	}
 	
@@ -818,7 +819,7 @@ int main(int argc, char **argv)
 		
 		for (;;) {
 			if (moonfish_pgn(file, &fancy->plies[fancy->i].chess, &move, fancy->i == 0 ? 1 : 0)) break;
-			moonfish_play(fancy, &move);
+			moonfish_fancy_play(fancy, &move);
 		}
 		
 		for (i = 0 ; i < fancy->count ; i++) {
@@ -1036,7 +1037,7 @@ int main(int argc, char **argv)
 					fprintf(stderr, "invalid best move: %s\n", fancy->plies[fancy->i].best);
 					return 1;
 				}
-				moonfish_play(fancy, &move);
+				moonfish_fancy_play(fancy, &move);
 			}
 			continue;
 		}
@@ -1066,7 +1067,7 @@ int main(int argc, char **argv)
 		/* handle mouse up or mouse down: if it forms a valid move, play it on the board */
 		if (ch0 == 0x20 || ch0 == 0x23) {
 			if (!moonfish_move_from(&fancy->plies[fancy->i].chess, &move, fancy->x, fancy->y, x1, y1)) {
-				moonfish_play(fancy, &move);
+				moonfish_fancy_play(fancy, &move);
 				continue;
 			}
 		}

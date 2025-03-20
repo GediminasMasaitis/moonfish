@@ -84,12 +84,10 @@ struct moonfish_chess {
 
 /* represents a move that may be made on a given position */
 struct moonfish_move {
-	
-	/* the position after the move is played */
-	struct moonfish_chess chess;
-	
 	/* square indices of where the piece moved from and to */
 	unsigned char from, to;
+	/* the piece that moved (or the promotion piece) */
+	unsigned char piece;
 };
 
 /* represents cross-search state */
@@ -178,6 +176,9 @@ void moonfish_to_san(struct moonfish_chess *chess, struct moonfish_move *move, c
 /* on failure (i.e. invalid move), this will return 1, and the move the pointer points to will not be usable */
 /* note: this will ignore underpromotions (always promotes to queen when a pawn reaches the last rank) */
 int moonfish_move(struct moonfish_chess *chess, struct moonfish_move *move, int from, int to);
+
+/* plays the move on the given position, updating it */
+void moonfish_play(struct moonfish_chess *chess, struct moonfish_move *move);
 
 /* returns whether the game ended due to either checkmate or stalemate */
 /* note: 0 means false (i.e. not finished) */
