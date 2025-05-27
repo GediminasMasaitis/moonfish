@@ -1,4 +1,4 @@
-/* moonfish is licensed under the AGPL (v3 or later) */
+/* moonfish's license: 0BSD */
 /* copyright 2025 zamfofex */
 
 #include <unistd.h>
@@ -299,7 +299,6 @@ void moonfish_usage(struct moonfish_command *cmd, char *argv0)
 	
 	fprintf(stderr, "version:\n");
 	fprintf(stderr, "   %s is part of \x1B[36mmoonfish " moonfish_version "\x1B[0m\n", argv0);
-	fprintf(stderr, "   copyright 2025 zamfofex (AGPL, v3 or later)\n");
 	fprintf(stderr, "   report bugs to \x1B[36mzamfofex@twdb.moe\x1B[0m\n");
 	fprintf(stderr, "   source code at \x1B[36mhttps://git.sr.ht/~zamfofex/moonfish\x1B[0m\n");
 	

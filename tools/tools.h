@@ -1,4 +1,4 @@
-/* moonfish is licensed under the AGPL (v3 or later) */
+/* moonfish's license: 0BSD */
 /* copyright 2025 zamfofex */
 
 #ifndef MOONFISH_TOOLS

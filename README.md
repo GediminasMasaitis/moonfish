@@ -1,4 +1,4 @@
-<!-- moonfish is licensed under the AGPL (v3 or later) -->
+<!-- moonfish's license: 0BSD -->
 <!-- copyright 2025 zamfofex -->
 
 moonfish
@@ -30,7 +30,7 @@ table of contents
   - [using “chat”](#using-chat) (for integrating UCI bots with IRC)
   - [using “lichess”](#using-lichess) (for integrating UCI bots with Lichess)
 - [helping improve moonfish!](#contributing-to-moonfish)
-- [license](#license)
+- [license](#license-0bsd)
 
 features
 ---
@@ -199,10 +199,9 @@ The only pieces of functionality that moonfish optionally depends on that is not
 
 Thus, moonfish can be compiled within a strict C89 implementation by setting the `moonfish_no_threads` and `moonfish_no_clock` macros during compile time.
 
-license
+license (0BSD)
 ---
 
-[AGPL] ([v3 or later]) © zamfofex 2025
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
 
-[AGPL]: <https://gnu.org/licenses/agpl-3.0>
-[v3 or later]: <https://gnu.org/licenses/gpl-faq.html#VersionThreeOrLater>
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
