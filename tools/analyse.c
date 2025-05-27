@@ -681,7 +681,6 @@ static void moonfish_fancy_play(struct moonfish_fancy *fancy, struct moonfish_mo
 	
 	i = fancy->i;
 	ply = fancy->plies + i;
-	ply->chess.white = ply[-1].main->chess.white ^ 1;
 	
 	strcpy(fancy->plies[fancy->i].name, name);
 	if (move == NULL) return;
