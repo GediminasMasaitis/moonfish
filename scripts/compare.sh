@@ -16,7 +16,7 @@ which "$make" &> /dev/null || make=make
 
 rm -f moonfish
 mkdir -p compare
-[[ -f compare/openings.fen ]] || wget -O- https://moonfish.neocities.org/pohl.fen.xz | xz -d > compare/openings.fen
+[[ -f compare/openings.fen ]] || wget -O- https://moonfish.cc/pohl.fen.xz | xz -d > compare/openings.fen
 
 dirty=
 [[ "x$(git status --porcelain)" = x ]] || dirty=-dirty

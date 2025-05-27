@@ -53,7 +53,7 @@ These are things that might be resolved eventually.
 download
 ---
 
-Pre‐compiled executables for Linux of moonfish (and some of its tools) may be found at <https://moonfish.neocities.org>
+Pre‐compiled executables for Linux of moonfish (and some of its tools) may be found at <https://moonfish.cc>
 
 contributing to moonfish
 ---
