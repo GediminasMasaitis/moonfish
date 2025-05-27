@@ -323,7 +323,7 @@ int main(int argc, char **argv)
 	static struct moonfish_info info;
 	static struct moonfish_option options[] = {
 #ifndef moonfish_no_threads
-		{"Threads", "spin", 0, 1, 0xFFFF},
+		{"Threads", "spin", 1, 1, 0xFFFF},
 #endif
 		{"MultiPV", "spin", 0, 0, 256},
 		{NULL},
@@ -343,7 +343,6 @@ int main(int argc, char **argv)
 	
 #ifndef moonfish_no_threads
 	info.has_thread = 0;
-	options[0].value = 1;
 #endif
 	
 	for (;;) {
