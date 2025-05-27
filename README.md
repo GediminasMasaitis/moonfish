@@ -188,14 +188,14 @@ Note that [MinGW] compilation is also supported.
 porting moonfish
 ---
 
-Porting moonfish to a different platform should be a matter of simply providing a “mostly C89‐compliant”. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on 9front](#compiling-on-9front), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
+Porting moonfish to a different platform should be a matter of simply providing a “mostly C89‐compliant” C implementation. Of course, moonfish doesn’t make use of *all* C89 features, so it is not necessary to have features that it doesn’t use. [Compiling on 9front](#compiling-on-9front), for example, works through NPE, which provides something close enough to C89 for moonfish to work.
 
-The only pieces of functionality that moonfish optionally depends on that is not specified entirely in C89 are `clock_gettime` and threads. For threads, either pthreads or C11 `<threads.h>` may be used. For `clock_gettime`, it is possible to use `time` instead. These can be configured with the following compile-time macros.
+The only pieces of functionality that moonfish optionally depends on that is not specified entirely in C89 are `clock_gettime` and threads. For threads, either pthreads or C11 `<threads.h>` may be used. For `clock_gettime`, it is possible to use `time` instead. These can be configured with the following compile‐time macros.
 
 - default (without explicit options): use `clock_gettime` and C11 `<threads.h>`
 - `-Dmoonfish_pthreads`: use pthreads instead of C11 `<threads.h>`
 - `-Dmoonfish_no_threads`: disable threads altogether
-- `-Dmoonfish_no_clock`: use `time` instead of `clock_gettime` (note: this is highly discouraged because 1 second time granularity is very detrimental in fast games, besides unfortunate reliance on wall-clock time.)
+- `-Dmoonfish_no_clock`: use `time` instead of `clock_gettime` (note: this is highly discouraged because 1 second time granularity is very detrimental in fast games, besides unfortunate reliance on wall‐clock time.)
 
 Thus, moonfish can be compiled within a strict C89 implementation by setting the `moonfish_no_threads` and `moonfish_no_clock` macros during compile time.
 
