@@ -3,11 +3,7 @@
 
 </$objtype/mkfile
 
-moonfish:
-	$LD $LDFLAGS -o $target $prereq
-lichess:
-	$LD $LDFLAGS -o $target $prereq
-chat:
+moonfish lichess chat:
 	$LD $LDFLAGS -o $target $prereq
 
 %.$O: %.c moonfish.h

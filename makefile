@@ -1,37 +1,45 @@
 # moonfish's license: 0BSD
 # copyright 2025 zamfofex
 
-CFLAGS ?= -O3 -Wall -Wextra -Wpedantic
-PREFIX ?= /usr/local
-BINDIR ?= $(PREFIX)/bin
-RM ?= rm -f
-
-src = $(.ALLSRC:M*.c)
-tools = lichess analyse chat perft
-
+.POSIX:
 .PHONY: all check clean install
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+CFLAGS = -O3 -Wall -Wextra -Wpedantic
+PREFIX = /usr/local
+BINDIR = $(PREFIX)/bin
+RM = rm -f
+
+# hack for BSD Make
+# (ideally, '$^' should be used directly instead)
+.ALLSRC ?= $^
+
+tool_obj = tools/utils.o tools/https.o tools/pgn.o tools/lichess.o tools/analyse.o tools/chat.o tools/perft.o
+obj = chess.o search.o main.o
+
+moonfish_libs = -lm -pthread -latomic
+lichess_libs = -pthread -ltls -lssl -lcrypto -lcjson
+analyse_libs = -pthread
+chat_libs = -ltls -lssl -lcrypto
 
 all: moonfish lichess analyse chat
 
-moonfish $(tools):
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $(src) $(cflags) $(LIBS)
+moonfish: $(obj)
+lichess analyse chat perft: chess.o tools/utils.o
+lichess: tools/lichess.o tools/https.o
+analyse: tools/analyse.o tools/pgn.o
+chat: tools/chat.o tools/https.o
 
-$(tools): moonfish.h tools/tools.h tools/utils.c chess.c
+$(obj): moonfish.h
+$(tool_obj): moonfish.h tools/tools.h
+tools/https.o: tools/https.h
 
-moonfish: moonfish.h threads.h chess.c search.c main.c
-moonfish: cflags = -lm -pthread -latomic
+moonfish lichess analyse chat perft:
+	$(CC) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
-lichess: tools/lichess.c tools/https.c tools/https.h
-lichess: cflags = -pthread -ltls -lssl -lcrypto -lcjson
-
-analyse: tools/analyse.c tools/pgn.c
-analyse: cflags = -pthread
-
-chat: tools/chat.c tools/https.c tools/https.h
-chat: cflags = -ltls -lssl -lcrypto
-
-perft: tools/perft.c
-perft: cflags =
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 check: moonfish perft
 	scripts/check.sh
