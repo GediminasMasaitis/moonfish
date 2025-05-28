@@ -72,11 +72,18 @@ Contributions (complaints, ideas, thoughts, patches, etc.) may be submitted via 
 compiling from source
 ---
 
-Compiling on UNIX (and clones) should be easy! Make sure you have GNU Make (or BSD Make) and a C compiler like GCC, then run the following command.
+Compiling on UNIX (and clones) should be easy! Make sure you have [POSIX Make] (like [GNU Make] or [BSD Make] or [PDP Make]) and a C compiler (like [GCC] or [Clang]), then run the following command.
 
 ~~~
 make moonfish
 ~~~
+
+[POSIX Make]: <https://pubs.opengroup.org/onlinepubs/9799919799/utilities/make.html>
+[GNU Make]: <https://gnu.org/software/make/>
+[BSD Make]: <https://man.netbsd.org/make.1>
+[PDP Make]: <https://frippery.org/make/>
+[GCC]: <https://gnu.org/software/gcc/>
+[Clang]: <https://clang.llvm.org>
 
 Conversely, you may also invoke your compiler by hand. (Feel free to replace `cc` with your compiler of choice.)
 
@@ -94,6 +101,12 @@ It is also possible to compile moonfish without a dependency on threads by passi
 
 ~~~
 cc -O3 -Dmoonfish_no_threads -o moonfish chess.c search.c main.c -lm
+~~~
+
+Note: It’s also possible to pass arguments to the compiler when using Make by specifying `CFLAGS`:
+
+~~~
+make CFLAGS='-O3 -Dmoonfish_pthreads' moonfish
 ~~~
 
 using “analyse”
