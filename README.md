@@ -117,7 +117,7 @@ make analyse
 
 “analyse” is a TUI that allows you to analyse chess games with UCI bots.
 
-After compiling and running it, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
+After compiling and running it, you may use the mouse to click and move pieces around. (So, it requires mouse support from your terminal.)
 
 To analyse a game with a UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and then the command of whichever bot you want to use for analysis.
 
