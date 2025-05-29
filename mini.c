@@ -11,7 +11,7 @@
 int main(void)
 {
 	static char line[2048];
-	static struct moonfish_chess chess, chess0;
+	static struct moonfish_chess chess, chess0, chess1;
 	static struct moonfish_move move;
 	static struct moonfish_options options;
 	static struct moonfish_result result;
@@ -54,18 +54,14 @@ int main(void)
 			arg = strtok(arg, " ");
 			
 			for (;;) {
-				
 				arg = strtok(NULL, "\r\n\t ");
 				if (arg == NULL) break;
-				if (moonfish_from_uci(&chess, &move, arg)) {
-					fprintf(stderr, "malformed move '%s'\n", arg);
-					exit(1);
-				}
-				
+				if (moonfish_from_uci(&chess, &move, arg)) exit(1);
 				moonfish_root(root, &chess0);
-				if (moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &move.chess);
-				
-				chess = move.chess;
+				chess1 = chess;
+				moonfish_play(&chess1, &move);
+				if (moonfish_equal(&chess0, &chess)) moonfish_reroot(root, &chess1);
+				chess = chess1;
 			}
 			
 			moonfish_root(root, &chess0);
