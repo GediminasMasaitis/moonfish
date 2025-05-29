@@ -468,8 +468,8 @@ struct moonfish_root *moonfish_new(void)
 	
 #ifndef moonfish_mini
 	root->log = NULL;
-#endif
 	root->stop = 0;
+#endif
 	moonfish_node(&root->node);
 	moonfish_chess(&root->chess);
 	
