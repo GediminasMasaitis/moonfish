@@ -47,7 +47,6 @@ limitations
 These are things that might be resolved eventually.
 
 - the TUI does not let you underpromote
-- no support for `go depth`, `go infinite`, `go mate`
 - no support for some seldom used UCI features
 
 download
@@ -120,7 +119,7 @@ make analyse
 
 After compiling and running it, you may use the mouse to click and move pieces around. (So, they require mouse support from your terminal.)
 
-To analyse a game with a UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and then the command of whichever bot you want to use for analysis. (Though note that moonfish has limited analysis capabilities.)
+To analyse a game with a UCI bot, use `./analyse` followed optionally by the UCI options you want to specify, and then the command of whichever bot you want to use for analysis.
 
 ~~~
 # (analyse a game using Stockfish)

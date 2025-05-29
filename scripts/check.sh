@@ -7,9 +7,8 @@ set -eo pipefail
 
 go()
 {
-	echo 'setoption name Threads value 1'
 	echo "position fen $1"
-	echo "go nodes $2"
+	echo "go depth $2"
 	while read -r line
 	do
 		case "$line" in "bestmove "*)
@@ -23,8 +22,8 @@ show()
 {
 	echo "- - - POSITION $2 - - -" >&2
 	./perft -F "$3" "$1"
-	coproc go "$3" `expr "$1" '*' 4096 + 2048`
-	{ ./moonfish | tee /dev/fd/3 3> /dev/fd/3 ; } <&"${COPROC[0]}" 3>&"${COPROC[1]}"
+	coproc go "$3" "$1"
+	{ ./moonfish | tee /dev/fd/3 3> /dev/fd/3 | tail -2 | sed -E 's/ time [^ ]+//g' ; } <&"${COPROC[0]}" 3>&"${COPROC[1]}"
 	echo >&2
 }
 

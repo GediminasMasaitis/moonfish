@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "moonfish.h"
 #include "threads.h"
@@ -38,7 +39,12 @@ static int moonfish_getoption(struct moonfish_option *options, char *name)
 	return -1;
 }
 
-static moonfish_result_t moonfish_go0(void *data)
+static void moonfish_log_result(struct moonfish_result *result)
+{
+	printf("info depth %.0f nodes %ld time %ld", log(result->node_count) / log(16), result->node_count, result->time);
+}
+
+static void moonfish_log(struct moonfish_result *result0, void *data)
 {
 	static struct moonfish_move pv[256];
 	static struct moonfish_result result;
@@ -49,15 +55,23 @@ static moonfish_result_t moonfish_go0(void *data)
 	char name[6];
 	
 	info = data;
-	
-	moonfish_best_move(info->root, &info->result, &info->search_options);
-	
 	count0 = moonfish_getoption(info->options, "MultiPV");
+	
+	if (count0 == 0) {
+		moonfish_log_result(result0);
+		printf(" score cp %d\n", result0->score);
+		fflush(stdout);
+		return;
+	}
+	
 	for (i = 0 ; i < count0 ; i++) {
 		count = sizeof pv / sizeof *pv;
 		moonfish_pv(info->root, pv, &result, i, &count);
 		if (count == 0) continue;
-		printf("info depth 1 score cp %d nodes %ld multipv %d pv", result.score, result.node_count, i + 1);
+		moonfish_log_result(result0);
+		if (count0 > 1) printf(" multipv %d", i + 1);
+		printf(" score cp %d", result.score);
+		if (count > 0) printf(" pv");
 		moonfish_root(info->root, &chess);
 		for (j = 0 ; j < count ; j++) {
 			moonfish_to_uci(&chess, pv + j, name);
@@ -65,13 +79,24 @@ static moonfish_result_t moonfish_go0(void *data)
 			printf(" %s", name);
 		}
 		printf("\n");
+		fflush(stdout);
 	}
+}
+
+static moonfish_result_t moonfish_go0(void *data)
+{
+	static struct moonfish_chess chess;
 	
-	printf("info depth 1 score cp %d nodes %ld\n", info->result.score, info->result.node_count);
+	struct moonfish_info *info;
+	char name[6];
 	
+	info = data;
+	moonfish_best_move(info->root, &info->result, &info->search_options);
 	moonfish_root(info->root, &chess);
 	moonfish_to_uci(&chess, &info->result.move, name);
 	
+	moonfish_log_result(&info->result);
+	printf(" score cp %d\n", info->result.score);
 	printf("bestmove %s\n", name);
 	fflush(stdout);
 	return moonfish_value;
@@ -84,6 +109,7 @@ static void moonfish_go(struct moonfish_info *info)
 	long int our_time, their_time, *xtime, time;
 	char *arg, *end;
 	long int node_count;
+	long int depth;
 	
 	info->searching = 1;
 	
@@ -91,6 +117,7 @@ static void moonfish_go(struct moonfish_info *info)
 	their_time = -1;
 	time = -1;
 	node_count = -1;
+	depth = -1;
 	
 	moonfish_root(info->root, &chess);
 	
@@ -98,6 +125,8 @@ static void moonfish_go(struct moonfish_info *info)
 		
 		arg = strtok(NULL, "\r\n\t ");
 		if (arg == NULL) break;
+		
+		if (!strcmp(arg, "infinite")) continue;
 		
 		if (!strcmp(arg, "wtime") || !strcmp(arg, "btime")) {
 			
@@ -161,12 +190,37 @@ static void moonfish_go(struct moonfish_info *info)
 			
 			continue;
 		}
+		
+		if (!strcmp(arg, "depth")) {
+			
+			arg = strtok(NULL, "\r\n\t ");
+			if (arg == NULL) {
+				fprintf(stderr, "malformed 'go depth' command\n");
+				exit(1);
+			}
+			
+			errno = 0;
+			depth = strtol(arg, &end, 10);
+			if (errno || *end != 0 || depth < 0) {
+				fprintf(stderr, "malformed 'depth' in 'go' command\n");
+				exit(1);
+			}
+			
+			continue;
+		}
 	}
 	
 	info->search_options.max_time = time;
 	info->search_options.our_time = our_time;
 	info->search_options.thread_count = moonfish_getoption(info->options, "Threads");
 	info->search_options.node_count = node_count;
+	
+	if (depth >= 0 && depth < 6) {
+		node_count = pow(16, depth);
+		if (node_count < info->search_options.node_count || info->search_options.node_count < 0) {
+			info->search_options.node_count = node_count;
+		}
+	}
 	
 #ifdef moonfish_no_threads
 	moonfish_go0(info);
@@ -325,8 +379,8 @@ int main(int argc, char **argv)
 #ifndef moonfish_no_threads
 		{"Threads", "spin", 1, 1, 0xFFFF},
 #endif
-		{"MultiPV", "spin", 0, 0, 256},
-		{NULL},
+		{"MultiPV", "spin", 1, 0, 256},
+		{NULL, NULL, 0, 0, 0},
 	};
 	
 	char *arg;
@@ -344,6 +398,8 @@ int main(int argc, char **argv)
 #ifndef moonfish_no_threads
 	info.has_thread = 0;
 #endif
+	
+	moonfish_idle(info.root, &moonfish_log, &info);
 	
 	for (;;) {
 		
