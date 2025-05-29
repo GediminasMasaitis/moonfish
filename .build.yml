@@ -17,7 +17,7 @@ tasks:
 
 - build: |
     cd moonfish
-    make LDFLAGS=-static
+    make CC=gcc LDFLAGS=-static moonfish lichess chat perft
     strip moonfish lichess chat
     scripts/minify.sh
 
