@@ -108,6 +108,7 @@ struct moonfish_options {
 struct moonfish_result {
 	struct moonfish_move move;
 	long int node_count;
+	long int time;
 	int score;
 };
 
@@ -210,6 +211,9 @@ void moonfish_unstop(struct moonfish_root *root);
 
 /* requests the PV with the given index, with at most 'count' moves */
 void moonfish_pv(struct moonfish_root *root, struct moonfish_move *moves, struct moonfish_result *result, int index, int *count);
+
+/* adds an "idle/log" handler, which will be called every once in a while during search */
+void moonfish_idle(struct moonfish_root *root, void (*log)(struct moonfish_result *result, void *data), void *data);
 
 #endif
 

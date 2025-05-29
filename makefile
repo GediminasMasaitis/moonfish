@@ -30,6 +30,7 @@ lichess analyse chat perft: chess.o tools/utils.o
 lichess: tools/lichess.o tools/https.o
 analyse: tools/analyse.o tools/pgn.o
 chat: tools/chat.o tools/https.o
+perft: tools/perft.o
 
 $(obj): moonfish.h
 $(tool_obj): moonfish.h tools/tools.h
