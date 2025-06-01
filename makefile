@@ -10,6 +10,7 @@ CFLAGS = -O3 -Wall -Wextra -Wpedantic
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 RM = rm -f
+EXE = moonfish
 
 # hack for BSD Make
 # (ideally, '$^' should be used directly instead)
@@ -23,9 +24,9 @@ lichess_libs = -pthread -ltls -lssl -lcrypto -lcjson
 analyse_libs = -pthread
 chat_libs = -ltls -lssl -lcrypto
 
-all: moonfish lichess analyse chat
+all: $(EXE)
 
-moonfish: $(obj)
+$(EXE): $(obj)
 lichess analyse chat perft: chess.o tools/utils.o
 lichess: tools/lichess.o tools/https.o
 analyse: tools/analyse.o tools/pgn.o
@@ -36,13 +37,13 @@ $(obj): moonfish.h
 $(tool_obj): moonfish.h tools/tools.h
 tools/https.o: tools/https.h
 
-moonfish lichess analyse chat perft:
+$(EXE) lichess analyse chat perft:
 	$(CC) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-check: moonfish perft
+check: $(EXE) perft
 	scripts/check.sh
 
 clean:
