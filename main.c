@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
+#include <limits.h>
 
 #include "moonfish.h"
 #include "threads.h"
@@ -377,6 +378,17 @@ static void moonfish_setoption(struct moonfish_info *info)
 	info->options[i].value = value;
 }
 
+static void moonfish_bench(struct moonfish_info *info)
+{
+	info->search_options.max_time = LONG_MAX;
+	info->search_options.our_time = LONG_MAX;
+	info->search_options.thread_count = 1;
+	info->search_options.node_count = 0x10000L;
+	moonfish_best_move(info->root, &info->result, &info->search_options);
+	printf("%ld nodes %ld nps\n", info->result.positive_node_count, info->result.node_count * 1000 / info->result.time);
+	fflush(stdout);
+}
+
 int main(int argc, char **argv)
 {
 	static char line[2048];
@@ -386,13 +398,14 @@ int main(int argc, char **argv)
 		{"Threads", "spin", 1, 1, 0xFFFF},
 #endif
 		{"MultiPV", "spin", 1, 0, 256},
+		{"Hash", "spin", 1, 1, 1},
 		{NULL, NULL, 0, 0, 0},
 	};
 	
 	char *arg;
 	int i;
 	
-	if (argc > 1) {
+	if (argc > 1 && strcmp(argv[1], "bench")) {
 		fprintf(stderr, "usage: %s (no arguments)\n", argv[0]);
 		return 1;
 	}
@@ -406,6 +419,11 @@ int main(int argc, char **argv)
 #endif
 	
 	moonfish_idle(info.root, &moonfish_log, &info);
+	
+	if (argc > 1) {
+		moonfish_bench(&info);
+		return 0;
+	}
 	
 	for (;;) {
 		

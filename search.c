@@ -66,6 +66,7 @@ struct moonfish_node {
 struct moonfish_root {
 	struct moonfish_node node;
 	struct moonfish_chess chess;
+	long int positive_node_count;
 #ifndef moonfish_mini
 	_Atomic int stop;
 	void (*log)(struct moonfish_result *result, void *data);
@@ -148,7 +149,7 @@ static int moonfish_compare(const void *ax, const void *bx)
 	return 0;
 }
 
-static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *chess)
+static void moonfish_expand(struct moonfish_root *root, struct moonfish_node *node, struct moonfish_chess *chess)
 {
 	int x, y;
 	int count, i;
@@ -184,6 +185,8 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 				node->children[child_count].index = i;
 				
 				node->children[child_count].score = moonfish_score(&other);
+				
+				if (node->children[child_count].score > 0) root->positive_node_count++;
 				
 				child_count++;
 			}
@@ -311,7 +314,7 @@ static moonfish_result_t moonfish_search(void *data)
 	for (i = 0 ; i < 1024 ; i++) {
 		chess = root->chess;
 		leaf = moonfish_select(&root->node, &chess);
-		moonfish_expand(leaf, &chess);
+		moonfish_expand(root, leaf, &chess);
 		if (leaf->count == 0 && moonfish_check(&chess)) moonfish_propagate_bounds(leaf);
 		moonfish_propagate(leaf);
 	}
@@ -395,6 +398,7 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 		moonfish_node_move(root->node.children, &root->chess, &result->move);
 		result->score = root->node.score;
 		result->node_count = root->node.visits;
+		result->positive_node_count = root->positive_node_count;
 		result->time = moonfish_clock() - time0;
 #ifndef moonfish_mini
 		if (root->log != NULL) (*root->log)(result, root->data);
@@ -468,6 +472,7 @@ struct moonfish_root *moonfish_new(void)
 #endif
 	moonfish_node(&root->node);
 	moonfish_chess(&root->chess);
+	root->positive_node_count = 0;
 	
 	return root;
 }
