@@ -7,7 +7,6 @@
 
 #ifndef moonfish_plan9
 
-#include <sys/wait.h>
 #include <signal.h>
 
 #include <cjson/cJSON.h>
@@ -523,18 +522,6 @@ static char *moonfish_username(char *host, char *port, char *token)
 	return username;
 }
 
-#ifndef moonfish_plan9
-
-static void moonfish_signal(int signal)
-{
-	(void) signal;
-	for (;;) {
-		if (waitpid(-1, NULL, WNOHANG) <= 0) break;
-	}
-}
-
-#endif
-
 int main(int argc, char **argv)
 {
 	static struct moonfish_command cmd = {
@@ -616,11 +603,11 @@ int main(int argc, char **argv)
 	
 #ifndef moonfish_plan9
 	
-	action.sa_handler = &moonfish_signal;
+	action.sa_handler = SIG_DFL;
 	sigemptyset(&action.sa_mask);
-	action.sa_flags = 0;
+	action.sa_flags = SA_RESTART | SA_NOCLDWAIT;
 	
-	if (sigaction(SIGCHLD, &action, NULL)) {
+	if (sigaction(SIGCHLD, &action, NULL) != 0) {
 		perror("sigaction");
 		return 1;
 	}

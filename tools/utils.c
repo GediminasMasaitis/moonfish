@@ -115,25 +115,18 @@ void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory)
 	}
 }
 
-char *moonfish_next(FILE *file)
-{
-	static char line[2048];
-	if (fgets(line, sizeof line, file) == NULL) return NULL;
-	return line;
-}
-
 char *moonfish_wait(FILE *file, char *name)
 {
-	char *line, *arg, *buffer;
+	char line[2048], *arg, *buffer;
 	
 	for (;;) {
 		
-		line = moonfish_next(file);
-		if (line == NULL) {
+		if (fgets(line, sizeof line, file) == NULL) {
 			fprintf(stderr, "file closed unexpectedly\n");
 			exit(1);
 		}
 		
+		buffer = NULL;
 		arg = strtok_r(line, "\r\n\t ", &buffer);
 		if (arg == NULL) continue;
 		if (!strcmp(line, name)) return strtok_r(NULL, "\r\n\t ", &buffer);

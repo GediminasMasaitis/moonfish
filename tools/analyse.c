@@ -853,7 +853,7 @@ int main(int argc, char **argv)
 	
 	action.sa_handler = &moonfish_signal;
 	sigemptyset(&action.sa_mask);
-	action.sa_flags = 0;
+	action.sa_flags = SA_RESTART;
 	
 	if (sigaction(SIGTERM, &action, NULL) || sigaction(SIGINT, &action, NULL) || sigaction(SIGQUIT, &action, NULL)) {
 		perror("sigaction");

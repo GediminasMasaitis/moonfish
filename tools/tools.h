@@ -39,7 +39,6 @@ struct moonfish_move;
 
 void moonfish_spawn(char **argv, FILE **in, FILE **out, char *directory);
 
-char *moonfish_next(FILE *file);
 char *moonfish_wait(FILE *file, char *name);
 char **moonfish_args(struct moonfish_command *cmd, int argc, char **argv);
 void moonfish_usage(struct moonfish_command *cmd, char *argv0);
