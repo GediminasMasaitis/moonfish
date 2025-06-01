@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
+#include <limits.h>
 
 #include "moonfish.h"
 #include "threads.h"
