@@ -220,11 +220,7 @@ void moonfish_chess(struct moonfish_chess *chess)
 	chess->ooo[1] = 1;
 	chess->passing = 0;
 	
-	for (y = 0 ; y < 12 ; y++) {
-		for (x = 0 ; x < 10 ; x++) {
-			chess->board[x + y * 10] = moonfish_outside;
-		}
-	}
+	for (x = 0 ; x < 120 ; x++) chess->board[x] = moonfish_outside;
 	
 	for (x = 0 ; x < 8 ; x++) {
 		chess->board[x + 21] = pieces[x] | 0x10;
@@ -440,6 +436,7 @@ int moonfish_from_fen(struct moonfish_chess *chess, char *fen)
 		if (ch == 'k') type = moonfish_king;
 		if (type == 0) return 1;
 		
+		if (x >= 8 || y >= 8) return 1;
 		chess->board[(x + 1) + (9 - y) * 10] = type | color;
 		
 		x++;
@@ -534,8 +531,8 @@ static int moonfish_match_move(struct moonfish_chess *chess, struct moonfish_mov
 				other = *chess;
 				moonfish_play(&other, moves + i);
 				if (!moonfish_validate(&other)) continue;
-				if (check && !moonfish_check(chess)) continue;
-				if (check == 2 && !moonfish_checkmate(chess)) continue;
+				if (check && !moonfish_check(&other)) continue;
+				if (check == 2 && !moonfish_checkmate(&other)) continue;
 				if (found) return 1;
 				found = 1;
 				*move = moves[i];
