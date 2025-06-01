@@ -6,7 +6,7 @@
 .SUFFIXES:
 .SUFFIXES: .c .o
 
-CFLAGS = -O3 -Wall -Wextra -Wpedantic
+CFLAGS = -O3 -Wall -Wextra -Wpedantic -Dmoonfish_pthreads
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 RM = rm -f
