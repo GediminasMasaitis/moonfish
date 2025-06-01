@@ -6,10 +6,24 @@
 .SUFFIXES:
 .SUFFIXES: .c .o
 
+# configurable variables (note: not exhaustive!)
 CFLAGS = -O3 -Wall -Wextra -Wpedantic
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 RM = rm -f
+
+# configurable libraries
+LIBM = -lm
+LIBPTHREAD = -pthread
+LIBATOMIC = -latomic
+LIBTLS = -ltls -lssl -lcrypto
+LIBCJSON = -lcjson
+
+# further configurable variables
+moonfish_libs = $(LIBM) $(LIBPTHREAD) $(LIBATOMIC)
+lichess_libs = $(LIBPTHREAD) $(LIBTLS) $(LIBCJSON)
+analyse_libs = $(LIBPTHREAD)
+chat_libs = $(LIBTLS)
 
 # hack for BSD Make
 # (ideally, '$^' should be used directly instead)
@@ -17,11 +31,6 @@ RM = rm -f
 
 tool_obj = tools/utils.o tools/https.o tools/pgn.o tools/lichess.o tools/analyse.o tools/chat.o tools/perft.o
 obj = chess.o search.o main.o
-
-moonfish_libs = -lm -pthread -latomic
-lichess_libs = -pthread -ltls -lssl -lcrypto -lcjson
-analyse_libs = -pthread
-chat_libs = -ltls -lssl -lcrypto
 
 all: moonfish lichess analyse chat
 
@@ -40,7 +49,7 @@ moonfish lichess analyse chat perft:
 	$(CC) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
 .c.o:
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 check: moonfish perft
 	scripts/check.sh

@@ -16,6 +16,7 @@
 	<ItemDefinitionGroup>
 		<ClCompile>
 			<LanguageStandard_C>stdc11</LanguageStandard_C>
+			<AdditionalOptions>/experimental:c11atomics</AdditionalOptions>
 		</ClCompile>
 	</ItemDefinitionGroup>
 	<ItemGroup>
