@@ -109,6 +109,7 @@ struct moonfish_result {
 	struct moonfish_move move;
 	long int node_count;
 	long int time;
+	long int positive_node_count;
 	int score;
 };
 

@@ -7,7 +7,9 @@
 .SUFFIXES: .c .o
 
 # configurable variables (note: not exhaustive!)
+EXE = moonfish
 CFLAGS = -O3 -Wall -Wextra -Wpedantic
+CPPFLAGS = -Dmoonfish_pthreads
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 RM = rm -f
@@ -16,7 +18,7 @@ LD = $(CC)
 # configurable libraries
 LIBM = -lm
 LIBPTHREAD = -pthread
-LIBATOMIC = -latomic
+LIBATOMIC =
 LIBTLS = -ltls -lssl -lcrypto
 LIBCJSON = -lcjson
 
@@ -34,9 +36,7 @@ line_libs = $(LIBPTHREAD)
 tool_obj = tools/utils.o tools/https.o tools/pgn.o tools/lichess.o tools/analyse.o tools/chat.o tools/line.o tools/perft.o
 obj = chess.o search.o main.o
 
-all: moonfish lichess analyse chat line
-
-moonfish: $(obj)
+$(EXE): $(obj)
 lichess analyse chat line perft: chess.o tools/utils.o
 lichess: tools/lichess.o tools/https.o
 analyse: tools/analyse.o tools/pgn.o
@@ -48,13 +48,16 @@ $(obj): moonfish.h
 $(tool_obj): moonfish.h tools/tools.h
 tools/https.o: tools/https.h
 
-moonfish lichess analyse chat line perft:
+$(EXE):
+	$(LD) $(LDFLAGS) -o $@ $(.ALLSRC) $(moonfish_libs)
+
+lichess analyse chat perft:
 	$(LD) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
 .c.o:
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
-check: moonfish perft
+check: $(EXE) perft
 	scripts/check.sh
 
 clean:
