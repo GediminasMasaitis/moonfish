@@ -377,7 +377,7 @@ static void moonfish_bench(struct moonfish_info *info)
 	info->search_options.max_time = LONG_MAX;
 	info->search_options.our_time = LONG_MAX;
 	info->search_options.thread_count = 1;
-	info->search_options.node_count = 0x20000L;
+	info->search_options.node_count = 0x10000L;
 	moonfish_best_move(info->root, &info->result, &info->search_options);
 	printf("%ld nodes %ld nps\n", info->result.positive_node_count, info->result.node_count * 1000 / info->result.time);
 	fflush(stdout);
