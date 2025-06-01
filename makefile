@@ -19,7 +19,6 @@ EXE = moonfish
 tool_obj = tools/utils.o tools/https.o tools/pgn.o tools/lichess.o tools/analyse.o tools/chat.o tools/perft.o
 obj = chess.o search.o main.o
 
-moonfish_libs = -lm -pthread
 lichess_libs = -pthread -ltls -lssl -lcrypto -lcjson
 analyse_libs = -pthread
 chat_libs = -ltls -lssl -lcrypto
@@ -37,7 +36,10 @@ $(obj): moonfish.h
 $(tool_obj): moonfish.h tools/tools.h
 tools/https.o: tools/https.h
 
-$(EXE) lichess analyse chat perft:
+$(EXE):
+	$(CC) $(LDFLAGS) -o $@ $(.ALLSRC) -lm -pthread
+
+lichess analyse chat perft:
 	$(CC) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
 .c.o:
