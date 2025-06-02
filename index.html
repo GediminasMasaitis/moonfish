@@ -33,24 +33,7 @@ body {
 		linear-gradient(#0000 12em, #1028, #001 calc(100% - 12em)),
 		linear-gradient(90deg, #213, #0000, #246, #0000, #132)
 		#123;
-	color: #444;
-}
-
-body > header > *, body > header ~ * {
-	margin-left: auto !important;
-	margin-right: auto !important;
-	padding-left: 64px !important;
-	padding-right: 64px !important;
-	max-width: 64em;
-}
-
-p {
-	margin: 0;
-}
-
-svg {
-	height: 3em;
-	filter: drop-shadow(0 0 2em #ABC);
+	color: #EEE;
 }
 
 header {
@@ -58,38 +41,53 @@ header {
 		var(--background),
 		linear-gradient(90deg, #213, #0000, #246, #0000, #132)
 		#123;
-	padding: 1em 0;
-	color: #EEE;
 	border-bottom: 2px solid #68A;
-	position: sticky;
-	top: -5em;
+	position: fixed;
+	left: 0;
+	right: 0;
 	margin-bottom: 2em;
-	z-index: 1;
-}
-
-.logo {
-	display: flex;
+	display: grid;
+	padding: 0 calc(50% - 36em);
+	height: 3em;
+	grid-template: auto / auto 1fr auto;
 	align-items: center;
-	font-style: italic;
+	gap: 1em;
 }
 
-.logo > p {
-	margin: 0 2em;
+header > :first-child {
+	padding-left: 4em;
 }
 
-header > p {
+header > :last-child {
+	padding-right: 4em;
+}
+
+header p {
 	margin: 0;
-	margin-top: 2em;
+}
+
+main {
+	margin: 0 auto;
+	padding: 4em 64px;
+	max-width: 48em;
+	line-height: 1.5em;
+}
+
+svg {
+	height: 2em;
+	filter: drop-shadow(0 0 2em #ABC);
+}
+
+nav {
 	display: flex;
 	gap: 1em;
 }
 
-header > p > a {
-	color: #EEE;
+nav > a {
 	transition: text-decoration-color ease 0.25s;
 }
 
-header > p > a:not(:hover) {
+nav > a:not(:hover) {
 	text-decoration-color: #0000;
 }
 
@@ -97,61 +95,12 @@ header > * {
 	text-shadow: 0 0 2em #ABC;
 }
 
-section section {
-	border: 4px solid #A8E;
-	background: #FFF;
-	padding: 0 2em 1em;
-	border-radius: 2em;
-	overflow: hidden;
-	text-align: center;
-	flex: 1;
-	min-width: 12em;
-	box-shadow: 0 0 0.5em #A8E, 0 0 1em #0008;
+a {
+	color: #EEE;
 }
-
-section section > h3 {
-	background: #CBD;
-	font-style: italic;
-	margin: 0 -2em 1em;
-	padding: 0.5em 2em;
-	font-size: 1em;
-}
-
-section section a {
-	display: block;
-	background: #C8D;
-	color: #444;
-	padding: 0.5em 1em;
-	border-radius: 2em;
-	margin: 0.5em 0;
-	text-decoration: none;
-	box-shadow: 0 0 0.5em #0002;
-	transition: box-shadow ease 0.25s;
-	font-weight: bold;
-}
-
-section section a:hover {
-	box-shadow: 0 0.5em 1em #0004;
-}
-
-section > div {
-	display: flex;
-	gap: 4em;
-	margin: 2em 0;
-	flex-flow: wrap;
-	align-items: center;
-}
-
-section section:nth-child(6n + 1) { transform: translate(1em, 1em); }
-section section:nth-child(6n + 2) { transform: translate(-1em, -1em); }
-section section:nth-child(6n + 3) { transform: translate(-1em, 0); }
-section section:nth-child(6n + 4) { transform: translate(0, 1em); }
-section section:nth-child(6n + 5) { transform: translate(-2em, -1em); }
-section section:nth-child(6n + 6) { transform: translate(0, 0); }
 
 h2 {
 	font-size: 1.5em;
-	margin: 0;
 	text-align: center;
 	color: #FED;
 	text-shadow: 0 0 1em #FEE;
@@ -160,12 +109,29 @@ h2 {
 }
 
 @media (min-width: 1024px) {
+	
 	h2 {
 		position: sticky;
 		top: 0;
-		z-index: 2;
 		line-height: 3rem;
 	}
+}
+
+ul {
+	padding: 0;
+	margin: 1em 0;
+}
+
+li {
+	display: block;
+}
+
+li ul {
+	margin-left: 1.5em;
+}
+
+li::before {
+	content: "\2022  ";
 }
 
 pre, code {
@@ -178,146 +144,77 @@ pre, code {
 		monospace;
 }
 
-.ascii {
-	position: relative;
-	user-select: none;
-	text-shadow: 0 0 1em #000, 0 0 1em #000, 0 0 1em #000, 0 0 1em #000, 0 0 1em #000, 0 0 1em #000;
+:not(pre) > code {
+	border-radius: 0.25em;
+	background: #FEE1;
+	box-shadow: 0 0 2px #FEE8;
+	white-space: nowrap;
+	padding: 0 0.25em;
 }
 
-.ascii pre {
-	margin: 0;
-	font-weight: bold;
-	opacity: 75%;
-	position: absolute;
-	bottom: 0;
-	right: 8em;
-	font-size: 0.5em;
+pre, blockquote {
+	border-radius: 1em;
+	background: #FEE1;
+	padding: 0.5em 1em;
+	box-shadow: 0 0 8px #FEE8;
+	margin: 1em auto 1em 0;
+	max-width: max-content;
 }
 
-@media (max-width: 768px) {
-	.ascii {
-		display: none;
-	}
+blockquote > :first-child {
+	margin-top: 0;
+}
+
+blockquote > :last-child {
+	margin-bottom: 0;
+}
+
+blockquote {
+	border-top-left-radius: 0.25em;
+	border-bottom-left-radius: 0.25em;
+	border-left: 4px solid #A8E;
 }
 
 </style>
 
 <header>
-	<div class="logo">
-		<svg viewbox="-0.5 -3 29 9" stroke-linejoin="round" stroke-linecap="round">
-			<title> moonfish's logo </title>
-			<mask id="m">
-				<rect x="-50" y="-50" width="100" height="100" fill="#FFF" />
-				<use href="#f" fill="#000" stroke="#000" stroke-width="2.5" transform="translate(17.5 0) scale(0.75 1) translate(-17.5 0)" />
-			</mask>
-			<g mask="url('#m')">
-				<g id="w4">
-					<g id="w3">
-						<g id="w2">
-						<g id="w1">
-						<path id="w0" fill="none" stroke="#CEF" stroke-width="0.25" d="M 0 5 Q 0.25 5 0.5 4.75 Q 0.75 5 1 5" />
-						<use href="#w0" x="1" />
-						</g>
-							<use href="#w1" x="2" />
-						</g>
-						<use href="#w2" x="4" />
+	<svg viewbox="-0.5 -3 29 9" stroke-linejoin="round" stroke-linecap="round">
+		<title> moonfish's logo </title>
+		<mask id="m">
+			<rect x="-50" y="-50" width="100" height="100" fill="#FFF" />
+			<use href="#f" fill="#000" stroke="#000" stroke-width="2.5" transform="translate(17.5 0) scale(0.75 1) translate(-17.5 0)" />
+		</mask>
+		<g mask="url('#m')">
+			<g id="w4">
+				<g id="w3">
+					<g id="w2">
+					<g id="w1">
+					<path id="w0" fill="none" stroke="#CEF" stroke-width="0.25" d="M 0 5 Q 0.25 5 0.5 4.75 Q 0.75 5 1 5" />
+					<use href="#w0" x="1" />
 					</g>
-					<use href="#w3" x="7" />
+						<use href="#w1" x="2" />
+					</g>
+					<use href="#w2" x="4" />
 				</g>
-				<use href="#w4" x="13" />
+				<use href="#w3" x="7" />
 			</g>
-			<g fill="#EEE">
-				<path d="M 0 0 0 4 1 4 1 1.5 2 3.5 3 3.5 4 1.5 4 4 5 4 5 0 3.75 0 2.5 2.25 1.25 0" />
-				<g transform="translate(0 2) scale(1 1.125)">
-					<path id="o" d="M 7.25 -2 a 1.75 2 0 0 0 0 4 a 1.75 2 0 0 0 0 -4 m 0 1 a 0.75 1 0 0 1 0 2 a 0.75 1 0 0 1 0 -2" />
-					<use href="#o" x="4" />
-				</g>
-				<path d="M 13.5 4 13.5 0 14.5 0 16 2.5 16 0 17 0 17 4 16 4 14.5 1.5 14.5 4" />
+			<use href="#w4" x="13" />
+		</g>
+		<g fill="#EEE">
+			<path d="M 0 0 0 4 1 4 1 1.5 2 3.5 3 3.5 4 1.5 4 4 5 4 5 0 3.75 0 2.5 2.25 1.25 0" />
+			<g transform="translate(0 2) scale(1 1.125)">
+				<path id="o" d="M 7.25 -2 a 1.75 2 0 0 0 0 4 a 1.75 2 0 0 0 0 -4 m 0 1 a 0.75 1 0 0 1 0 2 a 0.75 1 0 0 1 0 -2" />
+				<use href="#o" x="4" />
 			</g>
-			<g transform="translate(17.5 0) scale(0.75 1) translate(-17.5 0)" fill="none" stroke="#EEE">
-				<path d="M 16 5 C 20 6 17.5 -3 22 -1.75" id="f" />
-				<path d="M 18 0.5 C 26 -0.5 17 4.25 21.5 3.75" />
-				<path d="M 26 0.5 C 23.5 -0.5 22.5 1.75 24.5 2 S 25.5 4.5 23 3.5" />
-				<path d="M 26 -2 Q 30 -3 27 3.75 C 29 -1 32 0 31 3.75" />
-			</g>
-		</svg>
-		<p> a simple chess bot </p>
-	</div>
-	<p> <a href="#about">about</a> <a href="#download">download</a> <a href="https://git.sr.ht/~zamfofex/moonfish">hack</a> <a href="https://lichess.org/?user=munfish#friend">play</a> <a href="https://web.libera.chat/#moonfish">chat</a> </p>
-	<div class="ascii"><pre>
-   ___ z   _    _     __   /)        _o_  _+_
-)\/  -\ z (_)  (_)   /'_)  /|   |M|  \W/  \_/
-)/\___/   /_\  /_\  (__)  (__)  /_\  (_)  (_)</pre></div>
+			<path d="M 13.5 4 13.5 0 14.5 0 16 2.5 16 0 17 0 17 4 16 4 14.5 1.5 14.5 4" />
+		</g>
+		<g transform="translate(17.5 0) scale(0.75 1) translate(-17.5 0)" fill="none" stroke="#EEE">
+			<path d="M 16 5 C 20 6 17.5 -3 22 -1.75" id="f" />
+			<path d="M 18 0.5 C 26 -0.5 17 4.25 21.5 3.75" />
+			<path d="M 26 0.5 C 23.5 -0.5 22.5 1.75 24.5 2 S 25.5 4.5 23 3.5" />
+			<path d="M 26 -2 Q 30 -3 27 3.75 C 29 -1 32 0 31 3.75" />
+		</g>
+	</svg>
+	<p> a simple chess bot </p>
+	<nav> <a href="moonfish.sh">download</a> <a href="https://git.sr.ht/~zamfofex/moonfish">hack</a> <a href="https://lichess.org/?user=munfish#friend">play</a> <a href="https://web.libera.chat/#moonfish">chat</a> </nav>
 </header>
-
-<section id="about">
-	<h2> about moonfish </h2>
-	<div>
-		<section>
-			<h3> free software </h3>
-			<p> this means anyone can benefit from moonfish by having access to its source code </p>
-			<p> <a href="https://gnu.org/philosophy/free-sw">more about free software</a> </p>
-		</section>
-		<section>
-			<h3> simple and fun </h3>
-			<p> moonfish is simple and lightweight, which means it's easy and fun to understand how it works </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish">read the source code</a> </p>
-		</section>
-		<section>
-			<h3> portable </h3>
-			<p> written in straight-forward C89, moonfish can run in effectively any operating system and platform </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#compiling-from-source">compile moonfish</a> </p>
-		</section>
-		<section>
-			<h3> welcoming </h3>
-			<p> moonfish has a small but kind community, where you can feel comfortable being yourself </p>
-			<p> <a href="https://web.libera.chat/#moonfish">chat on IRC</a> </p>
-		</section>
-		<section>
-			<h3> effective </h3>
-			<p> moonfish uses MCTS, which allows for it to be reasonably effective despite being so simple </p>
-			<p> <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">more about MCTS</a> </p>
-		</section>
-		<section>
-			<h3> efficient </h3>
-			<p> moonfish makes efficient use of resources, allowing for it to run in constrained environments such as embedded devices </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#porting-moonfish">port moonfish</a> </p>
-		</section>
-	</div>
-</section>
-
-<section id="download">
-	<h2> download </h2>
-	<div>
-		<section>
-			<h3> source code </h3>
-			<p> this is moonfish's source code, choose this if you want to help hack on moonfish! </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish">sourcehut Git repository</a> </p>
-		</section>
-		<section>
-			<h3> Linux x86-64 (static) </h3>
-			<p> choose this if you want to run moonfish on 64-bit Linux </p>
-			<p> <a download href="moonfish">download moonfish!</a> </p>
-		</section>
-		<section>
-			<h3> UNIX (minified) </h3>
-			<p> this is a shell script with compressed source code, so it requires a shell, as well as <code>xz</code> and <code>cc</code> (it is very small!) </p>
-			<p> <a download href="moonfish.sh">download shell script</a> </p>
-		</section>
-		<section>
-			<h3> Windows </h3>
-			<p> you can compile moonfish for Windows using MinGW or Visual Studio </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#compiling-on-windows">compilation instructions</a> </p>
-		</section>
-		<section>
-			<h3> Mac OS X (and other UNIX) </h3>
-			<p> you can compile moonfish for UNIX and UNIX clones, including Mac OS </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#compiling-from-source">compilation instructions</a> </p>
-		</section>
-		<section>
-			<h3> others </h3>
-			<p> because of moonfish's adherence to the C89 standard, you can port moonfish to other platforms relatively easily </p>
-			<p> <a href="https://git.sr.ht/~zamfofex/moonfish#porting-moonfish">port moonfish</a> </p>
-		</section>
-	</div>
-</section>

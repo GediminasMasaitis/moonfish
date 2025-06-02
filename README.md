@@ -6,40 +6,17 @@ moonfish
 
 **moonfish** is a simple chess bot written in C89 (using just a few POSIX and C11 APIs).
 
-table of contents
----
-
-- [features](#features)
-- [download](#download)
-- compiling from source
-  - [configuring the compilation](#configuring-the-compilation)
-  - [compiling on UNIX](#compiling-from-source) (and UNIX clones)
-  - [compiling on Plan 9](#compiling-on-9front) (specifically 9front)
-  - [compiling on Windows](#compiling-on-windows)
-  - [compiling on Mac OS](#notes-for-mac-os)
-  - [compiling on other systems](#porting-moonfish)
-- [using moonfish’s tools](#using-moonfishs-tools)
-- [helping improve moonfish!](#contributing-to-moonfish)
-- [license](#license)
-
-features
----
-
+- lightweight and fun!
 - simple evaluation based on PSTs
 - MCTS (Monte Carlo tree search)
 - cute custom TUI for UCI bots
 - custom Lichess integration
 - custom IRC integration
 
-download
----
-
-Precompiled binaries of moonfish for Linux may be found at <https://moonfish.cc>
-
 contributing to moonfish
 ---
 
-Contributions to moonfish are always welcome! Whether you just have thoughts or ideas to share or complaints to make, any kind of help is very appreciated!
+Contributions to moonfish are always welcome! Whether you have thoughts or ideas to share or complaints to make, any kind of help is very appreciated!
 
 Please feel free to reach out!
 
@@ -70,25 +47,25 @@ make moonfish
 You can also run your compiler manually if you prefer.
 
 ~~~
-# (feel free to replace 'cc' with your compiler of choice)
+# (replace 'cc' with your compiler of choice)
 cc -O3 -o moonfish chess.c search.c main.c -lm -pthread -latomic
 ~~~
 
-configuring the compilation
+compilation configuration
 ---
 
 **Note:** Consult the makefile for more configuration options.
 
-- **threads**: moonfish uses C11 `<threads.h>` by default
+- **threads** — moonfish uses C11 `<threads.h>` by default
   - `make CPPFLAGS=-Dmoonfish_pthreads` to compile with pthreads instead
   - `make CPPFLAGS=-Dmoonfish_no_threads` to disable threads altogether
-- **clock/time**: moonfish uses `clock_gettime` by default
-  - `make CPPFLAGS=-Dmoonfish_no_clock` to compile with `time()` instead (note: discouraged)
-- **libraries**: moonfish uses `-pthread` and `-latomic` by default
+- **clock/time** — moonfish uses `clock_gettime` by default
+  - `make CPPFLAGS=-Dmoonfish_no_clock` to compile with `time(3)` instead
+- **libraries** — moonfish uses `-pthread` and `-latomic` by default
   - `make LIBPTHREAD= LIBATOMIC=` to disable them (respectively)
-  - `make LIBPTHREAD=-lpthread` to replace `-pthread` with `-lpthread` (for example)
+  - `make LIBPTHREAD=-lpthread` to replace `-pthread` with `-lpthread`
 
-notes for Mac OS
+notes for MacOS
 ---
 
 MacOS usually lacks `-latomic` and C11 `<threads.h>`, so you may need to compile with `-Dmoonfish_pthreads` and `LIBATOMIC=`.
@@ -103,9 +80,9 @@ using moonfish’s tools
 
 moonfish also has a few tools to use UCI bots in various ways.
 
-- **`analyse`**: TUI for analysing chess games with UCI bots
-- **`chat`**: IRC integration for UCI bots
-- **`lichess`**: Lichess integration for UCI bots
+- `analyse` — TUI for analysing chess games with UCI bots
+- `chat` — IRC integration for UCI bots
+- `lichess` — Lichess integration for UCI bots
 
 To compile them, simply run `make` followed by the name of the tool you want to compile.
 
@@ -144,7 +121,7 @@ compiling on Windows
 Clone the repository, then open `moonfish.vcxproj` with Visual Studio.
 
 - Only the UCI bot will be compiled, not the tools.
-- Compiling with [MinGW] is also supported. (In this case, the tools may be compiled too.)
+- [MinGW] may be used instead. (This way, the tools may be compiled too.)
 - You may use a GUI like [cutechess] to try it.
 
 [cutechess]: <https://github.com/cutechess/cutechess>
@@ -160,7 +137,7 @@ It is possible to compile moonfish within a strict C89 implementation by definin
 license
 ---
 
-moonfish is released under the [0BSD] license:
+moonfish is released under [the 0BSD license][0BSD]:
 
 > Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
 >

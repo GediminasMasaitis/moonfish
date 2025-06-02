@@ -12,6 +12,7 @@ packages:
 - curl
 - cjson-dev
 - xz
+- md4c
 
 tasks:
 
@@ -25,6 +26,15 @@ tasks:
     sudo rc-service devfs start
     cd moonfish
     make check
+
+- index: |
+    cd moonfish
+    {
+        cat index.html
+        echo '<main><section><h2>about moonfish</h2>'
+        md2html README.md | sed -e '1,/<h1>/d' -e 's,<h2>,</section><section><h2>,g'
+        echo '</section></main>'
+    } > index-out.html
 
 - deploy: |
     set +x
@@ -44,5 +54,5 @@ tasks:
       -F "$root"/moonfish.sh=@moonfish.sh \
       -F "$root"/lichess=@lichess \
       -F "$root"/chat=@chat \
-      -F "$root"/index.html=@index.html \
+      -F "$root"/index.html=@index-out.html \
       https://neocities.org/api/upload
