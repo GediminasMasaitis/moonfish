@@ -198,7 +198,7 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 	node->count = child_count;
 }
 
-static float moonfish_confidence(struct moonfish_node *node)
+static double moonfish_confidence(struct moonfish_node *node)
 {
 	if (node->visits == 0) return 1e9;
 	return 1 / (1 + pow(10, node->score / 400.0)) + 2 * sqrt(log(node->parent->visits) / node->visits);
@@ -221,7 +221,7 @@ static void moonfish_node_chess(struct moonfish_node *node, struct moonfish_ches
 static struct moonfish_node *moonfish_select(struct moonfish_node *node, struct moonfish_chess *chess)
 {
 	struct moonfish_node *next;
-	float max_confidence, confidence;
+	double max_confidence, confidence;
 	int i, count;
 	
 	for (;;) {
@@ -260,7 +260,6 @@ static void moonfish_propagate(struct moonfish_node *node)
 {
 	int i;
 	short int score, child_score;
-	struct moonfish_node *next;
 	
 	while (node != NULL) {
 		score = node->count == 0 ? 0 : SHRT_MIN;
@@ -268,14 +267,13 @@ static void moonfish_propagate(struct moonfish_node *node)
 			child_score = -node->children[i].score;
 			if (score < child_score) score = child_score;
 		}
-		next = node->parent;
 		node->score = score;
 #ifdef moonfish_no_threads
 		node->visits++;
 #else
 		atomic_fetch_add(&node->visits, 1);
 #endif
-		node = next;
+		node = node->parent;
 	}
 }
 

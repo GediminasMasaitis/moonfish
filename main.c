@@ -41,7 +41,7 @@ static int moonfish_getoption(struct moonfish_option *options, char *name)
 
 static void moonfish_log_result(struct moonfish_result *result)
 {
-	printf("info depth %.0f nodes %ld time %ld", log(result->node_count) / log(16), result->node_count, result->time);
+	printf("info depth %.0f nodes %ld time %ld", floor(log(result->node_count) / log(16)), result->node_count, result->time);
 }
 
 static void moonfish_log(struct moonfish_result *result0, void *data)

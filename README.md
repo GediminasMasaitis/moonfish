@@ -44,7 +44,7 @@ make moonfish
 [GCC]: <https://gnu.org/software/gcc/>
 [Clang]: <https://clang.llvm.org>
 
-You can also run your compiler manually if you prefer.
+You may instead run your compiler manually if you prefer.
 
 ~~~
 # (replace 'cc' with your compiler of choice)
@@ -59,10 +59,10 @@ compilation configuration
 - **threads** — moonfish uses C11 `<threads.h>` by default
   - `make CPPFLAGS=-Dmoonfish_pthreads` to compile with pthreads instead
   - `make CPPFLAGS=-Dmoonfish_no_threads` to disable threads altogether
-- **clock/time** — moonfish uses `clock_gettime` by default
-  - `make CPPFLAGS=-Dmoonfish_no_clock` to compile with `time(3)` instead
+- **clock/time** — moonfish uses `clock_gettime(3)` by default
+  - `make CPPFLAGS=-Dmoonfish_no_clock` to use `time(3)` instead
 - **libraries** — moonfish uses `-pthread` and `-latomic` by default
-  - `make LIBPTHREAD= LIBATOMIC=` to disable them (respectively)
+  - `make LIBPTHREAD= LIBATOMIC=` to disable each flag (respectively)
   - `make LIBPTHREAD=-lpthread` to replace `-pthread` with `-lpthread`
 
 notes for MacOS
@@ -111,7 +111,7 @@ Note that some of them have external dependencies!
 compiling on 9front
 ---
 
-You’ll need [NPE]. After that, you can just compile moonfish and its tools with `mk`. (They have no further dependencies on 9front.)
+You’ll need [NPE]. After that, you should be able to just compile moonfish and some of its tools with `mk`. (They have no further dependencies on 9front.)
 
 [NPE]: <https://git.sr.ht/~ft/npe>
 
@@ -120,7 +120,7 @@ compiling on Windows
 
 Clone the repository, then open `moonfish.vcxproj` with Visual Studio.
 
-- Only the UCI bot will be compiled, not the tools.
+- Only moonfish itself will be compiled, not its tools.
 - [MinGW] may be used instead. (This way, the tools may be compiled too.)
 - You may use a GUI like [cutechess] to try it.
 
