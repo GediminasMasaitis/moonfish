@@ -11,6 +11,7 @@ CFLAGS = -O3 -Wall -Wextra -Wpedantic
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 RM = rm -f
+LD = $(CC)
 
 # configurable libraries
 LIBM = -lm
@@ -48,7 +49,7 @@ $(tool_obj): moonfish.h tools/tools.h
 tools/https.o: tools/https.h
 
 moonfish lichess analyse chat line perft:
-	$(CC) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
+	$(LD) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
 .c.o:
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<

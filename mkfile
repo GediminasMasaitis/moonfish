@@ -14,6 +14,6 @@ lichess: chess.$O tools/lichess.$O tools/utils.$O tools/https.$O
 chat: chess.$O tools/chat.$O tools/utils.$O tools/https.$O
 
 tools/lichess.$O tools/chat.$O: tools/tools.h tools/https.h
-
 tools/utils.$O: tools/tools.h
 tools/https.$O: tools/https.h
+search.$O main.$O: threads.h
