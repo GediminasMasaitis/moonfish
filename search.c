@@ -120,10 +120,15 @@ static short int moonfish_score(struct moonfish_chess *chess)
 
 static void moonfish_discard(struct moonfish_node *node)
 {
-	int i;
+	int i, visits;
 	for (i = 0 ; i < node->count ; i++) moonfish_discard(node->children + i);
 	if (node->count > 0) free(node->children);
 	node->count = 0;
+	visits = node->visits;
+	while (node != NULL) {
+		node->visits -= visits;
+		node = node->parent;
+	}
 }
 
 static void moonfish_node(struct moonfish_node *node)
@@ -263,7 +268,6 @@ static void moonfish_propagate(struct moonfish_node *node)
 {
 	int i;
 	short int score, child_score;
-	struct moonfish_node *next;
 	
 	while (node != NULL) {
 		score = node->count == 0 ? 0 : SHRT_MIN;
@@ -271,14 +275,13 @@ static void moonfish_propagate(struct moonfish_node *node)
 			child_score = -node->children[i].score;
 			if (score < child_score) score = child_score;
 		}
-		next = node->parent;
 		node->score = score;
 #ifdef moonfish_no_threads
 		node->visits++;
 #else
 		atomic_fetch_add(&node->visits, 1);
 #endif
-		node = next;
+		node = node->parent;
 	}
 }
 
@@ -360,11 +363,11 @@ static void moonfish_start(struct moonfish_root *root, int thread_count)
 
 static void moonfish_clean(struct moonfish_node *node)
 {
-	int i;
+	int i, visits;
+	if (node->count == 0) return;
+	visits = node->visits / node->count / 4;
 	for (i = 0 ; i < node->count ; i++) {
-		if (node->children[i].visits < node->visits / node->count / 2) {
-			moonfish_discard(node->children + i);
-		}
+		if (node->children[i].visits < visits) moonfish_discard(node->children + i);
 		moonfish_clean(node->children + i);
 	}
 }
@@ -375,7 +378,7 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	long int time, time0;
 	long int node_count;
 	int i, j;
-	int count;
+	int count, visits;
 	
 	time = LONG_MAX;
 	if (options->our_time >= 0) time = options->our_time / 16;
@@ -388,6 +391,7 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 	if (node_count < 0) node_count = LONG_MAX;
 	
 	for (;;) {
+		visits = root->node.visits;
 #ifdef moonfish_no_threads
 		moonfish_search(root);
 #else
@@ -409,6 +413,7 @@ void moonfish_best_move(struct moonfish_root *root, struct moonfish_result *resu
 		if (root->stop) break;
 		if (root->node.visits >= node_count) break;
 #endif
+		if (root->node.visits <= visits) break;
 		if (result->time >= time) break;
 		count = root->node.count;
 		for (i = 0 ; i < root->node.count ; i++) {
