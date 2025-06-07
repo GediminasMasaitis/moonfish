@@ -202,7 +202,7 @@ static void moonfish_expand(struct moonfish_root *root, struct moonfish_node *no
 static double moonfish_confidence(struct moonfish_node *node)
 {
 	if (node->visits == 0) return 1e9;
-	return 1 / (1 + pow(10, node->score / 400.0)) + 2 * sqrt(log(node->parent->visits) / node->visits);
+	return 1 / (1 + pow(10, node->score / 400.0)) + 1.41 / node->count * sqrt(node->parent->visits) / (node->visits + 1);
 }
 
 static void moonfish_node_move(struct moonfish_node *node, struct moonfish_chess *chess, struct moonfish_move *move)
