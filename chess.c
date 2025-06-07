@@ -275,7 +275,7 @@ int moonfish_from_uci(struct moonfish_chess *chess, struct moonfish_move *move, 
 		if (!strcmp(name0, "e1h1")) name0 = "e1g1";
 		if (!strcmp(name0, "e1a1")) name0 = "e1c1";
 	}
-	if (chess->board[85] == moonfish_black_king) {
+	if (chess->board[95] == moonfish_black_king) {
 		if (!strcmp(name0, "e8h8")) name0 = "e8g8";
 		if (!strcmp(name0, "e8a8")) name0 = "e8c8";
 	}
