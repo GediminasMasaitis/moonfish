@@ -87,9 +87,14 @@ static short int moonfish_score(struct moonfish_chess *chess)
 	int i;
 	int phase;
 	
-	score0 = 0;
-	score1 = 0;
+	score0 = 16;
+	score1 = 8;
 	phase = 0;
+
+	if (!chess->white) {
+		score0 *= -1;
+		score1 *= -1;
+	}
 	
 	for (y = 0 ; y < 8 ; y++) {
 		
