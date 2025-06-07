@@ -86,8 +86,8 @@ static short int moonfish_score(struct moonfish_chess *chess)
 	int i;
 	int phase;
 	
-	score0 = 0;
-	score1 = 0;
+	score0 = 16;
+	score1 = 8;
 	phase = 0;
 	
 	for (y = 0 ; y < 8 ; y++) {
@@ -107,9 +107,8 @@ static short int moonfish_score(struct moonfish_chess *chess)
 			
 			i = x1 + y1 * 4 + type * 32;
 			
-			score0 -= values0[i] * (color * 2 - 1);
-			score1 -= values1[i] * (color * 2 - 1);
-			
+			score0 += values0[i] * ((color ^ chess->white) * 2 - 1);
+			score1 += values1[i] * ((color ^ chess->white) * 2 - 1);
 			phase += values[type];
 		}
 	}
@@ -185,7 +184,6 @@ static void moonfish_expand(struct moonfish_node *node, struct moonfish_chess *c
 				node->children[child_count].index = i;
 				
 				node->children[child_count].score = moonfish_score(&other);
-				if (chess->white) node->children[child_count].score *= -1;
 				
 				child_count++;
 			}
