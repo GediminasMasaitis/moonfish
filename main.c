@@ -83,6 +83,8 @@ static void moonfish_log(struct moonfish_result *result0, void *data)
 	}
 }
 
+int moonfish_c;
+
 static moonfish_result_t moonfish_go0(void *data)
 {
 	static struct moonfish_chess chess;
@@ -98,6 +100,8 @@ static moonfish_result_t moonfish_go0(void *data)
 		info->searching = 0;
 		return moonfish_value;
 	}
+	
+	moonfish_c = moonfish_getoption(info->options, "ExplorationC");
 	
 	moonfish_best_move(info->root, &info->result, &info->search_options);
 	moonfish_to_uci(&chess, &info->result.move, name);
@@ -386,6 +390,7 @@ int main(int argc, char **argv)
 		{"Threads", "spin", 1, 1, 0xFFFF},
 #endif
 		{"MultiPV", "spin", 1, 0, 256},
+		{"ExplorationC", "spin", 2000, 0, 10000},
 		{NULL, NULL, 0, 0, 0},
 	};
 	

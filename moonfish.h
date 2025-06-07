@@ -112,6 +112,8 @@ struct moonfish_result {
 	int score;
 };
 
+extern int moonfish_c;
+
 #ifndef moonfish_mini
 
 /* initialises the position and sets up the initial position */
