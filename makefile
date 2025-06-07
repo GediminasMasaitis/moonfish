@@ -1,7 +1,6 @@
 # moonfish's license: 0BSD
 # copyright 2025 zamfofex
 
-.POSIX:
 .PHONY: all check clean install
 .SUFFIXES:
 .SUFFIXES: .c .o
@@ -30,23 +29,23 @@ chat_libs = $(LIBTLS)
 # (ideally, '$^' should be used directly instead)
 .ALLSRC ?= $^
 
-tool_obj = tools/utils.o tools/https.o tools/pgn.o tools/lichess.o tools/analyse.o tools/chat.o tools/perft.o
+tools = lichess analyse chat perft
 obj = chess.o search.o main.o
 
 all: moonfish lichess analyse chat
 
 moonfish: $(obj)
-lichess analyse chat perft: chess.o tools/utils.o
+$(tools): chess.o tools/utils.o
 lichess: tools/lichess.o tools/https.o
 analyse: tools/analyse.o tools/pgn.o
 chat: tools/chat.o tools/https.o
 perft: tools/perft.o
 
 $(obj): moonfish.h
-$(tool_obj): moonfish.h tools/tools.h
+tools/utils.o: moonfish.h tools/tools.h
 tools/https.o: tools/https.h
 
-moonfish lichess analyse chat perft:
+moonfish $(tools):
 	$(LD) $(LDFLAGS) -o $@ $(.ALLSRC) $($@_libs)
 
 .c.o:
